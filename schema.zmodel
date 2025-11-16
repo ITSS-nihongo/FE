@@ -1,0 +1,168 @@
+/// A sample data source using local sqlite db.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x", "darwin", "darwin-arm64", "windows"]
+  previewFeatures = ["typedSql"]
+  output = "../generated/prisma-client"
+}
+
+// Plugin để generate Zod schemas
+plugin zod {
+  provider = '@core/zod'
+  modelOnly = true
+  compile = false
+}
+
+plugin hooks {
+  provider = '@zenstackhq/tanstack-query'
+  target = 'react'
+  output = './lib/api/generated'
+}
+
+/// Enum cho vai trò người dùng
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Enum cho loại địa điểm (trong nhà/ngoài trời)
+enum PlaceType {
+  INDOOR
+  OUTDOOR
+}
+
+// Model User - Quản lý người dùng
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String    // Đã được hash với bcrypt
+  name          String
+  phoneNumber   String?
+  address       String?
+  numberOfKids  Int       @default(0)
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean   @default(true)
+  
+  // Relations
+  reviews       Review[]
+  favorites     Favorite[]
+  
+  // Access Control Rules
+  // Cho phép tất cả người dùng đọc thông tin user (trừ password)
+  @@allow('read', true)
+  
+  // Chỉ user đó mới được update/delete chính mình
+  @@allow('update,delete', auth() == this)
+  
+  // Admin có thể làm mọi thứ
+  @@allow('all', auth().role == ADMIN)
+  
+  // Cho phép tạo user mới (đăng ký)
+  @@allow('create', true)
+  
+  @@map("users")
+}
+
+// Model Place - Địa điểm vui chơi
+model Place {
+  id              String      @id @default(uuid())
+  name            String
+  description     String?
+  address         String
+  latitude        Float       // Vĩ độ
+  longitude       Float       // Kinh độ
+  placeType       PlaceType   // INDOOR/OUTDOOR
+  minAge          Int         @default(0)
+  maxAge          Int         @default(100)
+  area            Float?      // Diện tích (m²)
+  openingTime     String?     // Giờ mở cửa (HH:mm)
+  closingTime     String?     // Giờ đóng cửa (HH:mm)
+  phoneNumber     String?
+  website         String?
+  imageUrl        String?
+  averageRating   Float       @default(0)
+  totalReviews    Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  isActive        Boolean     @default(true)
+  
+  // Relations
+  reviews         Review[]
+  favorites       Favorite[]
+  
+  // Access Control Rules
+  // Tất cả người dùng đều có thể đọc địa điểm
+  @@allow('read', isActive == true)
+  
+  // Chỉ Admin mới được tạo/sửa/xóa địa điểm
+  @@allow('create,update,delete', auth().role == ADMIN)
+  
+  @@map("places")
+}
+
+// Model Review - Đánh giá địa điểm
+model Review {
+  id          String    @id @default(uuid())
+  rating      Int       // 1-5 sao
+  comment     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Foreign Keys
+  userId      String
+  placeId     String
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place       Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  
+  // Access Control Rules
+  // Tất cả người dùng có thể đọc review
+  @@allow('read', true)
+  
+  // Chỉ người tạo review mới được update/delete
+  @@allow('update,delete', auth() == user)
+  
+  // Người dùng đã đăng nhập mới được tạo review
+  @@allow('create', auth() != null)
+  
+  // Admin có thể xóa review
+  @@allow('delete', auth().role == ADMIN)
+  
+  // Validation: rating phải từ 1-5
+  @@validate(rating >= 1 && rating <= 5, "Rating must be between 1 and 5")
+  
+  @@unique([userId, placeId]) // Mỗi user chỉ review 1 lần cho 1 địa điểm
+  @@map("reviews")
+}
+
+// Model Favorite - Địa điểm yêu thích
+model Favorite {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  
+  // Foreign Keys
+  userId      String
+  placeId     String
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  place       Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  
+  // Access Control Rules
+  // Người dùng chỉ có thể đọc favorite của chính mình
+  @@allow('read', auth() == user)
+  
+  // Người dùng chỉ có thể tạo/xóa favorite của chính mình
+  @@allow('create,delete', auth() == user)
+  
+  @@unique([userId, placeId]) // Mỗi user chỉ favorite 1 lần cho 1 địa điểm
+  @@map("favorites")
+}

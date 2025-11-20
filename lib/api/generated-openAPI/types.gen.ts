@@ -274,7 +274,7 @@ export type GetApiPlacesByIdResponse = GetApiPlacesByIdResponses[keyof GetApiPla
 export type PostApiPlacesImportFromMapData = {
     body?: {
         /**
-         * Place ID from Track-Asia Maps
+         * Place ID from Goong Maps
          */
         place_id: string;
         /**
@@ -303,7 +303,7 @@ export type PostApiPlacesImportFromMapErrors = {
         error: string;
     };
     /**
-     * Place not found on Track-Asia Maps
+     * Place not found on Goong Maps
      */
     404: {
         error: string;
@@ -379,6 +379,12 @@ export type GetApiMapsNearbyErrors = {
         error: string;
     };
     /**
+     * Endpoint deprecated
+     */
+    410: {
+        error: string;
+    };
+    /**
      * Internal server error or external API error
      */
     500: {
@@ -432,17 +438,9 @@ export type GetApiMapsPlaceDetailsData = {
     path?: never;
     query: {
         /**
-         * Place ID from Track-Asia Maps
+         * Place ID from Goong Maps
          */
         place_id: string;
-        /**
-         * Use new administrative boundaries
-         */
-        new_admin?: 'true' | 'false';
-        /**
-         * Include old administrative data
-         */
-        include_old_admin?: 'true' | 'false';
     };
     url: '/api/maps/place-details';
 };
@@ -571,21 +569,29 @@ export type GetApiMapsAutocompleteData = {
     path?: never;
     query: {
         /**
-         * Search input text
+         * Search input text (Required)
          */
         input: string;
         /**
-         * Latitude,longitude for location bias
+         * Coordinates for location biased search (latitude,longitude)
          */
         location?: string;
         /**
-         * Maximum number of results
+         * Limit number of results. Defaults to 10
          */
-        size?: string;
+        limit?: string;
         /**
-         * Place type filter (e.g., "restaurant", "park")
+         * Limits search to a radius from specified location (in km)
          */
-        type?: string;
+        radius?: string;
+        /**
+         * Token to group multiple autocomplete requests in 1 session
+         */
+        sessiontoken?: string;
+        /**
+         * If true, returns fields like district, commune, province
+         */
+        more_compound?: string;
     };
     url: '/api/maps/autocomplete';
 };
@@ -616,9 +622,19 @@ export type GetApiMapsAutocompleteResponses = {
         predictions: Array<{
             description: string;
             place_id: string;
-            structured_formatting?: {
+            reference?: string;
+            structured_formatting: {
                 main_text: string;
                 secondary_text?: string;
+            };
+            matched_substrings?: Array<unknown>;
+            terms?: Array<unknown>;
+            has_children?: boolean;
+            display_type?: string;
+            score?: number;
+            plus_code?: {
+                compound_code?: string;
+                global_code?: string;
             };
         }>;
     };
@@ -631,7 +647,7 @@ export type GetApiMapsSearchNearbyWithDetailsData = {
     path?: never;
     query: {
         /**
-         * Search input text
+         * Search input text (keyword-based search)
          */
         input: string;
         /**
@@ -643,17 +659,17 @@ export type GetApiMapsSearchNearbyWithDetailsData = {
          */
         longitude: string;
         /**
-         * Search radius in meters
+         * Search radius in meters (500, 1000, 2000, 5000, 10000)
          */
         radius?: string;
         /**
-         * Place type filter
+         * Maximum number of results
          */
-        type?: string;
+        limit?: string;
         /**
-         * Maximum results to check
+         * Transportation profile for distance calculation
          */
-        size?: string;
+        profile?: 'car' | 'moto' | 'bike';
     };
     url: '/api/maps/search-nearby-with-details';
 };
@@ -718,6 +734,10 @@ export type GetApiMapsSearchNearbyWithDetailsResponses = {
              * Distance from user location in meters
              */
             distance: number;
+            /**
+             * Travel time from user location in seconds
+             */
+            duration?: number;
         }>;
         total: number;
         /**
@@ -728,3 +748,118 @@ export type GetApiMapsSearchNearbyWithDetailsResponses = {
 };
 
 export type GetApiMapsSearchNearbyWithDetailsResponse = GetApiMapsSearchNearbyWithDetailsResponses[keyof GetApiMapsSearchNearbyWithDetailsResponses];
+
+export type PostApiReviewsData = {
+    body?: {
+        /**
+         * Place ID from database
+         */
+        placeId: string;
+        /**
+         * Rating from 1 to 5
+         */
+        rating: number;
+        /**
+         * Review comment
+         */
+        comment?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/reviews';
+};
+
+export type PostApiReviewsErrors = {
+    /**
+     * Invalid data or user already reviewed this place
+     */
+    400: {
+        error: string;
+    };
+    /**
+     * Place not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type PostApiReviewsError = PostApiReviewsErrors[keyof PostApiReviewsErrors];
+
+export type PostApiReviewsResponses = {
+    /**
+     * Review created successfully
+     */
+    201: {
+        id: string;
+        rating: number;
+        comment: string | null;
+        createdAt: string;
+        updatedAt: string;
+        userId: string;
+        placeId: string;
+        user?: {
+            id: string;
+            name: string;
+        };
+    };
+};
+
+export type PostApiReviewsResponse = PostApiReviewsResponses[keyof PostApiReviewsResponses];
+
+export type GetApiReviewsPlaceByPlaceIdData = {
+    body?: never;
+    path: {
+        placeId: string;
+    };
+    query?: never;
+    url: '/api/reviews/place/{placeId}';
+};
+
+export type GetApiReviewsPlaceByPlaceIdErrors = {
+    /**
+     * Place not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type GetApiReviewsPlaceByPlaceIdError = GetApiReviewsPlaceByPlaceIdErrors[keyof GetApiReviewsPlaceByPlaceIdErrors];
+
+export type GetApiReviewsPlaceByPlaceIdResponses = {
+    /**
+     * Reviews retrieved successfully
+     */
+    200: {
+        reviews: Array<{
+            id: string;
+            rating: number;
+            comment: string | null;
+            createdAt: string;
+            updatedAt: string;
+            userId: string;
+            placeId: string;
+            user?: {
+                id: string;
+                name: string;
+            };
+        }>;
+        total: number;
+        averageRating: number;
+    };
+};
+
+export type GetApiReviewsPlaceByPlaceIdResponse = GetApiReviewsPlaceByPlaceIdResponses[keyof GetApiReviewsPlaceByPlaceIdResponses];

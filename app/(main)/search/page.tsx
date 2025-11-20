@@ -1,59 +1,64 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Card, Rate, Button, Input, Select, Spin, message, Modal } from 'antd'
+import { Card, Button, Input, Select, Spin, message, Modal } from 'antd'
 import { SearchOutlined, EnvironmentOutlined } from '@ant-design/icons'
-import Link from 'next/link'
 import { useState, useEffect, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getApiMapsSearchNearbyWithDetailsOptions, postApiPlacesImportFromMapMutation } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { useQuery } from '@tanstack/react-query'
+import { getApiMapsAutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 
 const { Option } = Select
 
-// Place type mapping: Japanese label -> Track-Asia API type
-const PLACE_TYPE_MAP: Record<string, string> = {
-  'all': 'all',
-  'playground': 'playground',
-  'park': 'park',
-  'amusement_park': 'amusement_park',
-  'zoo': 'zoo',
-  'aquarium': 'aquarium',
-  'museum': 'museum',
-  'restaurant': 'restaurant',
-  'cafe': 'cafe',
-  'shopping_mall': 'shopping_mall',
+// Generate UUID v4 for session token (per Goong API recommendation)
+function generateSessionToken(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
 }
 
 export default function SearchResultsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const queryClient = useQueryClient()
   
-  const [sortBy, setSortBy] = useState('distance')
-  const [filterType, setFilterType] = useState('all')
-  const [selectedPlace, setSelectedPlace] = useState<any>(null)
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [sortBy, setSortBy] = useState('relevant')
   const [searchText, setSearchText] = useState('')
+  const [sessionToken] = useState(() => generateSessionToken()) // Generate once per component mount
   
-  // Location state (REQUIRED for this API)
+  // Location state (optional for Goong Autocomplete)
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
   
-  // Search trigger state
-  const [shouldSearch, setShouldSearch] = useState(false)
-  const [searchParams_query, setSearchParams_query] = useState<{
+  // Query params for autocomplete
+  const [autocompleteParams, setAutocompleteParams] = useState<{
     input: string
-    latitude: string
-    longitude: string
+    location?: string
+    limit?: string
     radius?: string
-    type?: string
   } | null>(null)
   
-  // Debug: Track shouldSearch changes
-  useEffect(() => {
-    console.log('🚀 shouldSearch changed:', shouldSearch)
-  }, [shouldSearch])
+  // Use generated hook for autocomplete
+  const { data: autocompleteData, isLoading: isSearching } = useQuery({
+    ...getApiMapsAutocompleteOptions({
+      query: autocompleteParams as any,
+    }),
+    enabled: !!autocompleteParams,
+  })
 
-  // Try to get user location on mount (REQUIRED)
+  // Read search query from URL params on mount
+  useEffect(() => {
+    const qParam = searchParams.get('q')
+    if (qParam) {
+      console.log('📖 Reading search query from URL:', qParam)
+      setSearchText(qParam)
+      // Auto-trigger search when location is available
+      if (location) {
+        handleSearch(qParam)
+      }
+    }
+  }, [searchParams, location])
+
+  // Get user location (optional - for location biased search)
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -63,322 +68,208 @@ export default function SearchResultsPage() {
             lng: position.coords.longitude,
           })
           console.log('✅ Got user location:', position.coords.latitude, position.coords.longitude)
-          message.success('現在地を取得しました')
         },
         (error) => {
-          console.error('❌ Location error:', error.message)
-          message.error('位置情報の取得に失敗しました。位置情報を許可してください。')
+          console.log('⚠️ Location not available:', error.message)
+          // Still allow search without location
+          setLocation({ lat: 0, lng: 0 })
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
+          enableHighAccuracy: false,
+          timeout: 5000,
           maximumAge: 0
         }
       )
     } else {
-      message.error('このブラウザは位置情報をサポートしていません')
+      // Geolocation not supported
+      setLocation({ lat: 0, lng: 0 })
     }
   }, [])
 
-  // Fetch places from Track-Asia Combined API (autocomplete + details + distance filter)
-  const searchQuery = useQuery({
-    ...getApiMapsSearchNearbyWithDetailsOptions({
-      query: searchParams_query as any,
-    }),
-    enabled: shouldSearch && !!searchParams_query && !!location,
-  })
-
-  const { data: searchData, isLoading, refetch, error } = searchQuery
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('📦 Frontend received data:', {
-      searchData,
-      hasResults: (searchData as any)?.results?.length || 0,
-      total: (searchData as any)?.total || 0,
-      searched: (searchData as any)?.searched || 0,
-    })
-    if (error) {
-      console.error('❌ Frontend error:', error)
+  // Search function using generated hook
+  const handleSearchAPI = (keyword: string) => {
+    if (!keyword || keyword.trim() === '') {
+      setAutocompleteParams(null)
+      return
     }
-  }, [searchData, error])
 
-  // Import place mutation - Sử dụng generated mutation hook
-  const importPlaceMutation = useMutation({
-    ...postApiPlacesImportFromMapMutation(),
-    onSuccess: () => {
-      message.success('場所をデータベースに保存しました！')
-      setIsImportModalOpen(false)
-      setSelectedPlace(null)
-    },
-    onError: (error: any) => {
-      if (error.error?.includes('already exists')) {
-        message.warning('この場所は既にデータベースに登録されています')
-      } else {
-        message.error(error.error || '保存に失敗しました')
-      }
-    },
-  })
+    const params: any = {
+      input: keyword.trim(),
+      limit: '20',
+      sessiontoken: sessionToken, // Add session token to group requests
+    }
 
-  const handleSearch = () => {
-    if (!searchText || searchText.trim() === '') {
+    // Add location bias if available
+    if (location && location.lat !== 0 && location.lng !== 0) {
+      params.location = `${location.lat},${location.lng}`
+      params.radius = '50' // 50km radius
+    }
+
+    setAutocompleteParams(params)
+  }
+
+  // Update predictions when data changes
+  useEffect(() => {
+    if (autocompleteData) {
+      console.log('🔍 Autocomplete response:', autocompleteData)
+    }
+  }, [autocompleteData])
+
+  const handleSearch = (keyword?: string) => {
+    const searchKeyword = keyword || searchText
+    if (!searchKeyword || searchKeyword.trim() === '') {
       message.warning('検索キーワードを入力してください')
       return
     }
     
-    if (!location) {
-      message.warning('位置情報を取得してください')
-      return
-    }
-    
-    // Set search params và trigger query
-    const queryParams: {
-      input: string
-      latitude: string
-      longitude: string
-      radius?: string
-      type?: string
-    } = {
-      input: searchText.trim(),
-      latitude: location.lat.toString(),
-      longitude: location.lng.toString(),
-      radius: '1000',
-    }
-    
-    // Map filterType sang Track-Asia API type
-    if (filterType !== 'all' && PLACE_TYPE_MAP[filterType]) {
-      queryParams.type = PLACE_TYPE_MAP[filterType]
-    }
-    
-    console.log('🔍 Search params:', queryParams)
-    
-    setSearchParams_query(queryParams)
-    setShouldSearch(true)
+    handleSearchAPI(searchKeyword)
   }
 
-  const handleImportPlace = (place: any) => {
-    console.log('🔵 Importing place:', place.place_id)
-    setSelectedPlace(place)
-    setIsImportModalOpen(true)
+  const handleSearchClick = () => {
+    handleSearch()
   }
 
-  const confirmImport = () => {
-    if (selectedPlace) {
-      console.log('💾 Importing place with details:', {
-        place_id: selectedPlace.place_id,
-        name: selectedPlace.name,
-        address: selectedPlace.formatted_address,
-      })
-      
-      importPlaceMutation.mutate({
-        body: {
-          place_id: selectedPlace.place_id,
-          placeType: 'OUTDOOR',
-          minAge: 1,
-          maxAge: 12,
-        }
-      })
+  // Get predictions from query data
+  const predictions = autocompleteData?.predictions || []
+
+  // Sort predictions
+  const sortedPredictions = useMemo(() => {
+    const sorted = [...predictions]
+    
+    if (sortBy === 'rating') {
+      // Goong doesn't provide rating in autocomplete, keep original order
+      return sorted
     }
-  }
-
-  // Extract places from response - results từ combined API
-  const places = useMemo(() => {
-    const results = (searchData as any)?.results || []
-    console.log('🎯 Places extracted:', {
-      searchDataExists: !!searchData,
-      resultsLength: results.length,
-      total: (searchData as any)?.total,
-      searched: (searchData as any)?.searched,
-      firstPlace: results[0]
-    })
-    return results
-  }, [searchData])
-  
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 Display state:', {
-      shouldSearch,
-      isLoading,
-      hasSearchData: !!searchData,
-      placesCount: places.length,
-      hasLocation: !!location,
-      hasSearchParams: !!searchParams_query
-    })
-  }, [shouldSearch, isLoading, searchData, places.length, location, searchParams_query])
-
-  // Calculate distance between two coordinates (Haversine formula) - Bỏ đi vì không cần location nữa
-  // const calculateDistance = ...
+    
+    return sorted
+  }, [predictions, sortBy])
 
   return (
-    <div className="space-y-6">
-      {/* Search Header */}
-      <Card className="bg-gradient-to-r from-pink-400 to-purple-500">
-        <div className="space-y-3">
-          {/* Location indicator (optional) */}
-          {location && (
-            <div className="flex items-center gap-2 text-sm /80">
-              <EnvironmentOutlined />
-              <span>現在地を利用して検索結果を最適化します</span>
-              <span> ({location.lat.toFixed(4)}, {location.lng.toFixed(4)})</span>
-            </div>
-          )}
-          
-          <div className="flex gap-4 items-center">
-            <div className="flex-1">
-              <Input
-                size="large"
-                placeholder="場所を検索... (例: 公園、遊び場、レストラン)"
-                prefix={<SearchOutlined />}
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                onPressEnter={handleSearch}
-              />
-            </div>
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleSearch}
-              className="bg-cyan-400 hover:bg-cyan-500 border-0"
-              loading={isLoading}
-            >
-              検索
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Results Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">検索結果</h1>
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+      {/* Top Bar with Back Button and Search */}
+      <div className="flex items-center gap-4 mb-4">
+        <Button
+          size="large"
+          onClick={() => router.push('/dashboard')}
+        >
+          ← 戻る
+        </Button>
         
-        <div className="flex gap-4">
-          {/* Sort */}
-          <Select value={sortBy} onChange={setSortBy} style={{ width: 180 }}>
-            <Option value="distance">並べ替え: 距離が近い順</Option>
-            <Option value="rating">並べ替え: 評価が高い順</Option>
-            <Option value="newest">並べ替え: 新着順</Option>
-          </Select>
+        <div className="flex-1 flex gap-3">
+          <Input
+            size="large"
+            placeholder="場所を検索... (例: 公園、遊び場、レストラン)"
+            prefix={<SearchOutlined />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onPressEnter={handleSearchClick}
+            className="flex-1"
+          />
+          <Button
+            type="primary"
+            size="large"
+            onClick={handleSearchClick}
+            className="bg-blue-500 hover:bg-blue-600 border-0"
+            loading={isSearching}
+          >
+            検索
+          </Button>
+        </div>
+      </div>
 
-          {/* Filter */}
-          <Select value={filterType} onChange={setFilterType} style={{ width: 200 }}>
-            <Option value="all">すべてのタイプ</Option>
-            <Option value="playground">遊び場</Option>
-            <Option value="park">公園</Option>
-            <Option value="amusement_park">遊園地</Option>
-            <Option value="zoo">動物園</Option>
-            <Option value="aquarium">水族館</Option>
-            <Option value="museum">博物館</Option>
-            <Option value="restaurant">レストラン</Option>
-            <Option value="cafe">カフェ</Option>
-            <Option value="shopping_mall">ショッピングモール</Option>
+      {/* Search Result Header - Pink Box */}
+      <div className="bg-linear-to-r from-pink-400 to-purple-400 rounded-lg p-8 text-white text-center">
+        <h1 className="text-3xl font-bold">検索結果</h1>
+      </div>
+
+      {/* Filters and Sort Section */}
+      <div className="flex justify-between items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <span className="text-gray-700 font-medium">並び替え:</span>
+          <Select 
+            value={sortBy} 
+            onChange={setSortBy} 
+            style={{ width: 200 }}
+            size="large"
+          >
+            <Option value="relevant">最も関連度の高い</Option>
+            <Option value="newest">新着順</Option>
+            <Option value="rating">評価順</Option>
+            <Option value="price">料金順</Option>
           </Select>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Button size="large">
+            フィルター
+          </Button>
+          <div className="flex gap-2">
+            <Button size="large">屋内</Button>
+            <Button size="large">屋外</Button>
+          </div>
         </div>
       </div>
 
       {/* Results List */}
-      {!shouldSearch && !searchData ? (
-        <Card>
-          <div className="text-center py-8">
-            <SearchOutlined className="text-6xl text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg mb-2">
-              場所を検索してください
-            </p>
-            <p className="text-gray-400 text-sm">
-              公園、遊び場、レストランなどを検索できます（半径1000m）
-            </p>
-          </div>
-        </Card>
-      ) : !location ? (
-        <Card>
-          <div className="text-center py-8">
-            <EnvironmentOutlined className="text-6xl text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg">
-              位置情報を許可してから検索してください
-            </p>
-          </div>
-        </Card>
-      ) : isLoading ? (
+      {isSearching ? (
         <div className="text-center py-12">
           <Spin size="large" />
           <p className="mt-4 text-gray-600">検索中...</p>
         </div>
-      ) : places.length === 0 ? (
+      ) : sortedPredictions.length === 0 ? (
         <Card>
-          <p className="text-center text-gray-500 py-8">
-            検索結果が見つかりませんでした
-          </p>
-          <p className="text-center text-sm text-gray-400">
-            別のフィルターを試してください
-          </p>
+          <div className="text-center py-8">
+            <SearchOutlined className="text-6xl text-gray-300 mb-4" />
+            <p className="text-gray-500 text-lg mb-2">
+              検索結果が見つかりませんでした
+            </p>
+            <p className="text-gray-400 text-sm">
+              別のキーワードやフィルターを試してください
+            </p>
+          </div>
         </Card>
       ) : (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600 mb-4">
-            {places.length}件の場所が見つかりました
-          </div>
-          {places.map((place: any) => {
+          {sortedPredictions.map((prediction: any) => {
             return (
-              <Card key={place.place_id} className="hover:shadow-lg transition-shadow">
-                <div className="flex gap-4">
+              <Card 
+                key={prediction.place_id} 
+                className="hover:shadow-xl transition-shadow border border-gray-200"
+                bodyStyle={{ padding: 0 }}
+              >
+                <div className="flex gap-0">
                   {/* Image */}
-                  <div className="w-48 h-32 bg-gray-200 rounded shrink-0 flex items-center justify-center">
-                    <span className="text-gray-400">Image</span>
+                  <div 
+                    className="w-64 h-48 bg-gray-300 shrink-0 flex items-center justify-center cursor-pointer"
+                    onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
+                  >
+                    <span className="text-gray-500 text-4xl font-bold">Image</span>
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-1">
-                          {place.name}
-                        </h3>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                          <EnvironmentOutlined />
-                          <span>{place.formatted_address}</span>
-                        </div>
-                        <div className="flex items-center gap-4 mb-2">
-                          <div className="text-sm text-blue-600 font-medium">
-                            📍 現在地から {place.distance}m
-                          </div>
-                          {place.duration !== undefined && place.duration > 0 && (
-                            <div className="text-sm text-green-600 font-medium">
-                              🚗 {place.duration >= 3600 
-                                ? `${Math.floor(place.duration / 3600)}時間${Math.round((place.duration % 3600) / 60)}分`
-                                : `${Math.round(place.duration / 60)}分`}
-                            </div>
-                          )}
-                        </div>
-                        {place.rating && (
-                          <div className="text-sm">
-                            <span className="text-yellow-500">⭐ {place.rating}</span>
-                            {place.user_ratings_total && (
-                              <span className="text-gray-500 ml-2">
-                                ({place.user_ratings_total} レビュー)
-                              </span>
-                            )}
-                          </div>
-                        )}
+                  <div className="flex-1 p-6 flex flex-col justify-between">
+                    <div>
+                      <h3 
+                        className="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-blue-600 transition-colors"
+                        onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
+                      >
+                        {prediction.structured_formatting?.main_text || prediction.description}
+                      </h3>
+                      
+                      <div className="flex items-start gap-2 text-base text-gray-700 mb-3">
+                        <EnvironmentOutlined className="text-lg mt-1" />
+                        <span>{prediction.description}</span>
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 mb-3">
-                      {place.types && place.types.length > 0 && (
-                        <div className="flex gap-2 flex-wrap">
-                          {place.types.slice(0, 3).map((type: string) => (
-                            <span key={type} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
 
                     <Button
                       type="primary"
-                      className="w-full"
-                      onClick={() => handleImportPlace(place)}
+                      size="large"
+                      block
+                      className="mt-4 bg-pink-500 hover:bg-pink-600 border-0 text-lg h-12"
+                      onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
                     >
-                      この場所を保存
+                      詳細を見る
                     </Button>
                   </div>
                 </div>
@@ -389,60 +280,9 @@ export default function SearchResultsPage() {
       )}
 
       {/* Copyright Footer */}
-      <div className="text-center text-xs text-gray-500 py-4 border-t">
+      <div className="text-center text-xs text-gray-500 py-8 border-t mt-8">
         © 2025 TheWeekend. All rights reserved.
       </div>
-
-      {/* Import Modal */}
-      <Modal
-        title="この場所をデータベースに保存"
-        open={isImportModalOpen}
-        onOk={confirmImport}
-        onCancel={() => {
-          setIsImportModalOpen(false)
-          setSelectedPlace(null)
-        }}
-        confirmLoading={importPlaceMutation.isPending}
-        okText="保存"
-        cancelText="キャンセル"
-      >
-        <div className="space-y-3">
-          <p>この場所をデータベースに保存しますか？</p>
-          <div className="bg-gray-50 p-3 rounded">
-            <p className="font-semibold text-lg">
-              {selectedPlace?.name}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {selectedPlace?.formatted_address}
-            </p>
-            {selectedPlace?.types && (
-              <div className="flex gap-2 flex-wrap mt-2">
-                {selectedPlace.types.slice(0, 3).map((type: string) => (
-                  <span key={type} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                    {type}
-                  </span>
-                ))}
-              </div>
-            )}
-            {selectedPlace?.rating && (
-              <div className="mt-2 text-sm">
-                <span className="text-yellow-500">⭐ {selectedPlace.rating}</span>
-                {selectedPlace?.user_ratings_total && (
-                  <span className="text-gray-500 ml-2">
-                    ({selectedPlace.user_ratings_total} レビュー)
-                  </span>
-                )}
-              </div>
-            )}
-            <div className="mt-2 text-sm text-blue-600">
-              📍 現在地から {selectedPlace?.distance}m
-            </div>
-          </div>
-          <p className="text-xs text-gray-500">
-            ※ 保存後、この場所の詳細情報を編集できます（年齢範囲、料金など）
-          </p>
-        </div>
-      </Modal>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetApiMapsAutocompleteData, GetApiMapsAutocompleteErrors, GetApiMapsAutocompleteResponses, GetApiMapsNearbyData, GetApiMapsNearbyErrors, GetApiMapsNearbyResponses, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsErrors, GetApiMapsPlaceDetailsResponses, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponses, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsErrors, GetApiMapsSearchNearbyWithDetailsResponses, GetApiPlacesByIdData, GetApiPlacesByIdErrors, GetApiPlacesByIdResponses, GetApiPlacesData, GetApiPlacesErrors, GetApiPlacesResponses, PostApiAuthLoginData, PostApiAuthLoginErrors, PostApiAuthLoginResponses, PostApiAuthRegisterData, PostApiAuthRegisterErrors, PostApiAuthRegisterResponses, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapErrors, PostApiPlacesImportFromMapResponses } from './types.gen';
+import type { GetApiMapsAutocompleteData, GetApiMapsAutocompleteErrors, GetApiMapsAutocompleteResponses, GetApiMapsNearbyData, GetApiMapsNearbyErrors, GetApiMapsNearbyResponses, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsErrors, GetApiMapsPlaceDetailsResponses, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponses, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsErrors, GetApiMapsSearchNearbyWithDetailsResponses, GetApiPlacesByIdData, GetApiPlacesByIdErrors, GetApiPlacesByIdResponses, GetApiPlacesData, GetApiPlacesErrors, GetApiPlacesResponses, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdErrors, GetApiReviewsPlaceByPlaceIdResponses, PostApiAuthLoginData, PostApiAuthLoginErrors, PostApiAuthLoginResponses, PostApiAuthRegisterData, PostApiAuthRegisterErrors, PostApiAuthRegisterResponses, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapErrors, PostApiPlacesImportFromMapResponses, PostApiReviewsData, PostApiReviewsErrors, PostApiReviewsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -73,9 +73,9 @@ export const getApiPlacesById = <ThrowOnError extends boolean = false>(options: 
 };
 
 /**
- * Import place from Track-Asia Maps
+ * Import place from Goong Maps
  *
- * Fetch place details from Track-Asia Maps and save to database
+ * Fetch place details from Goong Maps and save to database
  */
 export const postApiPlacesImportFromMap = <ThrowOnError extends boolean = false>(options?: Options<PostApiPlacesImportFromMapData, ThrowOnError>) => {
     return (options?.client ?? client).post<PostApiPlacesImportFromMapResponses, PostApiPlacesImportFromMapErrors, ThrowOnError>({
@@ -89,9 +89,9 @@ export const postApiPlacesImportFromMap = <ThrowOnError extends boolean = false>
 };
 
 /**
- * Search nearby places
+ * [DEPRECATED] Search nearby places
  *
- * Search for nearby places using Track-Asia Maps API based on location and optional filters
+ * DEPRECATED: This endpoint uses old Track-Asia API. Please use /maps/search-nearby-with-details or /maps/autocomplete with Goong API instead.
  */
 export const getApiMapsNearby = <ThrowOnError extends boolean = false>(options: Options<GetApiMapsNearbyData, ThrowOnError>) => {
     return (options.client ?? client).get<GetApiMapsNearbyResponses, GetApiMapsNearbyErrors, ThrowOnError>({
@@ -103,7 +103,7 @@ export const getApiMapsNearby = <ThrowOnError extends boolean = false>(options: 
 /**
  * Get place details
  *
- * Get detailed information about a specific place using Track-Asia Maps API
+ * Get detailed information about a specific place using Goong Maps API
  */
 export const getApiMapsPlaceDetails = <ThrowOnError extends boolean = false>(options: Options<GetApiMapsPlaceDetailsData, ThrowOnError>) => {
     return (options.client ?? client).get<GetApiMapsPlaceDetailsResponses, GetApiMapsPlaceDetailsErrors, ThrowOnError>({
@@ -144,6 +144,34 @@ export const getApiMapsAutocomplete = <ThrowOnError extends boolean = false>(opt
 export const getApiMapsSearchNearbyWithDetails = <ThrowOnError extends boolean = false>(options: Options<GetApiMapsSearchNearbyWithDetailsData, ThrowOnError>) => {
     return (options.client ?? client).get<GetApiMapsSearchNearbyWithDetailsResponses, GetApiMapsSearchNearbyWithDetailsErrors, ThrowOnError>({
         url: '/api/maps/search-nearby-with-details',
+        ...options
+    });
+};
+
+/**
+ * Create a review
+ *
+ * Create a new review for a place
+ */
+export const postApiReviews = <ThrowOnError extends boolean = false>(options?: Options<PostApiReviewsData, ThrowOnError>) => {
+    return (options?.client ?? client).post<PostApiReviewsResponses, PostApiReviewsErrors, ThrowOnError>({
+        url: '/api/reviews',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        }
+    });
+};
+
+/**
+ * Get place reviews
+ *
+ * Get all reviews for a specific place
+ */
+export const getApiReviewsPlaceByPlaceId = <ThrowOnError extends boolean = false>(options: Options<GetApiReviewsPlaceByPlaceIdData, ThrowOnError>) => {
+    return (options.client ?? client).get<GetApiReviewsPlaceByPlaceIdResponses, GetApiReviewsPlaceByPlaceIdErrors, ThrowOnError>({
+        url: '/api/reviews/place/{placeId}',
         ...options
     });
 };

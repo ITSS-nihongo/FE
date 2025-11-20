@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getApiMapsAutocomplete, getApiMapsNearby, getApiMapsPlaceDetails, getApiMapsPlaceTypes, getApiMapsSearchNearbyWithDetails, getApiPlaces, getApiPlacesById, type Options, postApiAuthLogin, postApiAuthRegister, postApiPlacesImportFromMap } from '../sdk.gen';
-import type { GetApiMapsAutocompleteData, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, GetApiMapsNearbyData, GetApiMapsNearbyError, GetApiMapsNearbyResponse, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponse, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, GetApiPlacesByIdData, GetApiPlacesByIdError, GetApiPlacesByIdResponse, GetApiPlacesData, GetApiPlacesError, GetApiPlacesResponse, PostApiAuthLoginData, PostApiAuthLoginError, PostApiAuthLoginResponse, PostApiAuthRegisterData, PostApiAuthRegisterError, PostApiAuthRegisterResponse, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapError, PostApiPlacesImportFromMapResponse } from '../types.gen';
+import { getApiMapsAutocomplete, getApiMapsNearby, getApiMapsPlaceDetails, getApiMapsPlaceTypes, getApiMapsSearchNearbyWithDetails, getApiPlaces, getApiPlacesById, getApiReviewsPlaceByPlaceId, type Options, postApiAuthLogin, postApiAuthRegister, postApiPlacesImportFromMap, postApiReviews } from '../sdk.gen';
+import type { GetApiMapsAutocompleteData, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, GetApiMapsNearbyData, GetApiMapsNearbyError, GetApiMapsNearbyResponse, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponse, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, GetApiPlacesByIdData, GetApiPlacesByIdError, GetApiPlacesByIdResponse, GetApiPlacesData, GetApiPlacesError, GetApiPlacesResponse, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdError, GetApiReviewsPlaceByPlaceIdResponse, PostApiAuthLoginData, PostApiAuthLoginError, PostApiAuthLoginResponse, PostApiAuthRegisterData, PostApiAuthRegisterError, PostApiAuthRegisterResponse, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapError, PostApiPlacesImportFromMapResponse, PostApiReviewsData, PostApiReviewsError, PostApiReviewsResponse } from '../types.gen';
 
 /**
  * Login
@@ -180,9 +180,9 @@ export const getApiPlacesByIdOptions = (options: Options<GetApiPlacesByIdData>) 
 });
 
 /**
- * Import place from Track-Asia Maps
+ * Import place from Goong Maps
  *
- * Fetch place details from Track-Asia Maps and save to database
+ * Fetch place details from Goong Maps and save to database
  */
 export const postApiPlacesImportFromMapMutation = (options?: Partial<Options<PostApiPlacesImportFromMapData>>): UseMutationOptions<PostApiPlacesImportFromMapResponse, PostApiPlacesImportFromMapError, Options<PostApiPlacesImportFromMapData>> => {
     const mutationOptions: UseMutationOptions<PostApiPlacesImportFromMapResponse, PostApiPlacesImportFromMapError, Options<PostApiPlacesImportFromMapData>> = {
@@ -201,9 +201,9 @@ export const postApiPlacesImportFromMapMutation = (options?: Partial<Options<Pos
 export const getApiMapsNearbyQueryKey = (options: Options<GetApiMapsNearbyData>) => createQueryKey("getApiMapsNearby", options);
 
 /**
- * Search nearby places
+ * [DEPRECATED] Search nearby places
  *
- * Search for nearby places using Track-Asia Maps API based on location and optional filters
+ * DEPRECATED: This endpoint uses old Track-Asia API. Please use /maps/search-nearby-with-details or /maps/autocomplete with Goong API instead.
  */
 export const getApiMapsNearbyOptions = (options: Options<GetApiMapsNearbyData>) => queryOptions<GetApiMapsNearbyResponse, GetApiMapsNearbyError, GetApiMapsNearbyResponse, ReturnType<typeof getApiMapsNearbyQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -223,7 +223,7 @@ export const getApiMapsPlaceDetailsQueryKey = (options: Options<GetApiMapsPlaceD
 /**
  * Get place details
  *
- * Get detailed information about a specific place using Track-Asia Maps API
+ * Get detailed information about a specific place using Goong Maps API
  */
 export const getApiMapsPlaceDetailsOptions = (options: Options<GetApiMapsPlaceDetailsData>) => queryOptions<GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, ReturnType<typeof getApiMapsPlaceDetailsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -296,4 +296,43 @@ export const getApiMapsSearchNearbyWithDetailsOptions = (options: Options<GetApi
         return data;
     },
     queryKey: getApiMapsSearchNearbyWithDetailsQueryKey(options)
+});
+
+/**
+ * Create a review
+ *
+ * Create a new review for a place
+ */
+export const postApiReviewsMutation = (options?: Partial<Options<PostApiReviewsData>>): UseMutationOptions<PostApiReviewsResponse, PostApiReviewsError, Options<PostApiReviewsData>> => {
+    const mutationOptions: UseMutationOptions<PostApiReviewsResponse, PostApiReviewsError, Options<PostApiReviewsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiReviews({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiReviewsPlaceByPlaceIdQueryKey = (options: Options<GetApiReviewsPlaceByPlaceIdData>) => createQueryKey("getApiReviewsPlaceByPlaceId", options);
+
+/**
+ * Get place reviews
+ *
+ * Get all reviews for a specific place
+ */
+export const getApiReviewsPlaceByPlaceIdOptions = (options: Options<GetApiReviewsPlaceByPlaceIdData>) => queryOptions<GetApiReviewsPlaceByPlaceIdResponse, GetApiReviewsPlaceByPlaceIdError, GetApiReviewsPlaceByPlaceIdResponse, ReturnType<typeof getApiReviewsPlaceByPlaceIdQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiReviewsPlaceByPlaceId({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiReviewsPlaceByPlaceIdQueryKey(options)
 });

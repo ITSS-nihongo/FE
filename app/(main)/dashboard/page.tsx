@@ -147,9 +147,6 @@ export default function DashboardPage() {
                         </span>
                       </div>
 
-                      <div className="text-xs text-gray-500 pt-2 border-t">
-                        © 2025 TheWeekend. All rights reserved.
-                      </div>
                     </div>
                   </Card>
                 </Link>

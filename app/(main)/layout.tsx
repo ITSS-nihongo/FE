@@ -1,8 +1,13 @@
+'use client'
+
 import type { ReactNode } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { HomeOutlined, HeartOutlined, UserOutlined } from '@ant-design/icons'
 
 export default function MainLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header Navigation */}
@@ -16,13 +21,22 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-gray-700 hover:text-pink-500 transition-colors">
+              <Link 
+                href="/dashboard" 
+                className={pathname === '/dashboard' ? 'text-pink-500 font-semibold' : 'text-gray-700 hover:text-pink-500 transition-colors'}
+              >
                 ホーム
               </Link>
-              <Link href="/places" className="text-gray-700 hover:text-pink-500 transition-colors">
+              <Link 
+                href="/recommendations" 
+                className={pathname === '/recommendations' ? 'text-pink-500 font-semibold' : 'text-gray-700 hover:text-pink-500 transition-colors'}
+              >
                 おすすめ
               </Link>
-              <Link href="/favorites" className="text-gray-700 hover:text-pink-500 transition-colors">
+              <Link 
+                href="/favorites" 
+                className={pathname === '/favorites' ? 'text-pink-500 font-semibold' : 'text-gray-700 hover:text-pink-500 transition-colors'}
+              >
                 お気に入り
               </Link>
             </nav>

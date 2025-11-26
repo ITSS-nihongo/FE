@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { getApiMapsAutocomplete, getApiMapsNearby, getApiMapsPlaceDetails, getApiMapsPlaceTypes, getApiMapsSearchNearbyWithDetails, getApiPlaces, getApiPlacesById, getApiReviewsPlaceByPlaceId, type Options, postApiAuthLogin, postApiAuthRegister, postApiPlacesImportFromMap, postApiReviews } from '../sdk.gen';
-import type { GetApiMapsAutocompleteData, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, GetApiMapsNearbyData, GetApiMapsNearbyError, GetApiMapsNearbyResponse, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponse, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, GetApiPlacesByIdData, GetApiPlacesByIdError, GetApiPlacesByIdResponse, GetApiPlacesData, GetApiPlacesError, GetApiPlacesResponse, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdError, GetApiReviewsPlaceByPlaceIdResponse, PostApiAuthLoginData, PostApiAuthLoginError, PostApiAuthLoginResponse, PostApiAuthRegisterData, PostApiAuthRegisterError, PostApiAuthRegisterResponse, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapError, PostApiPlacesImportFromMapResponse, PostApiReviewsData, PostApiReviewsError, PostApiReviewsResponse } from '../types.gen';
+import { deleteFile, generatePresignedUploadUrl, getApiMapsAutocomplete, getApiMapsPlaceDetails, getApiMapsPlaceTypes, getApiMapsSearchNearbyWithDetails, getApiMapsV2Autocomplete, getApiMapsV2PlaceDetails, getApiMapsV2PlaceTypes, getApiMapsV2SearchNearbyWithDetails, getApiPlaces, getApiPlacesById, getApiReviewsPlaceByPlaceId, getFileInfo, listFiles, type Options, patchApiPlacesByPlaceId, postApiAuthLogin, postApiAuthRegister, postApiPlacesImportFromMap, postApiReviews, uploadFile } from '../sdk.gen';
+import type { DeleteFileData, DeleteFileError, DeleteFileResponse, GeneratePresignedUploadUrlData, GeneratePresignedUploadUrlError, GeneratePresignedUploadUrlResponse, GetApiMapsAutocompleteData, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponse, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, GetApiMapsV2AutocompleteData, GetApiMapsV2AutocompleteError, GetApiMapsV2AutocompleteResponse, GetApiMapsV2PlaceDetailsData, GetApiMapsV2PlaceDetailsError, GetApiMapsV2PlaceDetailsResponse, GetApiMapsV2PlaceTypesData, GetApiMapsV2PlaceTypesResponse, GetApiMapsV2SearchNearbyWithDetailsData, GetApiMapsV2SearchNearbyWithDetailsError, GetApiMapsV2SearchNearbyWithDetailsResponse, GetApiPlacesByIdData, GetApiPlacesByIdError, GetApiPlacesByIdResponse, GetApiPlacesData, GetApiPlacesError, GetApiPlacesResponse, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdError, GetApiReviewsPlaceByPlaceIdResponse, GetFileInfoData, GetFileInfoError, GetFileInfoResponse, ListFilesData, ListFilesError, ListFilesResponse, PatchApiPlacesByPlaceIdData, PatchApiPlacesByPlaceIdError, PatchApiPlacesByPlaceIdResponse, PostApiAuthLoginData, PostApiAuthLoginError, PostApiAuthLoginResponse, PostApiAuthRegisterData, PostApiAuthRegisterError, PostApiAuthRegisterResponse, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapError, PostApiPlacesImportFromMapResponse, PostApiReviewsData, PostApiReviewsError, PostApiReviewsResponse, UploadFileData, UploadFileError, UploadFileResponse } from '../types.gen';
 
 /**
  * Login
@@ -198,52 +198,31 @@ export const postApiPlacesImportFromMapMutation = (options?: Partial<Options<Pos
     return mutationOptions;
 };
 
-export const getApiMapsNearbyQueryKey = (options: Options<GetApiMapsNearbyData>) => createQueryKey("getApiMapsNearby", options);
-
 /**
- * [DEPRECATED] Search nearby places
+ * Update place information
  *
- * DEPRECATED: This endpoint uses old Track-Asia API. Please use /maps/search-nearby-with-details or /maps/autocomplete with Goong API instead.
+ * Update additional information for a place (requires authentication)
  */
-export const getApiMapsNearbyOptions = (options: Options<GetApiMapsNearbyData>) => queryOptions<GetApiMapsNearbyResponse, GetApiMapsNearbyError, GetApiMapsNearbyResponse, ReturnType<typeof getApiMapsNearbyQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getApiMapsNearby({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getApiMapsNearbyQueryKey(options)
-});
-
-export const getApiMapsPlaceDetailsQueryKey = (options: Options<GetApiMapsPlaceDetailsData>) => createQueryKey("getApiMapsPlaceDetails", options);
-
-/**
- * Get place details
- *
- * Get detailed information about a specific place using Goong Maps API
- */
-export const getApiMapsPlaceDetailsOptions = (options: Options<GetApiMapsPlaceDetailsData>) => queryOptions<GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, ReturnType<typeof getApiMapsPlaceDetailsQueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-        const { data } = await getApiMapsPlaceDetails({
-            ...options,
-            ...queryKey[0],
-            signal,
-            throwOnError: true
-        });
-        return data;
-    },
-    queryKey: getApiMapsPlaceDetailsQueryKey(options)
-});
+export const patchApiPlacesByPlaceIdMutation = (options?: Partial<Options<PatchApiPlacesByPlaceIdData>>): UseMutationOptions<PatchApiPlacesByPlaceIdResponse, PatchApiPlacesByPlaceIdError, Options<PatchApiPlacesByPlaceIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiPlacesByPlaceIdResponse, PatchApiPlacesByPlaceIdError, Options<PatchApiPlacesByPlaceIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiPlacesByPlaceId({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getApiMapsPlaceTypesQueryKey = (options?: Options<GetApiMapsPlaceTypesData>) => createQueryKey("getApiMapsPlaceTypes", options);
 
 /**
  * Get available place types
  *
- * Get list of place types that can be used for nearby search
+ * List of place types (static list for OSM)
  */
 export const getApiMapsPlaceTypesOptions = (options?: Options<GetApiMapsPlaceTypesData>) => queryOptions<GetApiMapsPlaceTypesResponse, DefaultError, GetApiMapsPlaceTypesResponse, ReturnType<typeof getApiMapsPlaceTypesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -261,9 +240,7 @@ export const getApiMapsPlaceTypesOptions = (options?: Options<GetApiMapsPlaceTyp
 export const getApiMapsAutocompleteQueryKey = (options: Options<GetApiMapsAutocompleteData>) => createQueryKey("getApiMapsAutocomplete", options);
 
 /**
- * Autocomplete place search
- *
- * Get autocomplete suggestions for place search
+ * Autocomplete place search (OSM)
  */
 export const getApiMapsAutocompleteOptions = (options: Options<GetApiMapsAutocompleteData>) => queryOptions<GetApiMapsAutocompleteResponse, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, ReturnType<typeof getApiMapsAutocompleteQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -278,12 +255,28 @@ export const getApiMapsAutocompleteOptions = (options: Options<GetApiMapsAutocom
     queryKey: getApiMapsAutocompleteQueryKey(options)
 });
 
+export const getApiMapsPlaceDetailsQueryKey = (options: Options<GetApiMapsPlaceDetailsData>) => createQueryKey("getApiMapsPlaceDetails", options);
+
+/**
+ * Get place details (OSM)
+ */
+export const getApiMapsPlaceDetailsOptions = (options: Options<GetApiMapsPlaceDetailsData>) => queryOptions<GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, ReturnType<typeof getApiMapsPlaceDetailsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiMapsPlaceDetails({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiMapsPlaceDetailsQueryKey(options)
+});
+
 export const getApiMapsSearchNearbyWithDetailsQueryKey = (options: Options<GetApiMapsSearchNearbyWithDetailsData>) => createQueryKey("getApiMapsSearchNearbyWithDetails", options);
 
 /**
- * Search nearby places with full details
- *
- * Combines autocomplete and place-details APIs, filters by distance and type
+ * Search nearby places (OSM)
  */
 export const getApiMapsSearchNearbyWithDetailsOptions = (options: Options<GetApiMapsSearchNearbyWithDetailsData>) => queryOptions<GetApiMapsSearchNearbyWithDetailsResponse, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, ReturnType<typeof getApiMapsSearchNearbyWithDetailsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
@@ -296,6 +289,92 @@ export const getApiMapsSearchNearbyWithDetailsOptions = (options: Options<GetApi
         return data;
     },
     queryKey: getApiMapsSearchNearbyWithDetailsQueryKey(options)
+});
+
+export const getApiMapsV2PlaceTypesQueryKey = (options?: Options<GetApiMapsV2PlaceTypesData>) => createQueryKey("getApiMapsV2PlaceTypes", options);
+
+/**
+ * Get available place types
+ *
+ * List of place types for Goong API
+ */
+export const getApiMapsV2PlaceTypesOptions = (options?: Options<GetApiMapsV2PlaceTypesData>) => queryOptions<GetApiMapsV2PlaceTypesResponse, DefaultError, GetApiMapsV2PlaceTypesResponse, ReturnType<typeof getApiMapsV2PlaceTypesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiMapsV2PlaceTypes({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiMapsV2PlaceTypesQueryKey(options)
+});
+
+export const getApiMapsV2AutocompleteQueryKey = (options: Options<GetApiMapsV2AutocompleteData>) => createQueryKey("getApiMapsV2Autocomplete", options);
+
+/**
+ * Autocomplete place search (Goong)
+ *
+ *
+ * Places Search by keyword with autocomplete.
+ *
+ * **Session Token Usage:**
+ * - Use UUID v4 to group multiple autocomplete requests in one search session
+ * - Helps optimize billing (charges per session instead of per request)
+ * - Enables better caching and analytics
+ * - Example: a68dfa01-a5aa-47d1-aaa7-a3184896b283
+ *
+ * **Location Format:** latitude,longitude (e.g., "21.0285,105.8542")
+ *
+ */
+export const getApiMapsV2AutocompleteOptions = (options: Options<GetApiMapsV2AutocompleteData>) => queryOptions<GetApiMapsV2AutocompleteResponse, GetApiMapsV2AutocompleteError, GetApiMapsV2AutocompleteResponse, ReturnType<typeof getApiMapsV2AutocompleteQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiMapsV2Autocomplete({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiMapsV2AutocompleteQueryKey(options)
+});
+
+export const getApiMapsV2PlaceDetailsQueryKey = (options: Options<GetApiMapsV2PlaceDetailsData>) => createQueryKey("getApiMapsV2PlaceDetails", options);
+
+/**
+ * Get place details (Goong)
+ */
+export const getApiMapsV2PlaceDetailsOptions = (options: Options<GetApiMapsV2PlaceDetailsData>) => queryOptions<GetApiMapsV2PlaceDetailsResponse, GetApiMapsV2PlaceDetailsError, GetApiMapsV2PlaceDetailsResponse, ReturnType<typeof getApiMapsV2PlaceDetailsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiMapsV2PlaceDetails({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiMapsV2PlaceDetailsQueryKey(options)
+});
+
+export const getApiMapsV2SearchNearbyWithDetailsQueryKey = (options: Options<GetApiMapsV2SearchNearbyWithDetailsData>) => createQueryKey("getApiMapsV2SearchNearbyWithDetails", options);
+
+/**
+ * Search nearby places (Goong)
+ */
+export const getApiMapsV2SearchNearbyWithDetailsOptions = (options: Options<GetApiMapsV2SearchNearbyWithDetailsData>) => queryOptions<GetApiMapsV2SearchNearbyWithDetailsResponse, GetApiMapsV2SearchNearbyWithDetailsError, GetApiMapsV2SearchNearbyWithDetailsResponse, ReturnType<typeof getApiMapsV2SearchNearbyWithDetailsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiMapsV2SearchNearbyWithDetails({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiMapsV2SearchNearbyWithDetailsQueryKey(options)
 });
 
 /**
@@ -335,4 +414,92 @@ export const getApiReviewsPlaceByPlaceIdOptions = (options: Options<GetApiReview
         return data;
     },
     queryKey: getApiReviewsPlaceByPlaceIdQueryKey(options)
+});
+
+/**
+ * Upload file to MinIO storage
+ */
+export const uploadFileMutation = (options?: Partial<Options<UploadFileData>>): UseMutationOptions<UploadFileResponse, UploadFileError, Options<UploadFileData>> => {
+    const mutationOptions: UseMutationOptions<UploadFileResponse, UploadFileError, Options<UploadFileData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await uploadFile({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const generatePresignedUploadUrlQueryKey = (options: Options<GeneratePresignedUploadUrlData>) => createQueryKey("generatePresignedUploadUrl", options);
+
+/**
+ * Generate a presigned URL for uploading files
+ */
+export const generatePresignedUploadUrlOptions = (options: Options<GeneratePresignedUploadUrlData>) => queryOptions<GeneratePresignedUploadUrlResponse, GeneratePresignedUploadUrlError, GeneratePresignedUploadUrlResponse, ReturnType<typeof generatePresignedUploadUrlQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await generatePresignedUploadUrl({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: generatePresignedUploadUrlQueryKey(options)
+});
+
+export const getFileInfoQueryKey = (options: Options<GetFileInfoData>) => createQueryKey("getFileInfo", options);
+
+/**
+ * Get file information from MinIO
+ */
+export const getFileInfoOptions = (options: Options<GetFileInfoData>) => queryOptions<GetFileInfoResponse, GetFileInfoError, GetFileInfoResponse, ReturnType<typeof getFileInfoQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getFileInfo({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getFileInfoQueryKey(options)
+});
+
+/**
+ * Delete file from MinIO storage
+ */
+export const deleteFileMutation = (options?: Partial<Options<DeleteFileData>>): UseMutationOptions<DeleteFileResponse, DeleteFileError, Options<DeleteFileData>> => {
+    const mutationOptions: UseMutationOptions<DeleteFileResponse, DeleteFileError, Options<DeleteFileData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteFile({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const listFilesQueryKey = (options?: Options<ListFilesData>) => createQueryKey("listFiles", options);
+
+/**
+ * List files in MinIO bucket
+ */
+export const listFilesOptions = (options?: Options<ListFilesData>) => queryOptions<ListFilesResponse, ListFilesError, ListFilesResponse, ReturnType<typeof listFilesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await listFiles({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: listFilesQueryKey(options)
 });

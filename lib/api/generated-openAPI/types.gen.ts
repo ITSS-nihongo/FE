@@ -347,109 +347,44 @@ export type PostApiPlacesImportFromMapResponses = {
 
 export type PostApiPlacesImportFromMapResponse = PostApiPlacesImportFromMapResponses[keyof PostApiPlacesImportFromMapResponses];
 
-export type GetApiMapsNearbyData = {
-    body?: never;
-    path?: never;
-    query: {
+export type PatchApiPlacesByPlaceIdData = {
+    body?: {
         /**
-         * Latitude of the location
+         * Additional description
          */
-        latitude: string;
+        description?: string;
         /**
-         * Longitude of the location
+         * Area in square meters
          */
-        longitude: string;
+        area?: number;
         /**
-         * Search radius in meters (default: 1000)
+         * Opening time (HH:mm format)
          */
-        radius?: string;
+        openingTime?: string;
         /**
-         * Place types to search for (e.g., "restaurant|cafe|park")
+         * Closing time (HH:mm format)
          */
-        type?: string;
+        closingTime?: string;
+        /**
+         * Additional image URL
+         */
+        imageUrl?: string;
     };
-    url: '/api/maps/nearby';
+    path: {
+        /**
+         * Place ID
+         */
+        placeId: string;
+    };
+    query?: never;
+    url: '/api/places/{placeId}';
 };
 
-export type GetApiMapsNearbyErrors = {
+export type PatchApiPlacesByPlaceIdErrors = {
     /**
-     * Invalid parameters
+     * Access denied
      */
-    400: {
-        error: string;
-    };
-    /**
-     * Endpoint deprecated
-     */
-    410: {
-        error: string;
-    };
-    /**
-     * Internal server error or external API error
-     */
-    500: {
-        error: string;
-    };
-};
-
-export type GetApiMapsNearbyError = GetApiMapsNearbyErrors[keyof GetApiMapsNearbyErrors];
-
-export type GetApiMapsNearbyResponses = {
-    /**
-     * Nearby places found successfully
-     */
-    200: {
-        status: string;
-        results: Array<{
-            place_id: string;
-            name: string;
-            formatted_address: string;
-            geometry: {
-                location: {
-                    lat: number;
-                    lng: number;
-                };
-                location_type?: string;
-                viewport?: {
-                    northeast: {
-                        lat: number;
-                        lng: number;
-                    };
-                    southwest: {
-                        lat: number;
-                        lng: number;
-                    };
-                };
-            };
-            types?: Array<string>;
-            icon?: string;
-            vicinity?: string;
-            class?: string;
-            subclass?: string;
-        }>;
-        total: number;
-    };
-};
-
-export type GetApiMapsNearbyResponse = GetApiMapsNearbyResponses[keyof GetApiMapsNearbyResponses];
-
-export type GetApiMapsPlaceDetailsData = {
-    body?: never;
-    path?: never;
-    query: {
-        /**
-         * Place ID from Goong Maps
-         */
-        place_id: string;
-    };
-    url: '/api/maps/place-details';
-};
-
-export type GetApiMapsPlaceDetailsErrors = {
-    /**
-     * Invalid parameters
-     */
-    400: {
+    403: {
         error: string;
     };
     /**
@@ -466,81 +401,36 @@ export type GetApiMapsPlaceDetailsErrors = {
     };
 };
 
-export type GetApiMapsPlaceDetailsError = GetApiMapsPlaceDetailsErrors[keyof GetApiMapsPlaceDetailsErrors];
+export type PatchApiPlacesByPlaceIdError = PatchApiPlacesByPlaceIdErrors[keyof PatchApiPlacesByPlaceIdErrors];
 
-export type GetApiMapsPlaceDetailsResponses = {
+export type PatchApiPlacesByPlaceIdResponses = {
     /**
-     * Place details retrieved successfully
+     * Place updated successfully
      */
     200: {
-        status: string;
-        result: {
-            place_id: string;
-            official_id?: string;
-            name: string;
-            formatted_address: string;
-            vicinity?: string;
-            adr_address?: string;
-            editorial_summary?: {
-                overview?: string;
-            };
-            address_components: Array<{
-                long_name: string;
-                short_name: string;
-                types: Array<string>;
-                official_id?: string;
-            }>;
-            geometry: {
-                location: {
-                    lat: number;
-                    lng: number;
-                };
-                location_type?: string;
-                viewport?: {
-                    northeast: {
-                        lat: number;
-                        lng: number;
-                    };
-                    southwest: {
-                        lat: number;
-                        lng: number;
-                    };
-                };
-            };
-            plus_code?: {
-                compound_code?: string;
-                global_code?: string;
-            };
-            types: Array<string>;
-            icon?: string;
-            icon_background_color?: string;
-            photos?: Array<{
-                url: string;
-            }>;
-            opening_hours?: {
-                open_now?: boolean;
-                weekday_text?: Array<string>;
-            };
-            rating?: number;
-            user_ratings_total?: number;
-            website?: string;
-            phone_number?: string;
-            socials?: Array<string>;
-            url?: string;
-            utc_offset?: number;
-            old_address_components?: Array<{
-                long_name: string;
-                short_name: string;
-                types: Array<string>;
-                official_id?: string;
-            }>;
-            old_formatted_address?: string;
-        };
-        html_attributions?: Array<string>;
+        id: string;
+        name: string;
+        description: string | null;
+        address: string;
+        latitude: number;
+        longitude: number;
+        placeType: 'INDOOR' | 'OUTDOOR';
+        minAge: number;
+        maxAge: number;
+        area: number | null;
+        openingTime: string | null;
+        closingTime: string | null;
+        phoneNumber: string | null;
+        website: string | null;
+        imageUrl: string | null;
+        averageRating: number;
+        totalReviews: number;
+        createdAt: string;
+        updatedAt: string;
     };
 };
 
-export type GetApiMapsPlaceDetailsResponse = GetApiMapsPlaceDetailsResponses[keyof GetApiMapsPlaceDetailsResponses];
+export type PatchApiPlacesByPlaceIdResponse = PatchApiPlacesByPlaceIdResponses[keyof PatchApiPlacesByPlaceIdResponses];
 
 export type GetApiMapsPlaceTypesData = {
     body?: never;
@@ -569,40 +459,19 @@ export type GetApiMapsAutocompleteData = {
     path?: never;
     query: {
         /**
-         * Search input text (Required)
+         * Search input text
          */
         input: string;
-        /**
-         * Coordinates for location biased search (latitude,longitude)
-         */
         location?: string;
-        /**
-         * Limit number of results. Defaults to 10
-         */
         limit?: string;
-        /**
-         * Limits search to a radius from specified location (in km)
-         */
         radius?: string;
-        /**
-         * Token to group multiple autocomplete requests in 1 session
-         */
         sessiontoken?: string;
-        /**
-         * If true, returns fields like district, commune, province
-         */
         more_compound?: string;
     };
     url: '/api/maps/autocomplete';
 };
 
 export type GetApiMapsAutocompleteErrors = {
-    /**
-     * Invalid parameters
-     */
-    400: {
-        error: string;
-    };
     /**
      * Internal server error
      */
@@ -622,19 +491,9 @@ export type GetApiMapsAutocompleteResponses = {
         predictions: Array<{
             description: string;
             place_id: string;
-            reference?: string;
             structured_formatting: {
                 main_text: string;
                 secondary_text?: string;
-            };
-            matched_substrings?: Array<unknown>;
-            terms?: Array<unknown>;
-            has_children?: boolean;
-            display_type?: string;
-            score?: number;
-            plus_code?: {
-                compound_code?: string;
-                global_code?: string;
             };
         }>;
     };
@@ -642,45 +501,100 @@ export type GetApiMapsAutocompleteResponses = {
 
 export type GetApiMapsAutocompleteResponse = GetApiMapsAutocompleteResponses[keyof GetApiMapsAutocompleteResponses];
 
+export type GetApiMapsPlaceDetailsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Place ID
+         */
+        place_id: string;
+    };
+    url: '/api/maps/place-details';
+};
+
+export type GetApiMapsPlaceDetailsErrors = {
+    /**
+     * Place not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type GetApiMapsPlaceDetailsError = GetApiMapsPlaceDetailsErrors[keyof GetApiMapsPlaceDetailsErrors];
+
+export type GetApiMapsPlaceDetailsResponses = {
+    /**
+     * Place details
+     */
+    200: {
+        status: string;
+        result: {
+            place_id: string;
+            name: string;
+            formatted_address: string;
+            vicinity?: string;
+            geometry: {
+                location: {
+                    lat: number;
+                    lng: number;
+                };
+            };
+            types?: Array<string>;
+            rating?: number;
+            user_ratings_total?: number;
+            photos?: Array<{
+                photo_reference?: string;
+                height?: number;
+                width?: number;
+                url?: string;
+            }>;
+            phone_number?: string;
+            website?: string;
+            opening_hours?: {
+                open_now?: boolean;
+                weekday_text?: Array<string>;
+            };
+            editorial_summary?: {
+                overview?: string;
+            };
+        };
+        html_attributions?: Array<string>;
+    };
+};
+
+export type GetApiMapsPlaceDetailsResponse = GetApiMapsPlaceDetailsResponses[keyof GetApiMapsPlaceDetailsResponses];
+
 export type GetApiMapsSearchNearbyWithDetailsData = {
     body?: never;
     path?: never;
     query: {
         /**
-         * Search input text (keyword-based search)
+         * Search keyword
          */
         input: string;
-        /**
-         * User latitude
-         */
-        latitude: string;
-        /**
-         * User longitude
-         */
-        longitude: string;
-        /**
-         * Search radius in meters (500, 1000, 2000, 5000, 10000)
-         */
+        location?: string;
+        latitude?: string;
+        longitude?: string;
         radius?: string;
-        /**
-         * Maximum number of results
-         */
         limit?: string;
         /**
-         * Transportation profile for distance calculation
+         * Place type filter (e.g., park, restaurant, museum) - will be added to search query
          */
-        profile?: 'car' | 'moto' | 'bike';
+        type?: string;
+        profile?: string;
     };
     url: '/api/maps/search-nearby-with-details';
 };
 
 export type GetApiMapsSearchNearbyWithDetailsErrors = {
-    /**
-     * Invalid parameters
-     */
-    400: {
-        error: string;
-    };
     /**
      * Internal server error
      */
@@ -693,36 +607,174 @@ export type GetApiMapsSearchNearbyWithDetailsError = GetApiMapsSearchNearbyWithD
 
 export type GetApiMapsSearchNearbyWithDetailsResponses = {
     /**
-     * Places found with details and distance filtering
+     * Places found
      */
     200: {
         status: string;
-        results: Array<{
+        results: Array<unknown>;
+        total: number;
+        searched: number;
+    };
+};
+
+export type GetApiMapsSearchNearbyWithDetailsResponse = GetApiMapsSearchNearbyWithDetailsResponses[keyof GetApiMapsSearchNearbyWithDetailsResponses];
+
+export type GetApiMapsV2PlaceTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/maps-v2/place-types';
+};
+
+export type GetApiMapsV2PlaceTypesResponses = {
+    /**
+     * List of available place types
+     */
+    200: {
+        categories: Array<{
+            name: string;
+            types: Array<string>;
+            description: string;
+        }>;
+    };
+};
+
+export type GetApiMapsV2PlaceTypesResponse = GetApiMapsV2PlaceTypesResponses[keyof GetApiMapsV2PlaceTypesResponses];
+
+export type GetApiMapsV2AutocompleteData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Search input text
+         */
+        input: string;
+        /**
+         * Coordinates for location biased search (lat,lng)
+         */
+        location?: string;
+        /**
+         * Limit number of results (default: 10)
+         */
+        limit?: string;
+        /**
+         * Search radius from location in km (default: 50)
+         */
+        radius?: string;
+        /**
+         * UUID token to group multiple requests in one session
+         */
+        sessiontoken?: string;
+        /**
+         * Include district, commune, province info (true/false)
+         */
+        more_compound?: string;
+    };
+    url: '/api/maps-v2/autocomplete';
+};
+
+export type GetApiMapsV2AutocompleteErrors = {
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type GetApiMapsV2AutocompleteError = GetApiMapsV2AutocompleteErrors[keyof GetApiMapsV2AutocompleteErrors];
+
+export type GetApiMapsV2AutocompleteResponses = {
+    /**
+     * Autocomplete suggestions
+     */
+    200: {
+        status: string;
+        predictions: Array<{
+            description: string;
+            place_id: string;
+            reference?: string;
+            matched_substrings?: Array<{
+                length?: number;
+                offset?: number;
+            }>;
+            structured_formatting: {
+                main_text: string;
+                secondary_text?: string;
+            };
+            terms?: Array<{
+                offset?: number;
+                value?: string;
+            }>;
+            has_children?: boolean;
+            display_type?: string;
+            score?: number;
+            plus_code?: {
+                compound_code?: string;
+                global_code?: string;
+            };
+        }>;
+        executed_time?: number;
+        executed_time_all?: number;
+    };
+};
+
+export type GetApiMapsV2AutocompleteResponse = GetApiMapsV2AutocompleteResponses[keyof GetApiMapsV2AutocompleteResponses];
+
+export type GetApiMapsV2PlaceDetailsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Place ID
+         */
+        place_id: string;
+    };
+    url: '/api/maps-v2/place-details';
+};
+
+export type GetApiMapsV2PlaceDetailsErrors = {
+    /**
+     * Place not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type GetApiMapsV2PlaceDetailsError = GetApiMapsV2PlaceDetailsErrors[keyof GetApiMapsV2PlaceDetailsErrors];
+
+export type GetApiMapsV2PlaceDetailsResponses = {
+    /**
+     * Place details
+     */
+    200: {
+        status: string;
+        result: {
             place_id: string;
             name: string;
             formatted_address: string;
+            vicinity?: string;
             geometry: {
                 location: {
                     lat: number;
                     lng: number;
                 };
-                location_type?: string;
-                viewport?: {
-                    northeast: {
-                        lat: number;
-                        lng: number;
-                    };
-                    southwest: {
-                        lat: number;
-                        lng: number;
-                    };
-                };
             };
-            types: Array<string>;
+            types?: Array<string>;
             rating?: number;
             user_ratings_total?: number;
             photos?: Array<{
-                url: string;
+                photo_reference?: string;
+                height?: number;
+                width?: number;
+                url?: string;
             }>;
             phone_number?: string;
             website?: string;
@@ -730,24 +782,62 @@ export type GetApiMapsSearchNearbyWithDetailsResponses = {
                 open_now?: boolean;
                 weekday_text?: Array<string>;
             };
-            /**
-             * Distance from user location in meters
-             */
-            distance: number;
-            /**
-             * Travel time from user location in seconds
-             */
-            duration?: number;
-        }>;
-        total: number;
+            editorial_summary?: {
+                overview?: string;
+            };
+        };
+        html_attributions?: Array<string>;
+    };
+};
+
+export type GetApiMapsV2PlaceDetailsResponse = GetApiMapsV2PlaceDetailsResponses[keyof GetApiMapsV2PlaceDetailsResponses];
+
+export type GetApiMapsV2SearchNearbyWithDetailsData = {
+    body?: never;
+    path?: never;
+    query: {
         /**
-         * Total places checked
+         * Search keyword
          */
+        input: string;
+        location?: string;
+        latitude?: string;
+        longitude?: string;
+        radius?: string;
+        limit?: string;
+        /**
+         * Place type filter (e.g., restaurant, park, hospital)
+         */
+        type?: string;
+        profile?: string;
+    };
+    url: '/api/maps-v2/search-nearby-with-details';
+};
+
+export type GetApiMapsV2SearchNearbyWithDetailsErrors = {
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type GetApiMapsV2SearchNearbyWithDetailsError = GetApiMapsV2SearchNearbyWithDetailsErrors[keyof GetApiMapsV2SearchNearbyWithDetailsErrors];
+
+export type GetApiMapsV2SearchNearbyWithDetailsResponses = {
+    /**
+     * Places found
+     */
+    200: {
+        status: string;
+        results: Array<unknown>;
+        total: number;
         searched: number;
     };
 };
 
-export type GetApiMapsSearchNearbyWithDetailsResponse = GetApiMapsSearchNearbyWithDetailsResponses[keyof GetApiMapsSearchNearbyWithDetailsResponses];
+export type GetApiMapsV2SearchNearbyWithDetailsResponse = GetApiMapsV2SearchNearbyWithDetailsResponses[keyof GetApiMapsV2SearchNearbyWithDetailsResponses];
 
 export type PostApiReviewsData = {
     body?: {
@@ -863,3 +953,242 @@ export type GetApiReviewsPlaceByPlaceIdResponses = {
 };
 
 export type GetApiReviewsPlaceByPlaceIdResponse = GetApiReviewsPlaceByPlaceIdResponses[keyof GetApiReviewsPlaceByPlaceIdResponses];
+
+export type UploadFileData = {
+    body?: {
+        /**
+         * File to upload
+         */
+        file: Blob | File;
+        /**
+         * Folder path (optional)
+         */
+        folder?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/minio/upload';
+};
+
+export type UploadFileErrors = {
+    /**
+     * Bad request
+     */
+    400: {
+        error: string;
+        details?: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+        details?: string;
+    };
+};
+
+export type UploadFileError = UploadFileErrors[keyof UploadFileErrors];
+
+export type UploadFileResponses = {
+    /**
+     * File uploaded successfully
+     */
+    200: {
+        success: boolean;
+        fileName: string;
+        fileUrl: string;
+        fileSize: number;
+        contentType: string;
+        uploadedAt: string;
+    };
+};
+
+export type UploadFileResponse = UploadFileResponses[keyof UploadFileResponses];
+
+export type GeneratePresignedUploadUrlData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * File name with extension
+         */
+        fileName: string;
+        /**
+         * Folder path (optional)
+         */
+        folder?: string;
+        /**
+         * URL expiration in seconds (default: 3600)
+         */
+        expires?: string;
+    };
+    url: '/api/minio/presigned-upload-url';
+};
+
+export type GeneratePresignedUploadUrlErrors = {
+    /**
+     * Bad request
+     */
+    400: {
+        error: string;
+        details?: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+        details?: string;
+    };
+};
+
+export type GeneratePresignedUploadUrlError = GeneratePresignedUploadUrlErrors[keyof GeneratePresignedUploadUrlErrors];
+
+export type GeneratePresignedUploadUrlResponses = {
+    /**
+     * Presigned URL generated successfully
+     */
+    200: {
+        uploadUrl: string;
+        fileName: string;
+        expiresIn: number;
+        publicUrl: string;
+    };
+};
+
+export type GeneratePresignedUploadUrlResponse = GeneratePresignedUploadUrlResponses[keyof GeneratePresignedUploadUrlResponses];
+
+export type GetFileInfoData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * File name to get info for
+         */
+        fileName: string;
+    };
+    url: '/api/minio/file-info';
+};
+
+export type GetFileInfoErrors = {
+    /**
+     * File not found
+     */
+    404: {
+        error: string;
+        details?: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+        details?: string;
+    };
+};
+
+export type GetFileInfoError = GetFileInfoErrors[keyof GetFileInfoErrors];
+
+export type GetFileInfoResponses = {
+    /**
+     * File information retrieved successfully
+     */
+    200: {
+        fileName: string;
+        size: number;
+        lastModified: string;
+        contentType: string;
+        publicUrl: string;
+    };
+};
+
+export type GetFileInfoResponse = GetFileInfoResponses[keyof GetFileInfoResponses];
+
+export type DeleteFileData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * File name to delete
+         */
+        fileName: string;
+    };
+    url: '/api/minio/delete';
+};
+
+export type DeleteFileErrors = {
+    /**
+     * File not found
+     */
+    404: {
+        error: string;
+        details?: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+        details?: string;
+    };
+};
+
+export type DeleteFileError = DeleteFileErrors[keyof DeleteFileErrors];
+
+export type DeleteFileResponses = {
+    /**
+     * File deleted successfully
+     */
+    200: {
+        success: boolean;
+        message: string;
+        deletedFile: string;
+    };
+};
+
+export type DeleteFileResponse = DeleteFileResponses[keyof DeleteFileResponses];
+
+export type ListFilesData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Folder prefix to filter files
+         */
+        prefix?: string;
+        /**
+         * Maximum number of files to return
+         */
+        limit?: string;
+    };
+    url: '/api/minio/files';
+};
+
+export type ListFilesErrors = {
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+        details?: string;
+    };
+};
+
+export type ListFilesError = ListFilesErrors[keyof ListFilesErrors];
+
+export type ListFilesResponses = {
+    /**
+     * Files listed successfully
+     */
+    200: {
+        files: Array<{
+            name: string;
+            size: number;
+            lastModified: string;
+            publicUrl: string;
+        }>;
+        count: number;
+    };
+};
+
+export type ListFilesResponse = ListFilesResponses[keyof ListFilesResponses];

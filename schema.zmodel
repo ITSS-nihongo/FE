@@ -23,7 +23,6 @@ plugin hooks {
   target = 'react'
   output = './lib/api/generated'
 }
-
 /// Enum cho vai trò người dùng
 enum UserRole {
   USER
@@ -34,6 +33,12 @@ enum UserRole {
 enum PlaceType {
   INDOOR
   OUTDOOR
+}
+
+// Enum cho loại media (ảnh/video)
+enum MediaType {
+  IMAGE
+  VIDEO
 }
 
 // Model User - Quản lý người dùng
@@ -53,6 +58,7 @@ model User {
   // Relations
   reviews       Review[]
   favorites     Favorite[]
+  uploadedMedia Media[]    // Media files uploaded by this user
   
   // Access Control Rules
   // Cho phép tất cả người dùng đọc thông tin user (trừ password)
@@ -87,6 +93,7 @@ model Place {
   phoneNumber     String?
   website         String?
   imageUrl        String?
+  externalPlaceId String?     @unique // Place ID from external API (Goong, OSM, etc.)
   averageRating   Float       @default(0)
   totalReviews    Int         @default(0)
   createdAt       DateTime    @default(now())
@@ -96,6 +103,7 @@ model Place {
   // Relations
   reviews         Review[]
   favorites       Favorite[]
+  media           Media[]     // One-to-many relation with media files
   
   // Access Control Rules
   // Tất cả người dùng đều có thể đọc địa điểm
@@ -128,7 +136,7 @@ model Review {
   @@allow('read', true)
   
   // Chỉ người tạo review mới được update/delete
-  @@allow('update,delete', auth() == user)
+  @@allow('update,delete', auth().id == userId)
   
   // Người dùng đã đăng nhập mới được tạo review
   @@allow('create', auth() != null)
@@ -139,7 +147,6 @@ model Review {
   // Validation: rating phải từ 1-5
   @@validate(rating >= 1 && rating <= 5, "Rating must be between 1 and 5")
   
-  @@unique([userId, placeId]) // Mỗi user chỉ review 1 lần cho 1 địa điểm
   @@map("reviews")
 }
 
@@ -158,11 +165,50 @@ model Favorite {
   
   // Access Control Rules
   // Người dùng chỉ có thể đọc favorite của chính mình
-  @@allow('read', auth() == user)
+  @@allow('read', auth().id == userId)
   
   // Người dùng chỉ có thể tạo/xóa favorite của chính mình
-  @@allow('create,delete', auth() == user)
+  @@allow('create,delete', auth().id == userId)
   
   @@unique([userId, placeId]) // Mỗi user chỉ favorite 1 lần cho 1 địa điểm
   @@map("favorites")
+}
+
+// Model Media - Ảnh/Video cho địa điểm
+model Media {
+  id          String      @id @default(uuid())
+  fileName    String      // Tên file gốc
+  fileUrl     String      // Public URL của file (từ MinIO)
+  fileSize    Int?        // Kích thước file (bytes)
+  mimeType    String?     // MIME type (image/jpeg, video/mp4, etc.)
+  mediaType   MediaType   // IMAGE hoặc VIDEO
+  title       String?     // Tiêu đề/mô tả cho media
+  altText     String?     // Alt text cho accessibility
+  sortOrder   Int         @default(0) // Thứ tự hiển thị
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  isActive    Boolean     @default(true)
+  
+  // Foreign Keys
+  placeId     String
+  uploadedBy  String?     // User ID của người upload
+  
+  // Relations
+  place       Place       @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  uploader    User?       @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+  
+  // Access Control Rules
+  // Tất cả người dùng có thể đọc media của place active
+  @@allow('read', place.isActive == true && isActive == true)
+  
+  // Người đăng nhập có thể tạo media
+  @@allow('create', auth() != null)
+  
+  // Người upload hoặc admin có thể update/delete
+  @@allow('update,delete', auth().id == uploadedBy || auth().role == ADMIN)
+  
+  // Admin có thể làm mọi thứ
+  @@allow('all', auth().role == ADMIN)
+  
+  @@map("media")
 }

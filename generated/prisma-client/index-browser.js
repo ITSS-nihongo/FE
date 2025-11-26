@@ -150,6 +150,7 @@ exports.Prisma.PlaceScalarFieldEnum = {
   phoneNumber: 'phoneNumber',
   website: 'website',
   imageUrl: 'imageUrl',
+  externalPlaceId: 'externalPlaceId',
   averageRating: 'averageRating',
   totalReviews: 'totalReviews',
   createdAt: 'createdAt',
@@ -172,6 +173,23 @@ exports.Prisma.FavoriteScalarFieldEnum = {
   createdAt: 'createdAt',
   userId: 'userId',
   placeId: 'placeId'
+};
+
+exports.Prisma.MediaScalarFieldEnum = {
+  id: 'id',
+  fileName: 'fileName',
+  fileUrl: 'fileUrl',
+  fileSize: 'fileSize',
+  mimeType: 'mimeType',
+  mediaType: 'mediaType',
+  title: 'title',
+  altText: 'altText',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  isActive: 'isActive',
+  placeId: 'placeId',
+  uploadedBy: 'uploadedBy'
 };
 
 exports.Prisma.SortOrder = {
@@ -198,11 +216,17 @@ exports.PlaceType = exports.$Enums.PlaceType = {
   OUTDOOR: 'OUTDOOR'
 };
 
+exports.MediaType = exports.$Enums.MediaType = {
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   Place: 'Place',
   Review: 'Review',
-  Favorite: 'Favorite'
+  Favorite: 'Favorite',
+  Media: 'Media'
 };
 
 /**

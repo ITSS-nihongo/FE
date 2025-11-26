@@ -12,7 +12,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col">
       {/* Header Navigation */}
       <header className="border-b border-gray-200 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="w-full px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/dashboard" className="text-lg font-semibold hover:text-pink-500 transition-colors">
@@ -57,14 +57,14 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-[95%] mx-auto px-0 py-0">
           {children}
         </div>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-4">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-500">
+        <div className="w-full px-4 text-center text-sm text-gray-500">
           © 2025 TheWeekend. All rights reserved.
         </div>
       </footer>

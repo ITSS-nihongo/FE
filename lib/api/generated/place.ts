@@ -328,7 +328,7 @@ export function useSuspenseCountPlace<TArgs extends Prisma.PlaceCountArgs, TQuer
 }
 import type { PlaceType } from '../../../generated/prisma-client';
 
-export function useCheckPlace<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; name?: string; description?: string; address?: string; placeType?: PlaceType; minAge?: number; maxAge?: number; openingTime?: string; closingTime?: string; phoneNumber?: string; website?: string; imageUrl?: string; totalReviews?: number; isActive?: boolean }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
+export function useCheckPlace<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; name?: string; description?: string; address?: string; placeType?: PlaceType; minAge?: number; maxAge?: number; openingTime?: string; closingTime?: string; phoneNumber?: string; website?: string; imageUrl?: string; externalPlaceId?: string; totalReviews?: number; isActive?: boolean }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
     const { endpoint, fetch } = getHooksContext();
     return useModelQuery<boolean, boolean, TError>('Place', `${endpoint}/place/check`, args, options, fetch);
 }

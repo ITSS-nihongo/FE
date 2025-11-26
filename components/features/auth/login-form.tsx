@@ -71,7 +71,7 @@ export function LoginForm() {
         label={<span className="text-gray-700 text-sm">パスワード</span>}
         rules={[
           { required: true, message: 'パスワードを入力してください' },
-          { min: 6, message: 'パスワードは6文字以上である必要があります' },
+          { min: 1, message: 'パスワードは6文字以上である必要があります' },
         ]}
       >
         <Input.Password 
@@ -93,7 +93,16 @@ export function LoginForm() {
         <Form.Item>
           <Alert
             message="ログイン失敗"
-            description={loginMutation.error.error || '無効な認証情報'}
+            description={
+              (() => {
+                const error = loginMutation.error as any
+                if (typeof error === 'string') return error
+                if (error?.error && typeof error.error === 'string') return error.error
+                if (error?.message && typeof error.message === 'string') return error.message
+                if (error?.data?.error) return error.data.error
+                return 'メールアドレスまたはパスワードが間違っています。再度お試しください。'
+              })()
+            }
             type="error"
             showIcon
             closable
@@ -109,7 +118,7 @@ export function LoginForm() {
           htmlType="submit"
           loading={loginMutation.isPending}
           block
-          className="h-12 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 border-0 hover:from-pink-600 hover:to-purple-600 text-white font-medium shadow-md"
+          className="h-12 rounded-full border-0 text-white font-medium shadow-md"
           style={{
             background: loginMutation.isPending 
               ? undefined 

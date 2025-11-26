@@ -1,17 +1,17 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Card, Button, Input, Select, Spin, message, Modal } from 'antd'
-import { SearchOutlined, EnvironmentOutlined } from '@ant-design/icons'
-import { useState, useEffect, useMemo } from 'react'
+import { Card, Button, Input, Select, Spin, message, Modal, AutoComplete, List } from 'antd'
+import { SearchOutlined, EnvironmentOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getApiMapsAutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 
 const { Option } = Select
 
 // Generate UUID v4 for session token (per Goong API recommendation)
 function generateSessionToken(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = Math.random() * 16 | 0
     const v = c === 'x' ? r : (r & 0x3 | 0x8)
     return v.toString(16)
@@ -21,42 +21,39 @@ function generateSessionToken(): string {
 export default function SearchResultsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  
-  const [sortBy, setSortBy] = useState('relevant')
+
   const [searchText, setSearchText] = useState('')
   const [sessionToken] = useState(() => generateSessionToken()) // Generate once per component mount
+  const [searchRadius, setSearchRadius] = useState<string>('50') // Default 50km radius
   
+  // Debounced search states
+  const [debouncedSearchText, setDebouncedSearchText] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  
+  // Refs for debouncing
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const searchInputRef = useRef<any>(null)
+
   // Location state (optional for Goong Autocomplete)
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
-  
+
   // Query params for autocomplete
   const [autocompleteParams, setAutocompleteParams] = useState<{
     input: string
     location?: string
     limit?: string
-    radius?: string
+    sessiontoken?: string
   } | null>(null)
-  
-  // Use generated hook for autocomplete
-  const { data: autocompleteData, isLoading: isSearching } = useQuery({
-    ...getApiMapsAutocompleteOptions({
+
+  // Use generated hook for Goong autocomplete (for suggestions)
+  const { data: searchData, isLoading: isSearching, isFetching } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
       query: autocompleteParams as any,
     }),
     enabled: !!autocompleteParams,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   })
-
-  // Read search query from URL params on mount
-  useEffect(() => {
-    const qParam = searchParams.get('q')
-    if (qParam) {
-      console.log('📖 Reading search query from URL:', qParam)
-      setSearchText(qParam)
-      // Auto-trigger search when location is available
-      if (location) {
-        handleSearch(qParam)
-      }
-    }
-  }, [searchParams, location])
 
   // Get user location (optional - for location biased search)
   useEffect(() => {
@@ -86,8 +83,22 @@ export default function SearchResultsPage() {
     }
   }, [])
 
-  // Search function using generated hook
-  const handleSearchAPI = (keyword: string) => {
+  // Debounce function for search input
+  const debounceSearch = useCallback((value: string) => {
+    setIsTyping(true)
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      setDebouncedSearchText(value)
+      setIsTyping(false)
+    }, 300) // 300ms debounce
+  }, [])
+
+  // Search function using Goong autocomplete
+  const handleSearchAPI = useCallback((keyword: string) => {
     if (!keyword || keyword.trim() === '') {
       setAutocompleteParams(null)
       return
@@ -96,24 +107,53 @@ export default function SearchResultsPage() {
     const params: any = {
       input: keyword.trim(),
       limit: '20',
-      sessiontoken: sessionToken, // Add session token to group requests
+      sessiontoken: sessionToken,
+      more_compound: 'true', // Include district, commune, province info
     }
 
     // Add location bias if available
     if (location && location.lat !== 0 && location.lng !== 0) {
       params.location = `${location.lat},${location.lng}`
-      params.radius = '50' // 50km radius
+      params.radius = searchRadius // Add radius parameter
     }
 
     setAutocompleteParams(params)
-  }
+  }, [location, sessionToken, searchRadius])
+
+  // Effect for debounced search
+  useEffect(() => {
+    if (debouncedSearchText.length >= 2) {
+      handleSearchAPI(debouncedSearchText)
+    }
+  }, [debouncedSearchText, handleSearchAPI])
 
   // Update predictions when data changes
   useEffect(() => {
-    if (autocompleteData) {
-      console.log('🔍 Autocomplete response:', autocompleteData)
+    if (searchData) {
+      console.log('🔍 Search response:', searchData)
     }
-  }, [autocompleteData])
+  }, [searchData])
+
+  // Read search query from URL params on mount
+  useEffect(() => {
+    const qParam = searchParams.get('q')
+    if (qParam) {
+      console.log('📖 Reading search query from URL:', qParam)
+      setSearchText(qParam)
+      setDebouncedSearchText(qParam)
+      // Auto-trigger search
+      handleSearchAPI(qParam)
+    }
+  }, [searchParams, handleSearchAPI])
+
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleSearch = (keyword?: string) => {
     const searchKeyword = keyword || searchText
@@ -121,7 +161,7 @@ export default function SearchResultsPage() {
       message.warning('検索キーワードを入力してください')
       return
     }
-    
+
     handleSearchAPI(searchKeyword)
   }
 
@@ -129,20 +169,17 @@ export default function SearchResultsPage() {
     handleSearch()
   }
 
-  // Get predictions from query data
-  const predictions = autocompleteData?.predictions || []
+  // Handle input change with debouncing
+  const handleInputChange = (value: string) => {
+    setSearchText(value)
+    debounceSearch(value)
+  }
 
-  // Sort predictions
-  const sortedPredictions = useMemo(() => {
-    const sorted = [...predictions]
-    
-    if (sortBy === 'rating') {
-      // Goong doesn't provide rating in autocomplete, keep original order
-      return sorted
-    }
-    
-    return sorted
-  }, [predictions, sortBy])
+  // Get predictions from autocomplete data
+  const predictions = searchData?.predictions || []
+
+  // Get predictions from API (already filtered and sorted by relevance)
+  const results = predictions
 
   return (
     <div className="space-y-6 p-6 max-w-7xl mx-auto">
@@ -154,17 +191,28 @@ export default function SearchResultsPage() {
         >
           ← 戻る
         </Button>
-        
-        <div className="flex-1 flex gap-3">
-          <Input
-            size="large"
-            placeholder="場所を検索... (例: 公園、遊び場、レストラン)"
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            onPressEnter={handleSearchClick}
-            className="flex-1"
-          />
+
+        <div className="flex-1 flex gap-3 relative">
+          {/* Search Input with Suggestions Dropdown */}
+          <div className="flex-1 relative">
+            <Input
+              ref={searchInputRef}
+              size="large"
+              placeholder="場所を検索... (例: 公園、遊び場、レストラン)"
+              prefix={<SearchOutlined />}
+              suffix={
+                (isTyping || isFetching) && searchText.length >= 2 ? (
+                  <Spin size="small" />
+                ) : null
+              }
+              value={searchText}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onPressEnter={handleSearchClick}
+              className="w-full"
+              autoComplete="off"
+            />
+          </div>
+          
           <Button
             type="primary"
             size="large"
@@ -180,33 +228,37 @@ export default function SearchResultsPage() {
       {/* Search Result Header - Pink Box */}
       <div className="bg-linear-to-r from-pink-400 to-purple-400 rounded-lg p-8 text-white text-center">
         <h1 className="text-3xl font-bold">検索結果</h1>
+        {searchText && (
+          <div className="mt-2 text-pink-100">
+            「{searchText}」の検索結果 
+            {searchData?.predictions && (
+              <span className="ml-2">({searchData.predictions.length}件)</span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Filters and Sort Section */}
-      <div className="flex justify-between items-center gap-4 flex-wrap">
+      {/* API Supported Filters */}
+      <div className="flex justify-start items-center gap-6">
         <div className="flex items-center gap-3">
-          <span className="text-gray-700 font-medium">並び替え:</span>
-          <Select 
-            value={sortBy} 
-            onChange={setSortBy} 
-            style={{ width: 200 }}
+          <span className="text-gray-700 font-medium">検索範囲:</span>
+          <Select
+            value={searchRadius}
+            onChange={setSearchRadius}
+            style={{ width: 150 }}
             size="large"
+            disabled={!location || (location.lat === 0 && location.lng === 0)}
           >
-            <Option value="relevant">最も関連度の高い</Option>
-            <Option value="newest">新着順</Option>
-            <Option value="rating">評価順</Option>
-            <Option value="price">料金順</Option>
+            <Option value="1">1km</Option>
+            <Option value="5">5km</Option>
+            <Option value="10">10km</Option>
+            <Option value="25">25km</Option>
+            <Option value="50">50km</Option>
+            <Option value="100">100km</Option>
           </Select>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button size="large">
-            フィルター
-          </Button>
-          <div className="flex gap-2">
-            <Button size="large">屋内</Button>
-            <Button size="large">屋外</Button>
-          </div>
+          {(!location || (location.lat === 0 && location.lng === 0)) && (
+            <span className="text-gray-400 text-sm">位置情報が必要です</span>
+          )}
         </div>
       </div>
 
@@ -216,7 +268,7 @@ export default function SearchResultsPage() {
           <Spin size="large" />
           <p className="mt-4 text-gray-600">検索中...</p>
         </div>
-      ) : sortedPredictions.length === 0 ? (
+      ) : results.length === 0 ? (
         <Card>
           <div className="text-center py-8">
             <SearchOutlined className="text-6xl text-gray-300 mb-4" />
@@ -224,22 +276,22 @@ export default function SearchResultsPage() {
               検索結果が見つかりませんでした
             </p>
             <p className="text-gray-400 text-sm">
-              別のキーワードやフィルターを試してください
+              別のキーワードを試してください
             </p>
           </div>
         </Card>
       ) : (
         <div className="space-y-4">
-          {sortedPredictions.map((prediction: any) => {
+          {results.map((prediction: any) => {
             return (
-              <Card 
-                key={prediction.place_id} 
+              <Card
+                key={prediction.place_id}
                 className="hover:shadow-xl transition-shadow border border-gray-200"
                 bodyStyle={{ padding: 0 }}
               >
                 <div className="flex gap-0">
-                  {/* Image */}
-                  <div 
+                  {/* Image Placeholder */}
+                  <div
                     className="w-64 h-48 bg-gray-300 shrink-0 flex items-center justify-center cursor-pointer"
                     onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
                   >
@@ -249,16 +301,16 @@ export default function SearchResultsPage() {
                   {/* Content */}
                   <div className="flex-1 p-6 flex flex-col justify-between">
                     <div>
-                      <h3 
+                      <h3
                         className="text-2xl font-bold text-gray-900 mb-3 cursor-pointer hover:text-blue-600 transition-colors"
                         onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
                       >
                         {prediction.structured_formatting?.main_text || prediction.description}
                       </h3>
-                      
+
                       <div className="flex items-start gap-2 text-base text-gray-700 mb-3">
                         <EnvironmentOutlined className="text-lg mt-1" />
-                        <span>{prediction.description}</span>
+                        <span>{prediction.structured_formatting?.secondary_text || prediction.description}</span>
                       </div>
                     </div>
 

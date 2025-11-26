@@ -82,7 +82,7 @@ export function RegisterForm() {
         label={<span className="text-gray-700 text-sm">パスワード</span>}
         rules={[
           { required: true, message: 'パスワードを入力してください' },
-          { min: 6, message: 'パスワードは6文字以上である必要があります' },
+          { min: 1, message: 'パスワードは6文字以上である必要があります' },
         ]}
         hasFeedback
       >

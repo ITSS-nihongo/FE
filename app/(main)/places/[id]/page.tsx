@@ -1,11 +1,52 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { Card, Button, Spin, Avatar, Empty, Input, message, Modal, Rate } from 'antd'
-import { UserOutlined, EnvironmentOutlined, ClockCircleOutlined, StarFilled, SaveOutlined } from '@ant-design/icons'
+import { Card, Button, Spin, Avatar, Empty, Input, message, Modal, Rate, Upload, Image, Form, TimePicker, Select } from 'antd'
+import {
+  UserOutlined, EnvironmentOutlined, ClockCircleOutlined, StarFilled,
+  SaveOutlined, CheckCircleFilled, PlusOutlined, DeleteOutlined, HeartFilled, HeartOutlined,
+  PlayCircleOutlined, FileImageOutlined
+} from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getApiMapsPlaceDetailsOptions, postApiPlacesImportFromMapMutation, postApiReviewsMutation, getApiReviewsPlaceByPlaceIdOptions, getApiPlacesOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { getApiMapsV2PlaceDetailsOptions, postApiPlacesImportFromMapMutation, getApiPlacesOptions, uploadFileMutation, patchApiPlacesByPlaceIdMutation } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { useCreateReview, useFindManyReview } from '@/lib/api/generated'
+import { useUpdatePlace, useFindManyPlace } from '@/lib/api/generated'
+import { useCreateFavorite, useDeleteFavorite, useFindManyFavorite } from '@/lib/api/generated/favorite'
+import { useFindManyMedia, useCreateMedia, useDeleteMedia } from '@/lib/api/generated/media'
+import { tokenManager } from '@/lib/utils/token'
 import { useState, useEffect } from 'react'
+
+// Helper function to decode JWT and get user ID
+const getUserIdFromToken = (): string | null => {
+  try {
+    const token = tokenManager.getToken()
+    if (!token) {
+      console.warn('No token found')
+      return null
+    }
+    
+    // Validate token format
+    const tokenParts = token.split('.')
+    if (tokenParts.length !== 3) {
+      console.error('Invalid token format')
+      return null
+    }
+    
+    // Decode JWT payload (simple base64 decode)
+    const payload = JSON.parse(atob(tokenParts[1]))
+    console.log('Token payload:', payload) // Debug log
+    
+    const userId = payload.userId || payload.sub || payload.id || null
+    if (!userId) {
+      console.error('No userId found in token payload')
+    }
+    
+    return userId
+  } catch (error) {
+    console.error('Error decoding token:', error)
+    return null
+  }
+}
 
 const { TextArea } = Input
 
@@ -15,16 +56,19 @@ export default function PlaceDetailPage() {
   const queryClient = useQueryClient()
   const placeId = params.id as string
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
-  const [reviewRating, setReviewRating] = useState(5)
-  const [reviewComment, setReviewComment] = useState('')
-  const [placeType, setPlaceType] = useState<'INDOOR' | 'OUTDOOR'>('OUTDOOR')
-  const [minAge, setMinAge] = useState(0)
-  const [maxAge, setMaxAge] = useState(18)
+  const [isUpdatePlaceModalOpen, setIsUpdatePlaceModalOpen] = useState(false)
   const [savedPlaceId, setSavedPlaceId] = useState<string | null>(null)
+  const [updateUploadedFiles, setUpdateUploadedFiles] = useState<{id?: string, url: string, type: 'IMAGE' | 'VIDEO', fileName: string}[]>([])
+  const [showAllGallery, setShowAllGallery] = useState(false)
+  
+  // Form instances
+  const [reviewForm] = Form.useForm()
+  const [saveForm] = Form.useForm()
+  const [updatePlaceForm] = Form.useForm()
 
-  // Fetch place details using generated hook
+  // Fetch place details using Goong API v2
   const { data: placeData, isLoading, error } = useQuery({
-    ...getApiMapsPlaceDetailsOptions({
+    ...getApiMapsV2PlaceDetailsOptions({
       query: {
         place_id: placeId,
       },
@@ -42,24 +86,96 @@ export default function PlaceDetailPage() {
   })
 
   // Find saved place by externalPlaceId
+  const savedPlace = savedPlacesData?.places?.find(
+    (place: any) => place.externalPlaceId === placeId
+  )
+  
   useEffect(() => {
-    if (savedPlacesData?.places) {
-      const found = savedPlacesData.places.find(
-        (p) => p.externalPlaceId === placeId
-      )
-      if (found) {
-        setSavedPlaceId(found.id)
-      }
+    if (savedPlace) {
+      setSavedPlaceId(savedPlace.id)
     }
-  }, [savedPlacesData, placeId])
+  }, [savedPlace])
 
-  // Fetch reviews if place is saved
-  const { data: reviewsData } = useQuery({
-    ...getApiReviewsPlaceByPlaceIdOptions({
-      path: {
-        placeId: savedPlaceId!,
-      },
-    }),
+  // Fetch saved place details from ZenStack (for updated info)
+  const { data: savedPlaceDetails } = useFindManyPlace({
+    where: {
+      externalPlaceId: placeId,
+      isActive: true
+    },
+    take: 1
+  }, {
+    enabled: !!placeId,
+  })
+
+  // Use the first saved place if available
+  const savedPlaceData = savedPlaceDetails?.[0]
+
+  // Get current user ID for favorites
+  const currentUserId = getUserIdFromToken()
+  console.log('Current User ID:', currentUserId)
+
+  // Check if current place is favorited by user
+  const { data: userFavorites } = useFindManyFavorite({
+    where: {
+      userId: currentUserId!,
+      placeId: savedPlaceId!
+    }
+  }, {
+    enabled: !!currentUserId && !!savedPlaceId,
+  })
+
+  const isFavorited = userFavorites && userFavorites.length > 0
+
+  // Add/remove favorite mutations
+  const addFavoriteMutation = useCreateFavorite({
+    onSuccess: () => {
+      message.success('お気に入りに追加しました')
+      queryClient.invalidateQueries({ queryKey: ['Favorite', 'findMany'] })
+    },
+    onError: () => {
+      message.error('お気に入りの追加に失敗しました')
+    }
+  })
+
+  const removeFavoriteMutation = useDeleteFavorite({
+    onSuccess: () => {
+      message.success('お気に入りから削除しました')
+      queryClient.invalidateQueries({ queryKey: ['Favorite', 'findMany'] })
+    },
+    onError: () => {
+      message.error('お気に入りの削除に失敗しました')
+    }
+  })
+
+  // Fetch reviews using ZenStack
+  const { data: reviewsData } = useFindManyReview({
+    where: {
+      placeId: savedPlaceId!,
+    },
+    include: {
+      user: {
+        select: {
+          name: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
+  }, {
+    enabled: !!savedPlaceId,
+  })
+
+  // Fetch media files for the place
+  const { data: mediaData } = useFindManyMedia({
+    where: {
+      placeId: savedPlaceId!,
+      isActive: true
+    },
+    orderBy: {
+      sortOrder: 'asc'
+    }
+  }, {
     enabled: !!savedPlaceId,
   })
 
@@ -81,76 +197,258 @@ export default function PlaceDetailPage() {
     },
   })
 
-  // Submit review mutation
-  const submitReviewMutation = useMutation({
-    ...postApiReviewsMutation(),
+  // Update place with additional information using ZenStack
+  const updatePlaceMutation = useUpdatePlace({
+    onSuccess: () => {
+      message.success('地点情報を更新しました')
+      queryClient.invalidateQueries({ queryKey: ['getApiPlaces'] })
+      queryClient.invalidateQueries({ queryKey: ['getApiMapsV2PlaceDetails'] })
+      queryClient.invalidateQueries({ queryKey: ['Place', 'findMany'] })
+    },
+    onError: (error: any) => {
+      message.error(`地点情報の更新に失敗しました: ${error.message}`)
+    }
+  })
+
+  // Submit review mutation using ZenStack
+  const submitReviewMutation = useCreateReview({
     onSuccess: () => {
       message.success('レビューを投稿しました')
       setIsReviewModalOpen(false)
-      setReviewComment('')
-      setReviewRating(5)
-      queryClient.invalidateQueries({ queryKey: ['getApiReviewsPlaceByPlaceId', { path: { placeId: savedPlaceId } }] })
+      resetReviewForm()
+      queryClient.invalidateQueries({ queryKey: ['Review', 'findMany'] })
+      queryClient.invalidateQueries({ queryKey: ['getApiPlaces'] })
     },
     onError: (error: any) => {
-      const errorMsg = error?.message || ''
-      if (errorMsg.includes('already reviewed')) {
+      console.error('Review creation error:', error)
+      const errorMsg = error?.message || error?.error?.message || ''
+      
+      if (errorMsg.includes('already reviewed') || errorMsg.includes('Unique constraint')) {
         message.error('この地点を既にレビューしています')
+      } else if (errorMsg.includes('Foreign key constraint') || errorMsg.includes('userId_fkey')) {
+        message.error('ユーザー認証に問題があります。再度ログインしてください。')
+      } else if (errorMsg.includes('placeId')) {
+        message.error('地点情報に問題があります。ページを更新してください。')
       } else {
-        message.error('レビューの投稿に失敗しました')
+        message.error(`レビューの投稿に失敗しました: ${errorMsg}`)
       }
     },
   })
 
+  // Media creation mutation
+  const createMediaMutation = useCreateMedia({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['Media', 'findMany'] })
+    },
+    onError: (error: any) => {
+      console.error('Media creation error:', error)
+      message.error('メディアファイルの保存に失敗しました')
+    }
+  })
+
+  // Media deletion mutation
+  const deleteMediaMutation = useDeleteMedia({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['Media', 'findMany'] })
+      message.success('メディアファイルを削除しました')
+    },
+    onError: (error: any) => {
+      console.error('Media deletion error:', error)
+      message.error('メディアファイルの削除に失敗しました')
+    }
+  })
+
+  // Upload file mutation using presigned URL
+  const uploadFileMut = useMutation({
+    mutationFn: async (file: File) => {
+      try {
+        // Step 1: Get presigned URL from backend
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+        const presignedResponse = await fetch(`${backendUrl}/api/minio/presigned-upload-url?fileName=${encodeURIComponent(file.name)}&folder=places`)
+        if (!presignedResponse.ok) {
+          throw new Error('Failed to get presigned URL')
+        }
+        const presignedData = await presignedResponse.json()
+        
+        console.log('Presigned data:', presignedData)
+        
+        // Step 2: Upload file to MinIO using presigned URL
+        const uploadResponse = await fetch(presignedData.uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: {
+            'Content-Type': file.type
+          }
+        })
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload file to MinIO')
+        }
+        
+        console.log('Upload successful, public URL:', presignedData.publicUrl)
+        
+        // Step 3: Determine media type based on file type
+        const mediaType = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+        
+        // Step 4: Return file data
+        return {
+          fileUrl: presignedData.publicUrl,
+          fileName: presignedData.fileName,
+          mediaType,
+          fileSize: file.size,
+          mimeType: file.type
+        }
+      } catch (error) {
+        console.error('Upload process error:', error)
+        throw error
+      }
+    },
+    onSuccess: (data) => {
+      // This will be handled by specific upload handlers
+      message.success(`${data.mediaType === 'VIDEO' ? '動画' : '画像'}をアップロードしました`)
+    },
+    onError: (error) => {
+      message.error('ファイルのアップロードに失敗しました')
+      console.error('Upload error:', error)
+    },
+  })
+
+  // Reset review form
+  const resetReviewForm = () => {
+    reviewForm.resetFields()
+  }
+
+  // Reset update place form
+  const resetUpdatePlaceForm = () => {
+    updatePlaceForm.resetFields()
+    setUpdateUploadedFiles([])
+  }
+
+  // Handle file upload for place update
+  const handleUpdateFileUpload = (file: File) => {
+    const uploadMutation = {
+      mutateAsync: uploadFileMut.mutateAsync,
+      mutate: (file: File) => {
+        uploadFileMut.mutateAsync(file).then((data) => {
+          setUpdateUploadedFiles(prev => [...prev, {
+            url: data.fileUrl,
+            type: data.mediaType as 'IMAGE' | 'VIDEO',
+            fileName: data.fileName
+          }])
+          message.success(`${data.mediaType === 'VIDEO' ? '動画' : '画像'}をアップロードしました`)
+        }).catch((error) => {
+          message.error('ファイルのアップロードに失敗しました')
+          console.error('Upload error:', error)
+        })
+      }
+    }
+    uploadMutation.mutate(file)
+  }
+
+  // Remove uploaded file (for update)
+  const handleRemoveUpdateFile = (fileUrl: string) => {
+    setUpdateUploadedFiles(prev => prev.filter(item => item.url !== fileUrl))
+  }
+
+  // Delete media file from database
+  const handleDeleteMedia = (mediaId: string) => {
+    deleteMediaMutation.mutate({
+      where: { id: mediaId }
+    })
+  }
+
+  // Handle favorite toggle
+  const handleToggleFavorite = () => {
+    if (!currentUserId || !savedPlaceId) {
+      message.warning('お気に入りに追加するには、まずログインして地点を保存してください')
+      return
+    }
+
+    if (isFavorited && userFavorites?.[0]) {
+      removeFavoriteMutation.mutate({
+        where: { id: userFavorites[0].id }
+      })
+    } else {
+      addFavoriteMutation.mutate({
+        data: {
+          userId: currentUserId,
+          placeId: savedPlaceId
+        }
+      })
+    }
+  }
+
   const handleSavePlace = () => {
-    Modal.confirm({
+    const modal = Modal.confirm({
       title: '地点を保存',
+      width: 500,
       content: (
-        <div className="space-y-4 mt-4">
-          <div>
-            <label className="block mb-2">タイプ:</label>
-            <select
-              className="w-full p-2 border rounded"
-              value={placeType}
-              onChange={(e) => setPlaceType(e.target.value as 'INDOOR' | 'OUTDOOR')}
+        <div className="mt-4">
+          <Form
+            form={saveForm}
+            layout="vertical"
+            initialValues={{
+              placeType: 'OUTDOOR',
+              minAge: 0,
+              maxAge: 18
+            }}
+          >
+            <Form.Item
+              label="タイプ"
+              name="placeType"
+              rules={[{ required: true, message: 'タイプを選択してください' }]}
             >
-              <option value="INDOOR">屋内</option>
-              <option value="OUTDOOR">屋外</option>
-            </select>
-          </div>
-          <div>
-            <label className="block mb-2">最小年齢:</label>
-            <input
-              type="number"
-              className="w-full p-2 border rounded"
-              value={minAge}
-              onChange={(e) => setMinAge(Number(e.target.value))}
-              min={0}
-              max={18}
-            />
-          </div>
-          <div>
-            <label className="block mb-2">最大年齢:</label>
-            <input
-              type="number"
-              className="w-full p-2 border rounded"
-              value={maxAge}
-              onChange={(e) => setMaxAge(Number(e.target.value))}
-              min={0}
-              max={18}
-            />
-          </div>
+              <Select size="large">
+                <Select.Option value="INDOOR">屋内</Select.Option>
+                <Select.Option value="OUTDOOR">屋外</Select.Option>
+              </Select>
+            </Form.Item>
+            
+            <Form.Item
+              label="最小年齢"
+              name="minAge"
+              rules={[{ required: true, message: '最小年齢を入力してください' }]}
+            >
+              <Input
+                type="number"
+                min={0}
+                max={18}
+                size="large"
+                suffix="歳"
+              />
+            </Form.Item>
+            
+            <Form.Item
+              label="最大年齢"
+              name="maxAge"
+              rules={[{ required: true, message: '最大年齢を入力してください' }]}
+            >
+              <Input
+                type="number"
+                min={0}
+                max={18}
+                size="large"
+                suffix="歳"
+              />
+            </Form.Item>
+          </Form>
         </div>
       ),
       onOk: () => {
-        savePlaceMutation.mutate({
-          body: {
-            place_id: placeId,
-            placeType,
-            minAge,
-            maxAge,
-          },
+        return saveForm.validateFields().then((values) => {
+          savePlaceMutation.mutate({
+            body: {
+              place_id: placeId,
+              placeType: values.placeType,
+              minAge: values.minAge,
+              maxAge: values.maxAge,
+            },
+          })
         })
       },
+      onCancel: () => {
+        saveForm.resetFields()
+      }
     })
   }
 
@@ -160,23 +458,106 @@ export default function PlaceDetailPage() {
       return
     }
 
-    if (!reviewComment.trim()) {
-      message.warning('コメントを入力してください')
+    // Validate user authentication
+    const userId = getUserIdFromToken()
+    if (!userId) {
+      message.error('ログインが必要です。再度ログインしてください。')
       return
     }
 
-    submitReviewMutation.mutate({
-      body: {
-        placeId: savedPlaceId,
-        rating: reviewRating,
-        comment: reviewComment,
-      },
+    reviewForm.validateFields().then(async (values) => {
+      try {
+        console.log('Creating review with data:', {
+          rating: values.rating,
+          comment: values.comment,
+          placeId: savedPlaceId,
+          userId: userId
+        })
+
+        submitReviewMutation.mutate({
+          data: {
+            rating: values.rating,
+            comment: values.comment,
+            placeId: savedPlaceId,
+            userId: userId,
+          },
+        })
+      } catch (error) {
+        console.error('Error in review submission:', error)
+        message.error('レビューの投稿中にエラーが発生しました')
+      }
+    }).catch((errorInfo) => {
+      console.log('Validation failed:', errorInfo)
+    })
+  }
+
+  const handleUpdatePlace = () => {
+    if (!savedPlaceId) {
+      message.warning('地点を更新するには、まず地点を保存してください')
+      return
+    }
+
+    const userId = getUserIdFromToken()
+    if (!userId) {
+      message.error('ログインが必要です。再度ログインしてください。')
+      return
+    }
+
+    updatePlaceForm.validateFields().then(async (values) => {
+      try {
+        // Update place with additional information
+        if (values.description || values.area || values.openingTime || values.closingTime || values.minAge !== undefined || values.maxAge !== undefined) {
+          await updatePlaceMutation.mutateAsync({
+            where: {
+              id: savedPlaceId
+            },
+            data: {
+              description: values.description || undefined,
+              area: values.area ? parseFloat(values.area) : undefined,
+              openingTime: values.openingTime ? values.openingTime.format('HH:mm') : undefined,
+              closingTime: values.closingTime ? values.closingTime.format('HH:mm') : undefined,
+              minAge: values.minAge !== undefined ? parseInt(values.minAge) : undefined,
+              maxAge: values.maxAge !== undefined ? parseInt(values.maxAge) : undefined,
+              updatedAt: new Date()
+            }
+          })
+        }
+
+        // Save uploaded files as Media records
+        if (updateUploadedFiles.length > 0) {
+          for (let i = 0; i < updateUploadedFiles.length; i++) {
+            const file = updateUploadedFiles[i]
+            await createMediaMutation.mutateAsync({
+              data: {
+                fileName: file.fileName,
+                fileUrl: file.url,
+                mediaType: file.type,
+                placeId: savedPlaceId,
+                uploadedBy: userId,
+                sortOrder: (mediaData?.length || 0) + i,
+                isActive: true
+              }
+            })
+          }
+        }
+
+        message.success('地点情報を更新しました')
+        setIsUpdatePlaceModalOpen(false)
+        resetUpdatePlaceForm()
+        queryClient.invalidateQueries({ queryKey: ['Place', 'findMany'] })
+        queryClient.invalidateQueries({ queryKey: ['Media', 'findMany'] })
+      } catch (error) {
+        console.error('Error in place update:', error)
+        message.error('地点情報の更新中にエラーが発生しました')
+      }
+    }).catch((errorInfo) => {
+      console.log('Validation failed:', errorInfo)
     })
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-white">
         <Spin size="large" />
       </div>
     )
@@ -184,10 +565,10 @@ export default function PlaceDetailPage() {
 
   if (error || !placeData?.result) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <Card>
+      <div className="max-w-4xl mx-auto p-6 min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md text-center">
           <Empty description="地点情報が見つかりませんでした" />
-          <div className="text-center mt-4">
+          <div className="mt-6">
             <Button type="primary" onClick={() => router.back()}>
               戻る
             </Button>
@@ -199,331 +580,730 @@ export default function PlaceDetailPage() {
 
   const place = placeData.result
 
+  // Calculate average rating from reviews
+  const averageRating = reviewsData && reviewsData.length > 0 
+    ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
+    : place.rating || 0
+
+  const totalReviews = reviewsData?.length || place.user_ratings_total || 0
+
   return (
-    <div className="min-h-screen bg-gray-50 w-full">
-      <div className="w-full px-6 py-6 space-y-6">
-      {/* Main Image */}
-      <div className="relative w-full h-96 bg-linear-to-br from-blue-100 via-purple-100 to-pink-100 rounded-2xl overflow-hidden">
-        {place.photos && place.photos.length > 0 && place.photos[0].url ? (
+    <div className="min-h-screen bg-white w-full pb-20">
+      {/* Main Image - Full Width */}
+      <div className="w-full max-h-[500px] overflow-hidden bg-gray-100 flex items-center justify-center">
+        {/* Prioritize user uploaded media first, then fallback to Goong API photos */}
+        {mediaData && mediaData.length > 0 && mediaData[0].mediaType === 'IMAGE' ? (
+          <img
+            src={mediaData[0].fileUrl}
+            alt={mediaData[0].altText || place.name}
+            className="w-full h-auto max-h-[500px] object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none'
+            }}
+          />
+        ) : place.photos && place.photos.length > 0 && place.photos[0].url ? (
           <img
             src={place.photos[0].url}
             alt={place.name}
-            className="w-full h-full object-cover"
+            className="w-full h-auto max-h-[500px] object-cover"
             onError={(e) => {
-              // Fallback nếu ảnh lỗi
               e.currentTarget.style.display = 'none'
             }}
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-            <svg className="w-32 h-32 mb-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-            </svg>
+          <div className="w-full h-64 bg-gray-100 flex flex-col items-center justify-center text-gray-400">
             <p className="text-lg font-medium">写真準備中</p>
           </div>
         )}
       </div>
 
-      {/* Place Name and Info Cards */}
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-center flex-1">{place.name}</h1>
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            size="large"
-            onClick={handleSavePlace}
-            loading={savePlaceMutation.isPending}
-            className="bg-blue-500 hover:bg-blue-600"
-          >
-            地点を保存
-          </Button>
+      <div className="w-full px-4 py-6 space-y-8">
+        {/* Title */}
+        <div className="text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-black mb-2">{place.name}</h1>
         </div>
-        
-        <div className="grid grid-cols-3 gap-4">
-          {/* Rating Card - Only show if rating exists */}
-          {place.rating && (
-            <Card className="text-center">
-              <div className="flex flex-col items-center">
-                <div className="flex gap-1 mb-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <StarFilled
-                      key={star}
-                      className={star <= Math.round(place.rating!) ? 'text-yellow-400' : 'text-gray-300'}
-                      style={{ fontSize: '20px' }}
-                    />
-                  ))}
-                </div>
-                <p className="text-lg font-bold m-0">
-                  {place.rating.toFixed(1)}/5
-                </p>
-                {place.user_ratings_total && (
-                  <p className="text-sm text-gray-500 m-0">({place.user_ratings_total} レビュー)</p>
-                )}
-              </div>
-            </Card>
-          )}
 
-          {/* Location Card */}
-          <Card className="text-center">
-            <div className="flex flex-col items-center">
-              <EnvironmentOutlined className="text-2xl mb-2" />
-              <p className="text-sm m-0 line-clamp-2">
-                {place.vicinity || place.formatted_address.split(',')[0]}
-              </p>
+        {/* Info Cards Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Rating */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-center shadow-sm h-16">
+            <div className="flex items-center gap-2">
+              <div className="flex text-yellow-400">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <StarFilled
+                    key={star}
+                    style={{ fontSize: '18px' }}
+                    className={star <= Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-200'}
+                  />
+                ))}
+              </div>
+              <span className="font-bold text-lg ml-2">{averageRating.toFixed(1)}</span>
+              <span className="text-gray-400 text-sm">({totalReviews})</span>
             </div>
-          </Card>
+          </div>
 
-          {/* Hours Card - Only show if hours exist */}
-          {place.opening_hours?.open_now !== undefined && (
-            <Card className="text-center">
-              <div className="flex flex-col items-center">
-                <ClockCircleOutlined className="text-2xl mb-2" />
-                <p className="text-sm font-semibold m-0 mb-1">
-                  {place.opening_hours.open_now ? '営業中' : '営業時間外'}
-                </p>
-                {place.opening_hours.weekday_text?.[0] && (
-                  <p className="text-xs text-gray-600 m-0">
-                    {place.opening_hours.weekday_text[0].split(': ')[1]}
-                  </p>
+          {/* Address */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-center shadow-sm h-16">
+            <div className="flex items-center gap-2 truncate w-full justify-center px-2">
+              <EnvironmentOutlined className="text-lg" />
+              <span className="font-bold text-sm truncate">
+                {place.vicinity || place.formatted_address?.split(',')[0] || place.name}
+              </span>
+            </div>
+          </div>
+
+          {/* Working Hours */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-center shadow-sm h-16">
+            <div className="flex items-center gap-2">
+              <ClockCircleOutlined className="text-lg" />
+              <span className="font-bold text-sm">
+                {savedPlaceData?.openingTime && savedPlaceData?.closingTime 
+                  ? `${savedPlaceData.openingTime}-${savedPlaceData.closingTime}`
+                  : place.opening_hours?.open_now !== undefined 
+                    ? place.opening_hours.open_now ? '営業中' : '営業時間外'
+                    : '営業時間不明'
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Information */}
+        {(place.phone_number || place.website || place.editorial_summary?.overview || savedPlaceData?.description || savedPlaceData?.area || savedPlaceData?.openingTime) && (
+          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-bold mb-4">詳細情報</h3>
+            <div className="space-y-3">
+              {place.phone_number && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="text-green-600 text-sm font-bold">📞</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">電話番号</p>
+                    <a href={`tel:${place.phone_number}`} className="text-base font-medium text-green-600 hover:underline">
+                      {place.phone_number}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              {place.website && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-bold">🌐</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">ウェブサイト</p>
+                    <a 
+                      href={place.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-base font-medium text-blue-600 hover:underline"
+                    >
+                      公式サイトを見る
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {place.formatted_address && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <EnvironmentOutlined className="text-gray-600 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">住所</p>
+                    <p className="text-base font-medium">{place.formatted_address}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced description - prioritize user-added info */}
+              {(savedPlaceData?.description || place.editorial_summary?.overview) && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mt-1">
+                    <span className="text-purple-600 text-sm font-bold">ℹ️</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">説明</p>
+                    <p className="text-base">{savedPlaceData?.description || place.editorial_summary?.overview}</p>
+                    {savedPlaceData?.description && (
+                      <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full mt-1 inline-block">
+                        ユーザー追加情報
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Area information from saved data */}
+              {savedPlaceData?.area && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <span className="text-indigo-600 text-sm font-bold">📏</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">面積</p>
+                    <p className="text-base font-medium">{savedPlaceData.area} m²</p>
+                    <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full mt-1 inline-block">
+                      ユーザー追加情報
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced opening hours - prioritize saved data */}
+              {(savedPlaceData?.openingTime && savedPlaceData?.closingTime) ? (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mt-1">
+                    <ClockCircleOutlined className="text-orange-600 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">営業時間</p>
+                    <p className="text-base font-medium">
+                      {savedPlaceData.openingTime} - {savedPlaceData.closingTime}
+                    </p>
+                    <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full mt-1 inline-block">
+                      ユーザー追加情報
+                    </span>
+                  </div>
+                </div>
+              ) : place.opening_hours?.weekday_text && place.opening_hours.weekday_text.length > 1 && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mt-1">
+                    <ClockCircleOutlined className="text-orange-600 text-sm" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">営業時間</p>
+                    <div className="space-y-1">
+                      {place.opening_hours.weekday_text.map((time, index) => (
+                        <p key={index} className="text-sm">{time}</p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Age range information */}
+              {(savedPlaceData?.minAge !== undefined && savedPlaceData?.maxAge !== undefined) && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center">
+                    <span className="text-pink-600 text-sm font-bold">👶</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">適用年齢</p>
+                    <p className="text-base font-medium">{savedPlaceData.minAge}歳 - {savedPlaceData.maxAge}歳</p>
+                    <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full mt-1 inline-block">
+                      ユーザー追加情報
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Gallery Grid */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold">ギャラリー</h3>
+            {(mediaData && mediaData.length > 4) && (
+              <button 
+                onClick={() => setShowAllGallery(!showAllGallery)}
+                className="text-purple-500 text-sm font-medium hover:underline"
+              >
+                {showAllGallery ? '表示を減らす' : `すべて見る (${mediaData.length})`}
+              </button>
+            )}
+          </div>
+          
+          {/* User uploaded media prioritized */}
+          {mediaData && mediaData.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {mediaData.slice(0, showAllGallery ? mediaData.length : 4).map((media: any, index: number) => (
+                <div key={media.id} className="relative group rounded-2xl overflow-hidden bg-gray-100 aspect-square">
+                  {media.mediaType === 'IMAGE' ? (
+                    <div className="w-full h-full">
+                      <Image
+                        src={media.fileUrl}
+                        alt={media.altText || `Gallery ${index + 1}`}
+                        width="100%"
+                        height="100%"
+                        className="object-cover"
+                        preview={{
+                          mask: <div className="text-white">プレビュー</div>
+                        }}
+                        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                      <video
+                        src={media.fileUrl}
+                        className="w-full h-full object-cover"
+                        muted
+                        preload="metadata"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 group-hover:bg-opacity-20 transition-all">
+                        <PlayCircleOutlined className="text-white text-3xl" />
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute top-2 left-2 z-10">
+                    <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                      {media.mediaType === 'IMAGE' ? '画像' : '動画'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Fallback to original Goong API photos */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[400px]">
+              <div className="h-full rounded-3xl overflow-hidden bg-gray-100">
+                {place.photos && place.photos.length > 1 ? (
+                  <img
+                    src={place.photos[1].url}
+                    alt="Gallery 1"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                    <FileImageOutlined className="text-4xl mb-2" />
+                    <p>写真準備中</p>
+                  </div>
                 )}
               </div>
-            </Card>
+              <div className="grid grid-rows-2 gap-4 h-full">
+                <div className="rounded-3xl overflow-hidden bg-gray-100">
+                  {place.photos && place.photos.length > 2 ? (
+                    <img
+                      src={place.photos[2].url}
+                      alt="Gallery 2"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      写真準備中
+                    </div>
+                  )}
+                </div>
+                <div className="rounded-3xl overflow-hidden bg-gray-100">
+                  {place.photos && place.photos.length > 3 ? (
+                    <img
+                      src={place.photos[3].url}
+                      alt="Gallery 3"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      写真準備中
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Sub Images Gallery */}
-      <div className="grid grid-cols-3 gap-4 max-w-6xl mx-auto">
-        {place.photos && place.photos.length > 1 && place.photos.slice(1, 4).map((photo, index) => (
-          <div key={index} className="aspect-video bg-linear-to-br from-blue-50 to-purple-50 rounded-xl overflow-hidden">
-            {photo.url ? (
-              <img
-                src={photo.url}
-                alt={`${place.name} - Photo ${index + 2}`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-300">
-                <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                </svg>
+        {/* Reviews Section */}
+        <div className="pt-4">
+          <div className="flex justify-between items-end mb-6">
+            <h2 className="text-xl font-bold m-0">レビュー</h2>
+            <button className="text-purple-500 text-sm font-medium hover:underline">
+              すべてを見る
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {reviewsData?.map((review: any) => {
+              return (
+                <div key={review.id} className="bg-white border border-gray-200 rounded-2xl p-4">
+                  <div className="flex gap-3">
+                    <Avatar
+                      size={48}
+                      icon={<UserOutlined />}
+                      className="shrink-0"
+                    />
+                    <div className="flex-1">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm">{review.user?.name || '匿名ユーザー'}</span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(review.createdAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <Rate disabled defaultValue={review.rating} className="text-sm text-yellow-400" />
+                      </div>
+                      {review.comment && (
+                        <p className="mt-2 text-sm text-gray-600 leading-relaxed">
+                          {review.comment}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {(!reviewsData || reviewsData.length === 0) && (
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center">
+                <p className="text-gray-500 text-sm">レビューはまだありません。</p>
               </div>
             )}
           </div>
-        ))}
-        {/* Fill remaining slots with placeholders */}
-        {Array.from({ length: Math.max(0, 3 - (place.photos?.length || 0) + 1) }).map((_, index) => (
-          <div
-            key={`placeholder-${index}`}
-            className="aspect-video bg-linear-to-br from-gray-100 to-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400"
-          >
-            <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-            </svg>
-            <p className="text-xs mt-2">画像なし</p>
+
+          {/* Action Buttons */}
+          <div className="mt-8 space-y-4">
+            {/* Favorite Button */}
+            {savedPlaceId && (
+              <Button
+                size="large"
+                block
+                icon={isFavorited ? <HeartFilled /> : <HeartOutlined />}
+                className={`h-12 rounded-full font-bold text-base shadow-md ${
+                  isFavorited 
+                    ? 'bg-red-500 hover:bg-red-400 border-0 text-white'
+                    : 'bg-white hover:bg-red-50 border-red-300 text-red-500'
+                }`}
+                onClick={handleToggleFavorite}
+                loading={addFavoriteMutation.isPending || removeFavoriteMutation.isPending}
+              >
+                {isFavorited ? 'お気に入りから削除' : 'お気に入りに追加'}
+              </Button>
+            )}
+            
+            {/* Update Place Button */}
+            {savedPlaceId && (
+              <Button
+                size="large"
+                block
+                className="bg-blue-500 hover:bg-blue-400 border-0 h-12 rounded-full text-white font-bold text-base shadow-md"
+                onClick={() => setIsUpdatePlaceModalOpen(true)}
+              >
+                地点情報を更新
+              </Button>
+            )}
+            
+            {/* Write Review Button */}
+            <Button
+              type="primary"
+              size="large"
+              block
+              className="bg-[#C058D3] hover:bg-[#b04cc3] border-0 h-12 rounded-full text-white font-bold text-base shadow-md"
+              onClick={() => {
+                if (!savedPlaceId) {
+                  handleSavePlace()
+                } else {
+                  setIsReviewModalOpen(true)
+                }
+              }}
+            >
+              {savedPlaceId ? 'レビューを書く' : '保存してレビューを書く'}
+            </Button>
           </div>
-        ))}
-      </div>
-
-      {/* Additional Details */}
-      <Card className="mt-8 max-w-6xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6">詳細情報</h2>
-        
-        <div className="space-y-4">
-          {/* Address */}
-          <div className="flex items-start gap-3 pb-4 border-b">
-            <EnvironmentOutlined className="text-xl text-blue-500 mt-1" />
-            <div className="flex-1">
-              <p className="font-semibold mb-1">住所</p>
-              <p className="text-gray-700">{place.formatted_address}</p>
-            </div>
-          </div>
-
-          {/* Phone */}
-          {place.phone_number && (
-            <div className="flex items-start gap-3 pb-4 border-b">
-              <span className="text-xl text-blue-500 mt-1">📞</span>
-              <div className="flex-1">
-                <p className="font-semibold mb-1">電話番号</p>
-                <a href={`tel:${place.phone_number}`} className="text-blue-600 hover:underline">
-                  {place.phone_number}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* Website */}
-          {place.website && (
-            <div className="flex items-start gap-3 pb-4 border-b">
-              <span className="text-xl text-blue-500 mt-1">🌐</span>
-              <div className="flex-1">
-                <p className="font-semibold mb-1">ウェブサイト</p>
-                <a
-                  href={place.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline break-all"
-                >
-                  {place.website}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* Opening Hours */}
-          {place.opening_hours && place.opening_hours.weekday_text && (
-            <div className="flex items-start gap-3 pb-4 border-b">
-              <ClockCircleOutlined className="text-xl text-blue-500 mt-1" />
-              <div className="flex-1">
-                <p className="font-semibold mb-2">営業時間</p>
-                <div className="space-y-1">
-                  {place.opening_hours.weekday_text.map((text, index) => (
-                    <p key={index} className="text-gray-700 text-sm">
-                      {text}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Types */}
-          {place.types && place.types.length > 0 && (
-            <div className="flex items-start gap-3">
-              <span className="text-xl text-blue-500 mt-1">🏷️</span>
-              <div className="flex-1">
-                <p className="font-semibold mb-2">カテゴリー</p>
-                <div className="flex flex-wrap gap-2">
-                  {place.types.map((type) => (
-                    <span
-                      key={type}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
-                    >
-                      {type.replace(/_/g, ' ')}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </Card>
 
-      {/* Reviews Section - Show from DB if place is saved */}
-      {reviewsData && reviewsData.reviews && reviewsData.reviews.length > 0 && (
-        <Card className="mt-8 max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold m-0">レビュー</h2>
-            <div className="text-right">
-              <div className="flex items-center gap-2">
-                <StarFilled className="text-yellow-400" />
-                <span className="text-xl font-bold">{reviewsData.averageRating.toFixed(1)}</span>
-                <span className="text-gray-500">({reviewsData.total} レビュー)</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            {reviewsData.reviews.map((review) => (
-              <Card key={review.id} className="bg-gray-50">
-                <div className="flex gap-4">
-                  <Avatar size={48} icon={<UserOutlined />} />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-semibold m-0">{review.user?.name || '匿名'}</p>
-                        <p className="text-xs text-gray-500 m-0">
-                          {new Date(review.createdAt).toLocaleDateString('ja-JP')}
-                        </p>
-                      </div>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <StarFilled
-                            key={star}
-                            className={star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}
-                            style={{ fontSize: '16px' }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm m-0">{review.comment}</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {/* Write Review Button */}
-      <div className="max-w-6xl mx-auto">
-        <Button
-          type="primary"
-          size="large"
-          block
-          className="mt-6 bg-linear-to-r from-purple-500 to-pink-500 border-0 h-12 text-lg font-semibold"
-          onClick={() => {
-            if (!savedPlaceId) {
-              message.warning('レビューするには、まず地点を保存してください')
-              return
-            }
-            setIsReviewModalOpen(true)
-          }}
-          disabled={!savedPlaceId}
-        >
-          {savedPlaceId ? 'レビューを書く' : '地点を保存してレビュー'}
-        </Button>
-      </div>
-
-      {/* Copyright Footer */}
-      <div className="text-center text-xs text-gray-500 py-8 border-t mt-12">
-        © 2025 TheWeekend. All rights reserved.
-      </div>
       </div>
 
       {/* Review Modal */}
       <Modal
-        title="レビューを書く"
+        title={<div className="text-center text-lg font-bold">レビューを書く</div>}
         open={isReviewModalOpen}
-        onCancel={() => setIsReviewModalOpen(false)}
+        onCancel={() => {
+          setIsReviewModalOpen(false)
+          resetReviewForm()
+        }}
         footer={null}
-        width={600}
+        centered
+        width={700}
+        className="rounded-2xl overflow-hidden"
       >
-        <div className="space-y-4 py-4">
+        <Form
+          form={reviewForm}
+          layout="vertical"
+          initialValues={{
+            rating: 5,
+            comment: ''
+          }}
+          className="space-y-6 py-4"
+        >
+          {/* Rating Section */}
           <div className="text-center">
-            <Rate
-              value={reviewRating}
-              onChange={setReviewRating}
-              style={{ fontSize: 40 }}
-              className="mb-4"
-            />
-          </div>
-          
-          <div>
-            <label className="block mb-2 font-semibold">コメント</label>
-            <TextArea
-              rows={6}
-              value={reviewComment}
-              onChange={(e) => setReviewComment(e.target.value)}
-              placeholder="レビューを入力してください。"
-              className="w-full"
-            />
+            <Form.Item name="rating">
+              <Rate
+                style={{ fontSize: 36 }}
+                className="text-yellow-400"
+              />
+            </Form.Item>
           </div>
 
-          <Button
-            type="primary"
-            size="large"
-            block
-            className="bg-linear-to-r from-purple-500 to-pink-500 border-0 h-12 text-lg font-semibold mt-6"
-            onClick={handleSubmitReview}
+          {/* Comment Section */}
+          <Form.Item
+            name="comment"
+            rules={[{ required: true, message: 'コメントを入力してください' }]}
           >
-            投稿する
-          </Button>
-        </div>
+            <TextArea
+              rows={4}
+              placeholder="レビューを入力してください。"
+              className="rounded-xl"
+            />
+          </Form.Item>
+
+          {/* Submit Button */}
+          <Form.Item className="mb-0">
+            <Button
+              type="primary"
+              size="large"
+              block
+              className="bg-[#C058D3] hover:bg-[#b04cc3] border-0 h-12 rounded-full text-white font-bold"
+              onClick={handleSubmitReview}
+              loading={submitReviewMutation.isPending}
+            >
+              レビューを投稿
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Update Place Modal */}
+      <Modal
+        title={<div className="text-center text-lg font-bold">地点情報を更新</div>}
+        open={isUpdatePlaceModalOpen}
+        onCancel={() => {
+          setIsUpdatePlaceModalOpen(false)
+          resetUpdatePlaceForm()
+        }}
+        footer={null}
+        centered
+        width={700}
+        className="rounded-2xl overflow-hidden"
+      >
+        <Form
+          form={updatePlaceForm}
+          layout="vertical"
+          initialValues={{
+            description: savedPlaceData?.description || '',
+            area: savedPlaceData?.area || '',
+            openingTime: null,
+            closingTime: null,
+            minAge: savedPlaceData?.minAge || 0,
+            maxAge: savedPlaceData?.maxAge || 18
+          }}
+          className="space-y-6 py-4"
+        >
+          {/* Place Information Section */}
+          <div className="bg-blue-50 rounded-xl p-4">
+            <h4 className="text-base font-bold text-gray-900 mb-4">
+              地点の詳細情報を更新
+            </h4>
+            
+            {/* Additional Description */}
+            <Form.Item
+              label="詳細説明"
+              name="description"
+            >
+              <Input.TextArea
+                placeholder="この場所について詳しく教えてください（設備、特徴など）"
+                rows={3}
+                className="rounded-lg"
+              />
+            </Form.Item>
+
+            {/* Area */}
+            <Form.Item
+              label="面積"
+              name="area"
+            >
+              <Input
+                placeholder="面積を入力"
+                suffix="m²"
+                className="rounded-lg"
+              />
+            </Form.Item>
+
+            {/* Age Range Section */}
+            <div>
+              <h5 className="text-sm font-medium text-gray-700 mb-3">適用年齢</h5>
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item
+                  label="最小年齢"
+                  name="minAge"
+                  rules={[
+                    {
+                      validator(_, value) {
+                        if (value === undefined || value === '') return Promise.resolve()
+                        const num = Number(value)
+                        if (isNaN(num) || num < 0 || num > 18) {
+                          return Promise.reject(new Error('0歳から18歳の間で入力してください'))
+                        }
+                        return Promise.resolve()
+                      },
+                    }
+                  ]}
+                >
+                  <Input
+                    type="number"
+                    min={0}
+                    max={18}
+                    className="rounded-lg"
+                    suffix="歳"
+                    placeholder="最小年齢"
+                  />
+                </Form.Item>
+                
+                <Form.Item
+                  label="最大年齢"
+                  name="maxAge"
+                  dependencies={['minAge']}
+                  rules={[
+                    {
+                      validator(_, value) {
+                        if (value === undefined || value === '') return Promise.resolve()
+                        const num = Number(value)
+                        if (isNaN(num) || num < 0 || num > 18) {
+                          return Promise.reject(new Error('0歳から18歳の間で入力してください'))
+                        }
+                        return Promise.resolve()
+                      },
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        const minAge = Number(getFieldValue('minAge'))
+                        const maxAge = Number(value)
+                        if (!isNaN(minAge) && !isNaN(maxAge) && minAge > maxAge) {
+                          return Promise.reject(new Error('最大年齢は最小年齢より大きくしてください'))
+                        }
+                        return Promise.resolve()
+                      },
+                    }),
+                  ]}
+                >
+                  <Input
+                    type="number"
+                    min={0}
+                    max={18}
+                    className="rounded-lg"
+                    suffix="歳"
+                    placeholder="最大年齢"
+                  />
+                </Form.Item>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                この地点に適した子どもの年齢範囲を設定してください
+              </p>
+            </div>
+
+            {/* Opening Hours */}
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item
+                label="開店時間"
+                name="openingTime"
+              >
+                <TimePicker
+                  format="HH:mm"
+                  placeholder="開店時間を選択"
+                  size="large"
+                  className="w-full rounded-lg"
+                />
+              </Form.Item>
+              
+              <Form.Item
+                label="閉店時間"
+                name="closingTime"
+              >
+                <TimePicker
+                  format="HH:mm"
+                  placeholder="閉店時間を選択"
+                  size="large"
+                  className="w-full rounded-lg"
+                />
+              </Form.Item>
+            </div>
+
+            {/* Media Upload for Place */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">地点の写真・動画を追加</label>
+              <Upload
+                listType="picture-card"
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  handleUpdateFileUpload(file)
+                  return false // Prevent default upload
+                }}
+                accept="image/*,video/*"
+              >
+                {updateUploadedFiles.length < 10 && (
+                  <div className="flex flex-col items-center justify-center p-2">
+                    <PlusOutlined className="text-lg mb-1" />
+                    <span className="text-xs">ファイルを追加</span>
+                  </div>
+                )}
+              </Upload>
+              
+              {/* Display uploaded files */}
+              {updateUploadedFiles.length > 0 && (
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {updateUploadedFiles.map((file, index) => (
+                    <div key={index} className="relative group">
+                      {file.type === 'IMAGE' ? (
+                        <Image
+                          src={file.url}
+                          alt={`Update uploaded ${index + 1}`}
+                          className="rounded-lg object-cover"
+                          width={80}
+                          height={80}
+                        />
+                      ) : (
+                        <div className="relative w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
+                          <video
+                            src={file.url}
+                            className="w-full h-full object-cover"
+                            muted
+                            preload="metadata"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                            <PlayCircleOutlined className="text-white text-sm" />
+                          </div>
+                        </div>
+                      )}
+                      <Button
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveUpdateFile(file.url)}
+                        size="small"
+                      />
+                      <div className="absolute bottom-1 left-1">
+                        <span className="text-xs bg-black bg-opacity-70 text-white px-1 rounded">
+                          {file.type === 'IMAGE' ? '画像' : '動画'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500 mt-2">
+                地点の写真・動画は最大10ファイルまで追加できます。
+              </p>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <Form.Item className="mb-0">
+            <Button
+              type="primary"
+              size="large"
+              block
+              className="bg-blue-500 hover:bg-blue-400 border-0 h-12 rounded-full text-white font-bold"
+              onClick={handleUpdatePlace}
+              loading={updatePlaceMutation.isPending || uploadFileMut.isPending || createMediaMutation.isPending}
+            >
+              {uploadFileMut.isPending ? 'アップロード中...' : '地点情報を更新'}
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   )

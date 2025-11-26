@@ -26,47 +26,55 @@ enum PlaceType {
   OUTDOOR
 }
 
-model User {
-  id           String     @id() @default(uuid())
-  email        String     @unique()
-  password     String
-  name         String
-  phoneNumber  String?
-  address      String?
-  numberOfKids Int        @default(0)
-  role         UserRole   @default(USER)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt()
-  isActive     Boolean    @default(true)
-  reviews      Review[]
-  favorites    Favorite[]
-
-  @@map("users")
+enum MediaType {
+  IMAGE
+  VIDEO
 }
 
-model Place {
+model User {
   id            String     @id() @default(uuid())
+  email         String     @unique()
+  password      String
   name          String
-  description   String?
-  address       String
-  latitude      Float
-  longitude     Float
-  placeType     PlaceType
-  minAge        Int        @default(0)
-  maxAge        Int        @default(100)
-  area          Float?
-  openingTime   String?
-  closingTime   String?
   phoneNumber   String?
-  website       String?
-  imageUrl      String?
-  averageRating Float      @default(0)
-  totalReviews  Int        @default(0)
+  address       String?
+  numberOfKids  Int        @default(0)
+  role          UserRole   @default(USER)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt()
   isActive      Boolean    @default(true)
   reviews       Review[]
   favorites     Favorite[]
+  uploadedMedia Media[]
+
+  @@map("users")
+}
+
+model Place {
+  id              String     @id() @default(uuid())
+  name            String
+  description     String?
+  address         String
+  latitude        Float
+  longitude       Float
+  placeType       PlaceType
+  minAge          Int        @default(0)
+  maxAge          Int        @default(100)
+  area            Float?
+  openingTime     String?
+  closingTime     String?
+  phoneNumber     String?
+  website         String?
+  imageUrl        String?
+  externalPlaceId String?    @unique()
+  averageRating   Float      @default(0)
+  totalReviews    Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt()
+  isActive        Boolean    @default(true)
+  reviews         Review[]
+  favorites       Favorite[]
+  media           Media[]
 
   @@map("places")
 }
@@ -82,7 +90,6 @@ model Review {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, placeId])
   @@map("reviews")
 }
 
@@ -96,4 +103,25 @@ model Favorite {
 
   @@unique([userId, placeId])
   @@map("favorites")
+}
+
+model Media {
+  id         String    @id() @default(uuid())
+  fileName   String
+  fileUrl    String
+  fileSize   Int?
+  mimeType   String?
+  mediaType  MediaType
+  title      String?
+  altText    String?
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt()
+  isActive   Boolean   @default(true)
+  placeId    String
+  uploadedBy String?
+  place      Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  uploader   User?     @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  @@map("media")
 }

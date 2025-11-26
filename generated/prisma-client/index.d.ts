@@ -33,6 +33,11 @@ export type Review = $Result.DefaultSelection<Prisma.$ReviewPayload>
  * 
  */
 export type Favorite = $Result.DefaultSelection<Prisma.$FavoritePayload>
+/**
+ * Model Media
+ * 
+ */
+export type Media = $Result.DefaultSelection<Prisma.$MediaPayload>
 
 /**
  * Enums
@@ -53,6 +58,14 @@ export const PlaceType: {
 
 export type PlaceType = (typeof PlaceType)[keyof typeof PlaceType]
 
+
+export const MediaType: {
+  IMAGE: 'IMAGE',
+  VIDEO: 'VIDEO'
+};
+
+export type MediaType = (typeof MediaType)[keyof typeof MediaType]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -62,6 +75,10 @@ export const UserRole: typeof $Enums.UserRole
 export type PlaceType = $Enums.PlaceType
 
 export const PlaceType: typeof $Enums.PlaceType
+
+export type MediaType = $Enums.MediaType
+
+export const MediaType: typeof $Enums.MediaType
 
 /**
  * ##  Prisma Client ʲˢ
@@ -230,6 +247,16 @@ export class PrismaClient<
     * ```
     */
   get favorite(): Prisma.FavoriteDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.media`: Exposes CRUD operations for the **Media** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Media
+    * const media = await prisma.media.findMany()
+    * ```
+    */
+  get media(): Prisma.MediaDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -674,7 +701,8 @@ export namespace Prisma {
     User: 'User',
     Place: 'Place',
     Review: 'Review',
-    Favorite: 'Favorite'
+    Favorite: 'Favorite',
+    Media: 'Media'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -693,7 +721,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "place" | "review" | "favorite"
+      modelProps: "user" | "place" | "review" | "favorite" | "media"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -993,6 +1021,80 @@ export namespace Prisma {
           }
         }
       }
+      Media: {
+        payload: Prisma.$MediaPayload<ExtArgs>
+        fields: Prisma.MediaFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MediaFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MediaFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>
+          }
+          findFirst: {
+            args: Prisma.MediaFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MediaFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>
+          }
+          findMany: {
+            args: Prisma.MediaFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>[]
+          }
+          create: {
+            args: Prisma.MediaCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>
+          }
+          createMany: {
+            args: Prisma.MediaCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MediaCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>[]
+          }
+          delete: {
+            args: Prisma.MediaDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>
+          }
+          update: {
+            args: Prisma.MediaUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>
+          }
+          deleteMany: {
+            args: Prisma.MediaDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MediaUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MediaUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>[]
+          }
+          upsert: {
+            args: Prisma.MediaUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MediaPayload>
+          }
+          aggregate: {
+            args: Prisma.MediaAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMedia>
+          }
+          groupBy: {
+            args: Prisma.MediaGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MediaGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MediaCountArgs<ExtArgs>
+            result: $Utils.Optional<MediaCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1097,6 +1199,7 @@ export namespace Prisma {
     place?: PlaceOmit
     review?: ReviewOmit
     favorite?: FavoriteOmit
+    media?: MediaOmit
   }
 
   /* Types for Logging */
@@ -1179,11 +1282,13 @@ export namespace Prisma {
   export type UserCountOutputType = {
     reviews: number
     favorites: number
+    uploadedMedia: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | UserCountOutputTypeCountReviewsArgs
     favorites?: boolean | UserCountOutputTypeCountFavoritesArgs
+    uploadedMedia?: boolean | UserCountOutputTypeCountUploadedMediaArgs
   }
 
   // Custom InputTypes
@@ -1211,6 +1316,13 @@ export namespace Prisma {
     where?: FavoriteWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountUploadedMediaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MediaWhereInput
+  }
+
 
   /**
    * Count Type PlaceCountOutputType
@@ -1219,11 +1331,13 @@ export namespace Prisma {
   export type PlaceCountOutputType = {
     reviews: number
     favorites: number
+    media: number
   }
 
   export type PlaceCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | PlaceCountOutputTypeCountReviewsArgs
     favorites?: boolean | PlaceCountOutputTypeCountFavoritesArgs
+    media?: boolean | PlaceCountOutputTypeCountMediaArgs
   }
 
   // Custom InputTypes
@@ -1249,6 +1363,13 @@ export namespace Prisma {
    */
   export type PlaceCountOutputTypeCountFavoritesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: FavoriteWhereInput
+  }
+
+  /**
+   * PlaceCountOutputType without action
+   */
+  export type PlaceCountOutputTypeCountMediaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MediaWhereInput
   }
 
 
@@ -1504,6 +1625,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: boolean | User$reviewsArgs<ExtArgs>
     favorites?: boolean | User$favoritesArgs<ExtArgs>
+    uploadedMedia?: boolean | User$uploadedMediaArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1553,6 +1675,7 @@ export namespace Prisma {
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | User$reviewsArgs<ExtArgs>
     favorites?: boolean | User$favoritesArgs<ExtArgs>
+    uploadedMedia?: boolean | User$uploadedMediaArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1563,6 +1686,7 @@ export namespace Prisma {
     objects: {
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       favorites: Prisma.$FavoritePayload<ExtArgs>[]
+      uploadedMedia: Prisma.$MediaPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -1972,6 +2096,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     reviews<T extends User$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     favorites<T extends User$favoritesArgs<ExtArgs> = {}>(args?: Subset<T, User$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    uploadedMedia<T extends User$uploadedMediaArgs<ExtArgs> = {}>(args?: Subset<T, User$uploadedMediaArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2448,6 +2573,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.uploadedMedia
+   */
+  export type User$uploadedMediaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    where?: MediaWhereInput
+    orderBy?: MediaOrderByWithRelationInput | MediaOrderByWithRelationInput[]
+    cursor?: MediaWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MediaScalarFieldEnum | MediaScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2514,6 +2663,7 @@ export namespace Prisma {
     phoneNumber: string | null
     website: string | null
     imageUrl: string | null
+    externalPlaceId: string | null
     averageRating: number | null
     totalReviews: number | null
     createdAt: Date | null
@@ -2537,6 +2687,7 @@ export namespace Prisma {
     phoneNumber: string | null
     website: string | null
     imageUrl: string | null
+    externalPlaceId: string | null
     averageRating: number | null
     totalReviews: number | null
     createdAt: Date | null
@@ -2560,6 +2711,7 @@ export namespace Prisma {
     phoneNumber: number
     website: number
     imageUrl: number
+    externalPlaceId: number
     averageRating: number
     totalReviews: number
     createdAt: number
@@ -2605,6 +2757,7 @@ export namespace Prisma {
     phoneNumber?: true
     website?: true
     imageUrl?: true
+    externalPlaceId?: true
     averageRating?: true
     totalReviews?: true
     createdAt?: true
@@ -2628,6 +2781,7 @@ export namespace Prisma {
     phoneNumber?: true
     website?: true
     imageUrl?: true
+    externalPlaceId?: true
     averageRating?: true
     totalReviews?: true
     createdAt?: true
@@ -2651,6 +2805,7 @@ export namespace Prisma {
     phoneNumber?: true
     website?: true
     imageUrl?: true
+    externalPlaceId?: true
     averageRating?: true
     totalReviews?: true
     createdAt?: true
@@ -2761,6 +2916,7 @@ export namespace Prisma {
     phoneNumber: string | null
     website: string | null
     imageUrl: string | null
+    externalPlaceId: string | null
     averageRating: number
     totalReviews: number
     createdAt: Date
@@ -2803,6 +2959,7 @@ export namespace Prisma {
     phoneNumber?: boolean
     website?: boolean
     imageUrl?: boolean
+    externalPlaceId?: boolean
     averageRating?: boolean
     totalReviews?: boolean
     createdAt?: boolean
@@ -2810,6 +2967,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: boolean | Place$reviewsArgs<ExtArgs>
     favorites?: boolean | Place$favoritesArgs<ExtArgs>
+    media?: boolean | Place$mediaArgs<ExtArgs>
     _count?: boolean | PlaceCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["place"]>
 
@@ -2829,6 +2987,7 @@ export namespace Prisma {
     phoneNumber?: boolean
     website?: boolean
     imageUrl?: boolean
+    externalPlaceId?: boolean
     averageRating?: boolean
     totalReviews?: boolean
     createdAt?: boolean
@@ -2852,6 +3011,7 @@ export namespace Prisma {
     phoneNumber?: boolean
     website?: boolean
     imageUrl?: boolean
+    externalPlaceId?: boolean
     averageRating?: boolean
     totalReviews?: boolean
     createdAt?: boolean
@@ -2875,6 +3035,7 @@ export namespace Prisma {
     phoneNumber?: boolean
     website?: boolean
     imageUrl?: boolean
+    externalPlaceId?: boolean
     averageRating?: boolean
     totalReviews?: boolean
     createdAt?: boolean
@@ -2882,10 +3043,11 @@ export namespace Prisma {
     isActive?: boolean
   }
 
-  export type PlaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "address" | "latitude" | "longitude" | "placeType" | "minAge" | "maxAge" | "area" | "openingTime" | "closingTime" | "phoneNumber" | "website" | "imageUrl" | "averageRating" | "totalReviews" | "createdAt" | "updatedAt" | "isActive", ExtArgs["result"]["place"]>
+  export type PlaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "address" | "latitude" | "longitude" | "placeType" | "minAge" | "maxAge" | "area" | "openingTime" | "closingTime" | "phoneNumber" | "website" | "imageUrl" | "externalPlaceId" | "averageRating" | "totalReviews" | "createdAt" | "updatedAt" | "isActive", ExtArgs["result"]["place"]>
   export type PlaceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | Place$reviewsArgs<ExtArgs>
     favorites?: boolean | Place$favoritesArgs<ExtArgs>
+    media?: boolean | Place$mediaArgs<ExtArgs>
     _count?: boolean | PlaceCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PlaceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -2896,6 +3058,7 @@ export namespace Prisma {
     objects: {
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       favorites: Prisma.$FavoritePayload<ExtArgs>[]
+      media: Prisma.$MediaPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2913,6 +3076,7 @@ export namespace Prisma {
       phoneNumber: string | null
       website: string | null
       imageUrl: string | null
+      externalPlaceId: string | null
       averageRating: number
       totalReviews: number
       createdAt: Date
@@ -3314,6 +3478,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     reviews<T extends Place$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Place$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     favorites<T extends Place$favoritesArgs<ExtArgs> = {}>(args?: Subset<T, Place$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    media<T extends Place$mediaArgs<ExtArgs> = {}>(args?: Subset<T, Place$mediaArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3358,6 +3523,7 @@ export namespace Prisma {
     readonly phoneNumber: FieldRef<"Place", 'String'>
     readonly website: FieldRef<"Place", 'String'>
     readonly imageUrl: FieldRef<"Place", 'String'>
+    readonly externalPlaceId: FieldRef<"Place", 'String'>
     readonly averageRating: FieldRef<"Place", 'Float'>
     readonly totalReviews: FieldRef<"Place", 'Int'>
     readonly createdAt: FieldRef<"Place", 'DateTime'>
@@ -3796,6 +3962,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: FavoriteScalarFieldEnum | FavoriteScalarFieldEnum[]
+  }
+
+  /**
+   * Place.media
+   */
+  export type Place$mediaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    where?: MediaWhereInput
+    orderBy?: MediaOrderByWithRelationInput | MediaOrderByWithRelationInput[]
+    cursor?: MediaWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MediaScalarFieldEnum | MediaScalarFieldEnum[]
   }
 
   /**
@@ -5997,6 +6187,1246 @@ export namespace Prisma {
 
 
   /**
+   * Model Media
+   */
+
+  export type AggregateMedia = {
+    _count: MediaCountAggregateOutputType | null
+    _avg: MediaAvgAggregateOutputType | null
+    _sum: MediaSumAggregateOutputType | null
+    _min: MediaMinAggregateOutputType | null
+    _max: MediaMaxAggregateOutputType | null
+  }
+
+  export type MediaAvgAggregateOutputType = {
+    fileSize: number | null
+    sortOrder: number | null
+  }
+
+  export type MediaSumAggregateOutputType = {
+    fileSize: number | null
+    sortOrder: number | null
+  }
+
+  export type MediaMinAggregateOutputType = {
+    id: string | null
+    fileName: string | null
+    fileUrl: string | null
+    fileSize: number | null
+    mimeType: string | null
+    mediaType: $Enums.MediaType | null
+    title: string | null
+    altText: string | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    isActive: boolean | null
+    placeId: string | null
+    uploadedBy: string | null
+  }
+
+  export type MediaMaxAggregateOutputType = {
+    id: string | null
+    fileName: string | null
+    fileUrl: string | null
+    fileSize: number | null
+    mimeType: string | null
+    mediaType: $Enums.MediaType | null
+    title: string | null
+    altText: string | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    isActive: boolean | null
+    placeId: string | null
+    uploadedBy: string | null
+  }
+
+  export type MediaCountAggregateOutputType = {
+    id: number
+    fileName: number
+    fileUrl: number
+    fileSize: number
+    mimeType: number
+    mediaType: number
+    title: number
+    altText: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
+    isActive: number
+    placeId: number
+    uploadedBy: number
+    _all: number
+  }
+
+
+  export type MediaAvgAggregateInputType = {
+    fileSize?: true
+    sortOrder?: true
+  }
+
+  export type MediaSumAggregateInputType = {
+    fileSize?: true
+    sortOrder?: true
+  }
+
+  export type MediaMinAggregateInputType = {
+    id?: true
+    fileName?: true
+    fileUrl?: true
+    fileSize?: true
+    mimeType?: true
+    mediaType?: true
+    title?: true
+    altText?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    isActive?: true
+    placeId?: true
+    uploadedBy?: true
+  }
+
+  export type MediaMaxAggregateInputType = {
+    id?: true
+    fileName?: true
+    fileUrl?: true
+    fileSize?: true
+    mimeType?: true
+    mediaType?: true
+    title?: true
+    altText?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    isActive?: true
+    placeId?: true
+    uploadedBy?: true
+  }
+
+  export type MediaCountAggregateInputType = {
+    id?: true
+    fileName?: true
+    fileUrl?: true
+    fileSize?: true
+    mimeType?: true
+    mediaType?: true
+    title?: true
+    altText?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    isActive?: true
+    placeId?: true
+    uploadedBy?: true
+    _all?: true
+  }
+
+  export type MediaAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Media to aggregate.
+     */
+    where?: MediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Media to fetch.
+     */
+    orderBy?: MediaOrderByWithRelationInput | MediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Media from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Media.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Media
+    **/
+    _count?: true | MediaCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MediaAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MediaSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MediaMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MediaMaxAggregateInputType
+  }
+
+  export type GetMediaAggregateType<T extends MediaAggregateArgs> = {
+        [P in keyof T & keyof AggregateMedia]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMedia[P]>
+      : GetScalarType<T[P], AggregateMedia[P]>
+  }
+
+
+
+
+  export type MediaGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MediaWhereInput
+    orderBy?: MediaOrderByWithAggregationInput | MediaOrderByWithAggregationInput[]
+    by: MediaScalarFieldEnum[] | MediaScalarFieldEnum
+    having?: MediaScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MediaCountAggregateInputType | true
+    _avg?: MediaAvgAggregateInputType
+    _sum?: MediaSumAggregateInputType
+    _min?: MediaMinAggregateInputType
+    _max?: MediaMaxAggregateInputType
+  }
+
+  export type MediaGroupByOutputType = {
+    id: string
+    fileName: string
+    fileUrl: string
+    fileSize: number | null
+    mimeType: string | null
+    mediaType: $Enums.MediaType
+    title: string | null
+    altText: string | null
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
+    isActive: boolean
+    placeId: string
+    uploadedBy: string | null
+    _count: MediaCountAggregateOutputType | null
+    _avg: MediaAvgAggregateOutputType | null
+    _sum: MediaSumAggregateOutputType | null
+    _min: MediaMinAggregateOutputType | null
+    _max: MediaMaxAggregateOutputType | null
+  }
+
+  type GetMediaGroupByPayload<T extends MediaGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MediaGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MediaGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MediaGroupByOutputType[P]>
+            : GetScalarType<T[P], MediaGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MediaSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    fileUrl?: boolean
+    fileSize?: boolean
+    mimeType?: boolean
+    mediaType?: boolean
+    title?: boolean
+    altText?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isActive?: boolean
+    placeId?: boolean
+    uploadedBy?: boolean
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    uploader?: boolean | Media$uploaderArgs<ExtArgs>
+  }, ExtArgs["result"]["media"]>
+
+  export type MediaSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    fileUrl?: boolean
+    fileSize?: boolean
+    mimeType?: boolean
+    mediaType?: boolean
+    title?: boolean
+    altText?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isActive?: boolean
+    placeId?: boolean
+    uploadedBy?: boolean
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    uploader?: boolean | Media$uploaderArgs<ExtArgs>
+  }, ExtArgs["result"]["media"]>
+
+  export type MediaSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    fileUrl?: boolean
+    fileSize?: boolean
+    mimeType?: boolean
+    mediaType?: boolean
+    title?: boolean
+    altText?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isActive?: boolean
+    placeId?: boolean
+    uploadedBy?: boolean
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    uploader?: boolean | Media$uploaderArgs<ExtArgs>
+  }, ExtArgs["result"]["media"]>
+
+  export type MediaSelectScalar = {
+    id?: boolean
+    fileName?: boolean
+    fileUrl?: boolean
+    fileSize?: boolean
+    mimeType?: boolean
+    mediaType?: boolean
+    title?: boolean
+    altText?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    isActive?: boolean
+    placeId?: boolean
+    uploadedBy?: boolean
+  }
+
+  export type MediaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fileName" | "fileUrl" | "fileSize" | "mimeType" | "mediaType" | "title" | "altText" | "sortOrder" | "createdAt" | "updatedAt" | "isActive" | "placeId" | "uploadedBy", ExtArgs["result"]["media"]>
+  export type MediaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    uploader?: boolean | Media$uploaderArgs<ExtArgs>
+  }
+  export type MediaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    uploader?: boolean | Media$uploaderArgs<ExtArgs>
+  }
+  export type MediaIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    uploader?: boolean | Media$uploaderArgs<ExtArgs>
+  }
+
+  export type $MediaPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Media"
+    objects: {
+      place: Prisma.$PlacePayload<ExtArgs>
+      uploader: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      fileName: string
+      fileUrl: string
+      fileSize: number | null
+      mimeType: string | null
+      mediaType: $Enums.MediaType
+      title: string | null
+      altText: string | null
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
+      isActive: boolean
+      placeId: string
+      uploadedBy: string | null
+    }, ExtArgs["result"]["media"]>
+    composites: {}
+  }
+
+  type MediaGetPayload<S extends boolean | null | undefined | MediaDefaultArgs> = $Result.GetResult<Prisma.$MediaPayload, S>
+
+  type MediaCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MediaFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MediaCountAggregateInputType | true
+    }
+
+  export interface MediaDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Media'], meta: { name: 'Media' } }
+    /**
+     * Find zero or one Media that matches the filter.
+     * @param {MediaFindUniqueArgs} args - Arguments to find a Media
+     * @example
+     * // Get one Media
+     * const media = await prisma.media.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MediaFindUniqueArgs>(args: SelectSubset<T, MediaFindUniqueArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Media that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MediaFindUniqueOrThrowArgs} args - Arguments to find a Media
+     * @example
+     * // Get one Media
+     * const media = await prisma.media.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MediaFindUniqueOrThrowArgs>(args: SelectSubset<T, MediaFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Media that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaFindFirstArgs} args - Arguments to find a Media
+     * @example
+     * // Get one Media
+     * const media = await prisma.media.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MediaFindFirstArgs>(args?: SelectSubset<T, MediaFindFirstArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Media that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaFindFirstOrThrowArgs} args - Arguments to find a Media
+     * @example
+     * // Get one Media
+     * const media = await prisma.media.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MediaFindFirstOrThrowArgs>(args?: SelectSubset<T, MediaFindFirstOrThrowArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Media that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Media
+     * const media = await prisma.media.findMany()
+     * 
+     * // Get first 10 Media
+     * const media = await prisma.media.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const mediaWithIdOnly = await prisma.media.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MediaFindManyArgs>(args?: SelectSubset<T, MediaFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Media.
+     * @param {MediaCreateArgs} args - Arguments to create a Media.
+     * @example
+     * // Create one Media
+     * const Media = await prisma.media.create({
+     *   data: {
+     *     // ... data to create a Media
+     *   }
+     * })
+     * 
+     */
+    create<T extends MediaCreateArgs>(args: SelectSubset<T, MediaCreateArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Media.
+     * @param {MediaCreateManyArgs} args - Arguments to create many Media.
+     * @example
+     * // Create many Media
+     * const media = await prisma.media.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MediaCreateManyArgs>(args?: SelectSubset<T, MediaCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Media and returns the data saved in the database.
+     * @param {MediaCreateManyAndReturnArgs} args - Arguments to create many Media.
+     * @example
+     * // Create many Media
+     * const media = await prisma.media.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Media and only return the `id`
+     * const mediaWithIdOnly = await prisma.media.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MediaCreateManyAndReturnArgs>(args?: SelectSubset<T, MediaCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Media.
+     * @param {MediaDeleteArgs} args - Arguments to delete one Media.
+     * @example
+     * // Delete one Media
+     * const Media = await prisma.media.delete({
+     *   where: {
+     *     // ... filter to delete one Media
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MediaDeleteArgs>(args: SelectSubset<T, MediaDeleteArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Media.
+     * @param {MediaUpdateArgs} args - Arguments to update one Media.
+     * @example
+     * // Update one Media
+     * const media = await prisma.media.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MediaUpdateArgs>(args: SelectSubset<T, MediaUpdateArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Media.
+     * @param {MediaDeleteManyArgs} args - Arguments to filter Media to delete.
+     * @example
+     * // Delete a few Media
+     * const { count } = await prisma.media.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MediaDeleteManyArgs>(args?: SelectSubset<T, MediaDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Media.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Media
+     * const media = await prisma.media.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MediaUpdateManyArgs>(args: SelectSubset<T, MediaUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Media and returns the data updated in the database.
+     * @param {MediaUpdateManyAndReturnArgs} args - Arguments to update many Media.
+     * @example
+     * // Update many Media
+     * const media = await prisma.media.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Media and only return the `id`
+     * const mediaWithIdOnly = await prisma.media.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MediaUpdateManyAndReturnArgs>(args: SelectSubset<T, MediaUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Media.
+     * @param {MediaUpsertArgs} args - Arguments to update or create a Media.
+     * @example
+     * // Update or create a Media
+     * const media = await prisma.media.upsert({
+     *   create: {
+     *     // ... data to create a Media
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Media we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MediaUpsertArgs>(args: SelectSubset<T, MediaUpsertArgs<ExtArgs>>): Prisma__MediaClient<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Media.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaCountArgs} args - Arguments to filter Media to count.
+     * @example
+     * // Count the number of Media
+     * const count = await prisma.media.count({
+     *   where: {
+     *     // ... the filter for the Media we want to count
+     *   }
+     * })
+    **/
+    count<T extends MediaCountArgs>(
+      args?: Subset<T, MediaCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MediaCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Media.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MediaAggregateArgs>(args: Subset<T, MediaAggregateArgs>): Prisma.PrismaPromise<GetMediaAggregateType<T>>
+
+    /**
+     * Group by Media.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MediaGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MediaGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MediaGroupByArgs['orderBy'] }
+        : { orderBy?: MediaGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MediaGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMediaGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Media model
+   */
+  readonly fields: MediaFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Media.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MediaClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    place<T extends PlaceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlaceDefaultArgs<ExtArgs>>): Prisma__PlaceClient<$Result.GetResult<Prisma.$PlacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    uploader<T extends Media$uploaderArgs<ExtArgs> = {}>(args?: Subset<T, Media$uploaderArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Media model
+   */
+  interface MediaFieldRefs {
+    readonly id: FieldRef<"Media", 'String'>
+    readonly fileName: FieldRef<"Media", 'String'>
+    readonly fileUrl: FieldRef<"Media", 'String'>
+    readonly fileSize: FieldRef<"Media", 'Int'>
+    readonly mimeType: FieldRef<"Media", 'String'>
+    readonly mediaType: FieldRef<"Media", 'MediaType'>
+    readonly title: FieldRef<"Media", 'String'>
+    readonly altText: FieldRef<"Media", 'String'>
+    readonly sortOrder: FieldRef<"Media", 'Int'>
+    readonly createdAt: FieldRef<"Media", 'DateTime'>
+    readonly updatedAt: FieldRef<"Media", 'DateTime'>
+    readonly isActive: FieldRef<"Media", 'Boolean'>
+    readonly placeId: FieldRef<"Media", 'String'>
+    readonly uploadedBy: FieldRef<"Media", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Media findUnique
+   */
+  export type MediaFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * Filter, which Media to fetch.
+     */
+    where: MediaWhereUniqueInput
+  }
+
+  /**
+   * Media findUniqueOrThrow
+   */
+  export type MediaFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * Filter, which Media to fetch.
+     */
+    where: MediaWhereUniqueInput
+  }
+
+  /**
+   * Media findFirst
+   */
+  export type MediaFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * Filter, which Media to fetch.
+     */
+    where?: MediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Media to fetch.
+     */
+    orderBy?: MediaOrderByWithRelationInput | MediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Media.
+     */
+    cursor?: MediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Media from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Media.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Media.
+     */
+    distinct?: MediaScalarFieldEnum | MediaScalarFieldEnum[]
+  }
+
+  /**
+   * Media findFirstOrThrow
+   */
+  export type MediaFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * Filter, which Media to fetch.
+     */
+    where?: MediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Media to fetch.
+     */
+    orderBy?: MediaOrderByWithRelationInput | MediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Media.
+     */
+    cursor?: MediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Media from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Media.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Media.
+     */
+    distinct?: MediaScalarFieldEnum | MediaScalarFieldEnum[]
+  }
+
+  /**
+   * Media findMany
+   */
+  export type MediaFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * Filter, which Media to fetch.
+     */
+    where?: MediaWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Media to fetch.
+     */
+    orderBy?: MediaOrderByWithRelationInput | MediaOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Media.
+     */
+    cursor?: MediaWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Media from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Media.
+     */
+    skip?: number
+    distinct?: MediaScalarFieldEnum | MediaScalarFieldEnum[]
+  }
+
+  /**
+   * Media create
+   */
+  export type MediaCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Media.
+     */
+    data: XOR<MediaCreateInput, MediaUncheckedCreateInput>
+  }
+
+  /**
+   * Media createMany
+   */
+  export type MediaCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Media.
+     */
+    data: MediaCreateManyInput | MediaCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Media createManyAndReturn
+   */
+  export type MediaCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * The data used to create many Media.
+     */
+    data: MediaCreateManyInput | MediaCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Media update
+   */
+  export type MediaUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Media.
+     */
+    data: XOR<MediaUpdateInput, MediaUncheckedUpdateInput>
+    /**
+     * Choose, which Media to update.
+     */
+    where: MediaWhereUniqueInput
+  }
+
+  /**
+   * Media updateMany
+   */
+  export type MediaUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Media.
+     */
+    data: XOR<MediaUpdateManyMutationInput, MediaUncheckedUpdateManyInput>
+    /**
+     * Filter which Media to update
+     */
+    where?: MediaWhereInput
+    /**
+     * Limit how many Media to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Media updateManyAndReturn
+   */
+  export type MediaUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * The data used to update Media.
+     */
+    data: XOR<MediaUpdateManyMutationInput, MediaUncheckedUpdateManyInput>
+    /**
+     * Filter which Media to update
+     */
+    where?: MediaWhereInput
+    /**
+     * Limit how many Media to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Media upsert
+   */
+  export type MediaUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Media to update in case it exists.
+     */
+    where: MediaWhereUniqueInput
+    /**
+     * In case the Media found by the `where` argument doesn't exist, create a new Media with this data.
+     */
+    create: XOR<MediaCreateInput, MediaUncheckedCreateInput>
+    /**
+     * In case the Media was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MediaUpdateInput, MediaUncheckedUpdateInput>
+  }
+
+  /**
+   * Media delete
+   */
+  export type MediaDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+    /**
+     * Filter which Media to delete.
+     */
+    where: MediaWhereUniqueInput
+  }
+
+  /**
+   * Media deleteMany
+   */
+  export type MediaDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Media to delete
+     */
+    where?: MediaWhereInput
+    /**
+     * Limit how many Media to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Media.uploader
+   */
+  export type Media$uploaderArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * Media without action
+   */
+  export type MediaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Media
+     */
+    select?: MediaSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Media
+     */
+    omit?: MediaOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MediaInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -6043,6 +7473,7 @@ export namespace Prisma {
     phoneNumber: 'phoneNumber',
     website: 'website',
     imageUrl: 'imageUrl',
+    externalPlaceId: 'externalPlaceId',
     averageRating: 'averageRating',
     totalReviews: 'totalReviews',
     createdAt: 'createdAt',
@@ -6074,6 +7505,26 @@ export namespace Prisma {
   };
 
   export type FavoriteScalarFieldEnum = (typeof FavoriteScalarFieldEnum)[keyof typeof FavoriteScalarFieldEnum]
+
+
+  export const MediaScalarFieldEnum: {
+    id: 'id',
+    fileName: 'fileName',
+    fileUrl: 'fileUrl',
+    fileSize: 'fileSize',
+    mimeType: 'mimeType',
+    mediaType: 'mediaType',
+    title: 'title',
+    altText: 'altText',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    isActive: 'isActive',
+    placeId: 'placeId',
+    uploadedBy: 'uploadedBy'
+  };
+
+  export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -6194,6 +7645,20 @@ export namespace Prisma {
    */
   export type ListEnumPlaceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PlaceType[]'>
     
+
+
+  /**
+   * Reference to a field of type 'MediaType'
+   */
+  export type EnumMediaTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MediaType'>
+    
+
+
+  /**
+   * Reference to a field of type 'MediaType[]'
+   */
+  export type ListEnumMediaTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MediaType[]'>
+    
   /**
    * Deep Input Types
    */
@@ -6216,6 +7681,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
+    uploadedMedia?: MediaListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -6232,6 +7698,7 @@ export namespace Prisma {
     isActive?: SortOrder
     reviews?: ReviewOrderByRelationAggregateInput
     favorites?: FavoriteOrderByRelationAggregateInput
+    uploadedMedia?: MediaOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -6251,6 +7718,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
+    uploadedMedia?: MediaListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -6308,6 +7776,7 @@ export namespace Prisma {
     phoneNumber?: StringNullableFilter<"Place"> | string | null
     website?: StringNullableFilter<"Place"> | string | null
     imageUrl?: StringNullableFilter<"Place"> | string | null
+    externalPlaceId?: StringNullableFilter<"Place"> | string | null
     averageRating?: FloatFilter<"Place"> | number
     totalReviews?: IntFilter<"Place"> | number
     createdAt?: DateTimeFilter<"Place"> | Date | string
@@ -6315,6 +7784,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"Place"> | boolean
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
+    media?: MediaListRelationFilter
   }
 
   export type PlaceOrderByWithRelationInput = {
@@ -6333,6 +7803,7 @@ export namespace Prisma {
     phoneNumber?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     imageUrl?: SortOrderInput | SortOrder
+    externalPlaceId?: SortOrderInput | SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
     createdAt?: SortOrder
@@ -6340,10 +7811,12 @@ export namespace Prisma {
     isActive?: SortOrder
     reviews?: ReviewOrderByRelationAggregateInput
     favorites?: FavoriteOrderByRelationAggregateInput
+    media?: MediaOrderByRelationAggregateInput
   }
 
   export type PlaceWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    externalPlaceId?: string
     AND?: PlaceWhereInput | PlaceWhereInput[]
     OR?: PlaceWhereInput[]
     NOT?: PlaceWhereInput | PlaceWhereInput[]
@@ -6368,7 +7841,8 @@ export namespace Prisma {
     isActive?: BoolFilter<"Place"> | boolean
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
-  }, "id">
+    media?: MediaListRelationFilter
+  }, "id" | "externalPlaceId">
 
   export type PlaceOrderByWithAggregationInput = {
     id?: SortOrder
@@ -6386,6 +7860,7 @@ export namespace Prisma {
     phoneNumber?: SortOrderInput | SortOrder
     website?: SortOrderInput | SortOrder
     imageUrl?: SortOrderInput | SortOrder
+    externalPlaceId?: SortOrderInput | SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
     createdAt?: SortOrder
@@ -6417,6 +7892,7 @@ export namespace Prisma {
     phoneNumber?: StringNullableWithAggregatesFilter<"Place"> | string | null
     website?: StringNullableWithAggregatesFilter<"Place"> | string | null
     imageUrl?: StringNullableWithAggregatesFilter<"Place"> | string | null
+    externalPlaceId?: StringNullableWithAggregatesFilter<"Place"> | string | null
     averageRating?: FloatWithAggregatesFilter<"Place"> | number
     totalReviews?: IntWithAggregatesFilter<"Place"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Place"> | Date | string
@@ -6453,7 +7929,6 @@ export namespace Prisma {
 
   export type ReviewWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    userId_placeId?: ReviewUserIdPlaceIdCompoundUniqueInput
     AND?: ReviewWhereInput | ReviewWhereInput[]
     OR?: ReviewWhereInput[]
     NOT?: ReviewWhereInput | ReviewWhereInput[]
@@ -6465,7 +7940,7 @@ export namespace Prisma {
     placeId?: StringFilter<"Review"> | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
-  }, "id" | "userId_placeId">
+  }, "id">
 
   export type ReviewOrderByWithAggregationInput = {
     id?: SortOrder
@@ -6549,6 +8024,111 @@ export namespace Prisma {
     placeId?: StringWithAggregatesFilter<"Favorite"> | string
   }
 
+  export type MediaWhereInput = {
+    AND?: MediaWhereInput | MediaWhereInput[]
+    OR?: MediaWhereInput[]
+    NOT?: MediaWhereInput | MediaWhereInput[]
+    id?: StringFilter<"Media"> | string
+    fileName?: StringFilter<"Media"> | string
+    fileUrl?: StringFilter<"Media"> | string
+    fileSize?: IntNullableFilter<"Media"> | number | null
+    mimeType?: StringNullableFilter<"Media"> | string | null
+    mediaType?: EnumMediaTypeFilter<"Media"> | $Enums.MediaType
+    title?: StringNullableFilter<"Media"> | string | null
+    altText?: StringNullableFilter<"Media"> | string | null
+    sortOrder?: IntFilter<"Media"> | number
+    createdAt?: DateTimeFilter<"Media"> | Date | string
+    updatedAt?: DateTimeFilter<"Media"> | Date | string
+    isActive?: BoolFilter<"Media"> | boolean
+    placeId?: StringFilter<"Media"> | string
+    uploadedBy?: StringNullableFilter<"Media"> | string | null
+    place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
+    uploader?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type MediaOrderByWithRelationInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileUrl?: SortOrder
+    fileSize?: SortOrderInput | SortOrder
+    mimeType?: SortOrderInput | SortOrder
+    mediaType?: SortOrder
+    title?: SortOrderInput | SortOrder
+    altText?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isActive?: SortOrder
+    placeId?: SortOrder
+    uploadedBy?: SortOrderInput | SortOrder
+    place?: PlaceOrderByWithRelationInput
+    uploader?: UserOrderByWithRelationInput
+  }
+
+  export type MediaWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: MediaWhereInput | MediaWhereInput[]
+    OR?: MediaWhereInput[]
+    NOT?: MediaWhereInput | MediaWhereInput[]
+    fileName?: StringFilter<"Media"> | string
+    fileUrl?: StringFilter<"Media"> | string
+    fileSize?: IntNullableFilter<"Media"> | number | null
+    mimeType?: StringNullableFilter<"Media"> | string | null
+    mediaType?: EnumMediaTypeFilter<"Media"> | $Enums.MediaType
+    title?: StringNullableFilter<"Media"> | string | null
+    altText?: StringNullableFilter<"Media"> | string | null
+    sortOrder?: IntFilter<"Media"> | number
+    createdAt?: DateTimeFilter<"Media"> | Date | string
+    updatedAt?: DateTimeFilter<"Media"> | Date | string
+    isActive?: BoolFilter<"Media"> | boolean
+    placeId?: StringFilter<"Media"> | string
+    uploadedBy?: StringNullableFilter<"Media"> | string | null
+    place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
+    uploader?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id">
+
+  export type MediaOrderByWithAggregationInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileUrl?: SortOrder
+    fileSize?: SortOrderInput | SortOrder
+    mimeType?: SortOrderInput | SortOrder
+    mediaType?: SortOrder
+    title?: SortOrderInput | SortOrder
+    altText?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isActive?: SortOrder
+    placeId?: SortOrder
+    uploadedBy?: SortOrderInput | SortOrder
+    _count?: MediaCountOrderByAggregateInput
+    _avg?: MediaAvgOrderByAggregateInput
+    _max?: MediaMaxOrderByAggregateInput
+    _min?: MediaMinOrderByAggregateInput
+    _sum?: MediaSumOrderByAggregateInput
+  }
+
+  export type MediaScalarWhereWithAggregatesInput = {
+    AND?: MediaScalarWhereWithAggregatesInput | MediaScalarWhereWithAggregatesInput[]
+    OR?: MediaScalarWhereWithAggregatesInput[]
+    NOT?: MediaScalarWhereWithAggregatesInput | MediaScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Media"> | string
+    fileName?: StringWithAggregatesFilter<"Media"> | string
+    fileUrl?: StringWithAggregatesFilter<"Media"> | string
+    fileSize?: IntNullableWithAggregatesFilter<"Media"> | number | null
+    mimeType?: StringNullableWithAggregatesFilter<"Media"> | string | null
+    mediaType?: EnumMediaTypeWithAggregatesFilter<"Media"> | $Enums.MediaType
+    title?: StringNullableWithAggregatesFilter<"Media"> | string | null
+    altText?: StringNullableWithAggregatesFilter<"Media"> | string | null
+    sortOrder?: IntWithAggregatesFilter<"Media"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"Media"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Media"> | Date | string
+    isActive?: BoolWithAggregatesFilter<"Media"> | boolean
+    placeId?: StringWithAggregatesFilter<"Media"> | string
+    uploadedBy?: StringNullableWithAggregatesFilter<"Media"> | string | null
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -6563,6 +8143,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewCreateNestedManyWithoutUserInput
     favorites?: FavoriteCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -6579,6 +8160,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
     favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
   }
 
   export type UserUpdateInput = {
@@ -6595,6 +8177,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUpdateManyWithoutUserNestedInput
     favorites?: FavoriteUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -6611,6 +8194,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
     favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -6671,6 +8255,7 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
@@ -6678,6 +8263,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewCreateNestedManyWithoutPlaceInput
     favorites?: FavoriteCreateNestedManyWithoutPlaceInput
+    media?: MediaCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateInput = {
@@ -6696,6 +8282,7 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
@@ -6703,6 +8290,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
     favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
+    media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUpdateInput = {
@@ -6721,6 +8309,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6728,6 +8317,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUpdateManyWithoutPlaceNestedInput
     favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
+    media?: MediaUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateInput = {
@@ -6746,6 +8336,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6753,6 +8344,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
     favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
+    media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceCreateManyInput = {
@@ -6771,6 +8363,7 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
@@ -6794,6 +8387,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6817,6 +8411,7 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6939,6 +8534,123 @@ export namespace Prisma {
     placeId?: StringFieldUpdateOperationsInput | string
   }
 
+  export type MediaCreateInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    place: PlaceCreateNestedOneWithoutMediaInput
+    uploader?: UserCreateNestedOneWithoutUploadedMediaInput
+  }
+
+  export type MediaUncheckedCreateInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    placeId: string
+    uploadedBy?: string | null
+  }
+
+  export type MediaUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    place?: PlaceUpdateOneRequiredWithoutMediaNestedInput
+    uploader?: UserUpdateOneWithoutUploadedMediaNestedInput
+  }
+
+  export type MediaUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    placeId?: StringFieldUpdateOperationsInput | string
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type MediaCreateManyInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    placeId: string
+    uploadedBy?: string | null
+  }
+
+  export type MediaUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type MediaUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    placeId?: StringFieldUpdateOperationsInput | string
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -7015,6 +8727,12 @@ export namespace Prisma {
     none?: FavoriteWhereInput
   }
 
+  export type MediaListRelationFilter = {
+    every?: MediaWhereInput
+    some?: MediaWhereInput
+    none?: MediaWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -7025,6 +8743,10 @@ export namespace Prisma {
   }
 
   export type FavoriteOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MediaOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -7207,6 +8929,7 @@ export namespace Prisma {
     phoneNumber?: SortOrder
     website?: SortOrder
     imageUrl?: SortOrder
+    externalPlaceId?: SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
     createdAt?: SortOrder
@@ -7240,6 +8963,7 @@ export namespace Prisma {
     phoneNumber?: SortOrder
     website?: SortOrder
     imageUrl?: SortOrder
+    externalPlaceId?: SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
     createdAt?: SortOrder
@@ -7263,6 +8987,7 @@ export namespace Prisma {
     phoneNumber?: SortOrder
     website?: SortOrder
     imageUrl?: SortOrder
+    externalPlaceId?: SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
     createdAt?: SortOrder
@@ -7332,11 +9057,6 @@ export namespace Prisma {
     isNot?: PlaceWhereInput
   }
 
-  export type ReviewUserIdPlaceIdCompoundUniqueInput = {
-    userId: string
-    placeId: string
-  }
-
   export type ReviewCountOrderByAggregateInput = {
     id?: SortOrder
     rating?: SortOrder
@@ -7401,6 +9121,116 @@ export namespace Prisma {
     placeId?: SortOrder
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type EnumMediaTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.MediaType | EnumMediaTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumMediaTypeFilter<$PrismaModel> | $Enums.MediaType
+  }
+
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
+  export type MediaCountOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileUrl?: SortOrder
+    fileSize?: SortOrder
+    mimeType?: SortOrder
+    mediaType?: SortOrder
+    title?: SortOrder
+    altText?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isActive?: SortOrder
+    placeId?: SortOrder
+    uploadedBy?: SortOrder
+  }
+
+  export type MediaAvgOrderByAggregateInput = {
+    fileSize?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type MediaMaxOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileUrl?: SortOrder
+    fileSize?: SortOrder
+    mimeType?: SortOrder
+    mediaType?: SortOrder
+    title?: SortOrder
+    altText?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isActive?: SortOrder
+    placeId?: SortOrder
+    uploadedBy?: SortOrder
+  }
+
+  export type MediaMinOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileUrl?: SortOrder
+    fileSize?: SortOrder
+    mimeType?: SortOrder
+    mediaType?: SortOrder
+    title?: SortOrder
+    altText?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    isActive?: SortOrder
+    placeId?: SortOrder
+    uploadedBy?: SortOrder
+  }
+
+  export type MediaSumOrderByAggregateInput = {
+    fileSize?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type EnumMediaTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MediaType | EnumMediaTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumMediaTypeWithAggregatesFilter<$PrismaModel> | $Enums.MediaType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMediaTypeFilter<$PrismaModel>
+    _max?: NestedEnumMediaTypeFilter<$PrismaModel>
+  }
+
   export type ReviewCreateNestedManyWithoutUserInput = {
     create?: XOR<ReviewCreateWithoutUserInput, ReviewUncheckedCreateWithoutUserInput> | ReviewCreateWithoutUserInput[] | ReviewUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
@@ -7415,6 +9245,13 @@ export namespace Prisma {
     connect?: FavoriteWhereUniqueInput | FavoriteWhereUniqueInput[]
   }
 
+  export type MediaCreateNestedManyWithoutUploaderInput = {
+    create?: XOR<MediaCreateWithoutUploaderInput, MediaUncheckedCreateWithoutUploaderInput> | MediaCreateWithoutUploaderInput[] | MediaUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutUploaderInput | MediaCreateOrConnectWithoutUploaderInput[]
+    createMany?: MediaCreateManyUploaderInputEnvelope
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+  }
+
   export type ReviewUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<ReviewCreateWithoutUserInput, ReviewUncheckedCreateWithoutUserInput> | ReviewCreateWithoutUserInput[] | ReviewUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
@@ -7427,6 +9264,13 @@ export namespace Prisma {
     connectOrCreate?: FavoriteCreateOrConnectWithoutUserInput | FavoriteCreateOrConnectWithoutUserInput[]
     createMany?: FavoriteCreateManyUserInputEnvelope
     connect?: FavoriteWhereUniqueInput | FavoriteWhereUniqueInput[]
+  }
+
+  export type MediaUncheckedCreateNestedManyWithoutUploaderInput = {
+    create?: XOR<MediaCreateWithoutUploaderInput, MediaUncheckedCreateWithoutUploaderInput> | MediaCreateWithoutUploaderInput[] | MediaUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutUploaderInput | MediaCreateOrConnectWithoutUploaderInput[]
+    createMany?: MediaCreateManyUploaderInputEnvelope
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -7485,6 +9329,20 @@ export namespace Prisma {
     deleteMany?: FavoriteScalarWhereInput | FavoriteScalarWhereInput[]
   }
 
+  export type MediaUpdateManyWithoutUploaderNestedInput = {
+    create?: XOR<MediaCreateWithoutUploaderInput, MediaUncheckedCreateWithoutUploaderInput> | MediaCreateWithoutUploaderInput[] | MediaUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutUploaderInput | MediaCreateOrConnectWithoutUploaderInput[]
+    upsert?: MediaUpsertWithWhereUniqueWithoutUploaderInput | MediaUpsertWithWhereUniqueWithoutUploaderInput[]
+    createMany?: MediaCreateManyUploaderInputEnvelope
+    set?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    disconnect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    delete?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    update?: MediaUpdateWithWhereUniqueWithoutUploaderInput | MediaUpdateWithWhereUniqueWithoutUploaderInput[]
+    updateMany?: MediaUpdateManyWithWhereWithoutUploaderInput | MediaUpdateManyWithWhereWithoutUploaderInput[]
+    deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
+  }
+
   export type ReviewUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<ReviewCreateWithoutUserInput, ReviewUncheckedCreateWithoutUserInput> | ReviewCreateWithoutUserInput[] | ReviewUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
@@ -7513,6 +9371,20 @@ export namespace Prisma {
     deleteMany?: FavoriteScalarWhereInput | FavoriteScalarWhereInput[]
   }
 
+  export type MediaUncheckedUpdateManyWithoutUploaderNestedInput = {
+    create?: XOR<MediaCreateWithoutUploaderInput, MediaUncheckedCreateWithoutUploaderInput> | MediaCreateWithoutUploaderInput[] | MediaUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutUploaderInput | MediaCreateOrConnectWithoutUploaderInput[]
+    upsert?: MediaUpsertWithWhereUniqueWithoutUploaderInput | MediaUpsertWithWhereUniqueWithoutUploaderInput[]
+    createMany?: MediaCreateManyUploaderInputEnvelope
+    set?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    disconnect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    delete?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    update?: MediaUpdateWithWhereUniqueWithoutUploaderInput | MediaUpdateWithWhereUniqueWithoutUploaderInput[]
+    updateMany?: MediaUpdateManyWithWhereWithoutUploaderInput | MediaUpdateManyWithWhereWithoutUploaderInput[]
+    deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
+  }
+
   export type ReviewCreateNestedManyWithoutPlaceInput = {
     create?: XOR<ReviewCreateWithoutPlaceInput, ReviewUncheckedCreateWithoutPlaceInput> | ReviewCreateWithoutPlaceInput[] | ReviewUncheckedCreateWithoutPlaceInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutPlaceInput | ReviewCreateOrConnectWithoutPlaceInput[]
@@ -7527,6 +9399,13 @@ export namespace Prisma {
     connect?: FavoriteWhereUniqueInput | FavoriteWhereUniqueInput[]
   }
 
+  export type MediaCreateNestedManyWithoutPlaceInput = {
+    create?: XOR<MediaCreateWithoutPlaceInput, MediaUncheckedCreateWithoutPlaceInput> | MediaCreateWithoutPlaceInput[] | MediaUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutPlaceInput | MediaCreateOrConnectWithoutPlaceInput[]
+    createMany?: MediaCreateManyPlaceInputEnvelope
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+  }
+
   export type ReviewUncheckedCreateNestedManyWithoutPlaceInput = {
     create?: XOR<ReviewCreateWithoutPlaceInput, ReviewUncheckedCreateWithoutPlaceInput> | ReviewCreateWithoutPlaceInput[] | ReviewUncheckedCreateWithoutPlaceInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutPlaceInput | ReviewCreateOrConnectWithoutPlaceInput[]
@@ -7539,6 +9418,13 @@ export namespace Prisma {
     connectOrCreate?: FavoriteCreateOrConnectWithoutPlaceInput | FavoriteCreateOrConnectWithoutPlaceInput[]
     createMany?: FavoriteCreateManyPlaceInputEnvelope
     connect?: FavoriteWhereUniqueInput | FavoriteWhereUniqueInput[]
+  }
+
+  export type MediaUncheckedCreateNestedManyWithoutPlaceInput = {
+    create?: XOR<MediaCreateWithoutPlaceInput, MediaUncheckedCreateWithoutPlaceInput> | MediaCreateWithoutPlaceInput[] | MediaUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutPlaceInput | MediaCreateOrConnectWithoutPlaceInput[]
+    createMany?: MediaCreateManyPlaceInputEnvelope
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -7589,6 +9475,20 @@ export namespace Prisma {
     deleteMany?: FavoriteScalarWhereInput | FavoriteScalarWhereInput[]
   }
 
+  export type MediaUpdateManyWithoutPlaceNestedInput = {
+    create?: XOR<MediaCreateWithoutPlaceInput, MediaUncheckedCreateWithoutPlaceInput> | MediaCreateWithoutPlaceInput[] | MediaUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutPlaceInput | MediaCreateOrConnectWithoutPlaceInput[]
+    upsert?: MediaUpsertWithWhereUniqueWithoutPlaceInput | MediaUpsertWithWhereUniqueWithoutPlaceInput[]
+    createMany?: MediaCreateManyPlaceInputEnvelope
+    set?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    disconnect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    delete?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    update?: MediaUpdateWithWhereUniqueWithoutPlaceInput | MediaUpdateWithWhereUniqueWithoutPlaceInput[]
+    updateMany?: MediaUpdateManyWithWhereWithoutPlaceInput | MediaUpdateManyWithWhereWithoutPlaceInput[]
+    deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
+  }
+
   export type ReviewUncheckedUpdateManyWithoutPlaceNestedInput = {
     create?: XOR<ReviewCreateWithoutPlaceInput, ReviewUncheckedCreateWithoutPlaceInput> | ReviewCreateWithoutPlaceInput[] | ReviewUncheckedCreateWithoutPlaceInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutPlaceInput | ReviewCreateOrConnectWithoutPlaceInput[]
@@ -7615,6 +9515,20 @@ export namespace Prisma {
     update?: FavoriteUpdateWithWhereUniqueWithoutPlaceInput | FavoriteUpdateWithWhereUniqueWithoutPlaceInput[]
     updateMany?: FavoriteUpdateManyWithWhereWithoutPlaceInput | FavoriteUpdateManyWithWhereWithoutPlaceInput[]
     deleteMany?: FavoriteScalarWhereInput | FavoriteScalarWhereInput[]
+  }
+
+  export type MediaUncheckedUpdateManyWithoutPlaceNestedInput = {
+    create?: XOR<MediaCreateWithoutPlaceInput, MediaUncheckedCreateWithoutPlaceInput> | MediaCreateWithoutPlaceInput[] | MediaUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: MediaCreateOrConnectWithoutPlaceInput | MediaCreateOrConnectWithoutPlaceInput[]
+    upsert?: MediaUpsertWithWhereUniqueWithoutPlaceInput | MediaUpsertWithWhereUniqueWithoutPlaceInput[]
+    createMany?: MediaCreateManyPlaceInputEnvelope
+    set?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    disconnect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    delete?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+    update?: MediaUpdateWithWhereUniqueWithoutPlaceInput | MediaUpdateWithWhereUniqueWithoutPlaceInput[]
+    updateMany?: MediaUpdateManyWithWhereWithoutPlaceInput | MediaUpdateManyWithWhereWithoutPlaceInput[]
+    deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutReviewsInput = {
@@ -7671,6 +9585,48 @@ export namespace Prisma {
     upsert?: PlaceUpsertWithoutFavoritesInput
     connect?: PlaceWhereUniqueInput
     update?: XOR<XOR<PlaceUpdateToOneWithWhereWithoutFavoritesInput, PlaceUpdateWithoutFavoritesInput>, PlaceUncheckedUpdateWithoutFavoritesInput>
+  }
+
+  export type PlaceCreateNestedOneWithoutMediaInput = {
+    create?: XOR<PlaceCreateWithoutMediaInput, PlaceUncheckedCreateWithoutMediaInput>
+    connectOrCreate?: PlaceCreateOrConnectWithoutMediaInput
+    connect?: PlaceWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutUploadedMediaInput = {
+    create?: XOR<UserCreateWithoutUploadedMediaInput, UserUncheckedCreateWithoutUploadedMediaInput>
+    connectOrCreate?: UserCreateOrConnectWithoutUploadedMediaInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type EnumMediaTypeFieldUpdateOperationsInput = {
+    set?: $Enums.MediaType
+  }
+
+  export type PlaceUpdateOneRequiredWithoutMediaNestedInput = {
+    create?: XOR<PlaceCreateWithoutMediaInput, PlaceUncheckedCreateWithoutMediaInput>
+    connectOrCreate?: PlaceCreateOrConnectWithoutMediaInput
+    upsert?: PlaceUpsertWithoutMediaInput
+    connect?: PlaceWhereUniqueInput
+    update?: XOR<XOR<PlaceUpdateToOneWithWhereWithoutMediaInput, PlaceUpdateWithoutMediaInput>, PlaceUncheckedUpdateWithoutMediaInput>
+  }
+
+  export type UserUpdateOneWithoutUploadedMediaNestedInput = {
+    create?: XOR<UserCreateWithoutUploadedMediaInput, UserUncheckedCreateWithoutUploadedMediaInput>
+    connectOrCreate?: UserCreateOrConnectWithoutUploadedMediaInput
+    upsert?: UserUpsertWithoutUploadedMediaInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutUploadedMediaInput, UserUpdateWithoutUploadedMediaInput>, UserUncheckedUpdateWithoutUploadedMediaInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -7899,6 +9855,39 @@ export namespace Prisma {
     _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
+  export type NestedEnumMediaTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.MediaType | EnumMediaTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumMediaTypeFilter<$PrismaModel> | $Enums.MediaType
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMediaTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MediaType | EnumMediaTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MediaType[] | ListEnumMediaTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumMediaTypeWithAggregatesFilter<$PrismaModel> | $Enums.MediaType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMediaTypeFilter<$PrismaModel>
+    _max?: NestedEnumMediaTypeFilter<$PrismaModel>
+  }
+
   export type ReviewCreateWithoutUserInput = {
     id?: string
     rating: number
@@ -7946,6 +9935,48 @@ export namespace Prisma {
 
   export type FavoriteCreateManyUserInputEnvelope = {
     data: FavoriteCreateManyUserInput | FavoriteCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type MediaCreateWithoutUploaderInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    place: PlaceCreateNestedOneWithoutMediaInput
+  }
+
+  export type MediaUncheckedCreateWithoutUploaderInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    placeId: string
+  }
+
+  export type MediaCreateOrConnectWithoutUploaderInput = {
+    where: MediaWhereUniqueInput
+    create: XOR<MediaCreateWithoutUploaderInput, MediaUncheckedCreateWithoutUploaderInput>
+  }
+
+  export type MediaCreateManyUploaderInputEnvelope = {
+    data: MediaCreateManyUploaderInput | MediaCreateManyUploaderInput[]
     skipDuplicates?: boolean
   }
 
@@ -8004,6 +10035,42 @@ export namespace Prisma {
     placeId?: StringFilter<"Favorite"> | string
   }
 
+  export type MediaUpsertWithWhereUniqueWithoutUploaderInput = {
+    where: MediaWhereUniqueInput
+    update: XOR<MediaUpdateWithoutUploaderInput, MediaUncheckedUpdateWithoutUploaderInput>
+    create: XOR<MediaCreateWithoutUploaderInput, MediaUncheckedCreateWithoutUploaderInput>
+  }
+
+  export type MediaUpdateWithWhereUniqueWithoutUploaderInput = {
+    where: MediaWhereUniqueInput
+    data: XOR<MediaUpdateWithoutUploaderInput, MediaUncheckedUpdateWithoutUploaderInput>
+  }
+
+  export type MediaUpdateManyWithWhereWithoutUploaderInput = {
+    where: MediaScalarWhereInput
+    data: XOR<MediaUpdateManyMutationInput, MediaUncheckedUpdateManyWithoutUploaderInput>
+  }
+
+  export type MediaScalarWhereInput = {
+    AND?: MediaScalarWhereInput | MediaScalarWhereInput[]
+    OR?: MediaScalarWhereInput[]
+    NOT?: MediaScalarWhereInput | MediaScalarWhereInput[]
+    id?: StringFilter<"Media"> | string
+    fileName?: StringFilter<"Media"> | string
+    fileUrl?: StringFilter<"Media"> | string
+    fileSize?: IntNullableFilter<"Media"> | number | null
+    mimeType?: StringNullableFilter<"Media"> | string | null
+    mediaType?: EnumMediaTypeFilter<"Media"> | $Enums.MediaType
+    title?: StringNullableFilter<"Media"> | string | null
+    altText?: StringNullableFilter<"Media"> | string | null
+    sortOrder?: IntFilter<"Media"> | number
+    createdAt?: DateTimeFilter<"Media"> | Date | string
+    updatedAt?: DateTimeFilter<"Media"> | Date | string
+    isActive?: BoolFilter<"Media"> | boolean
+    placeId?: StringFilter<"Media"> | string
+    uploadedBy?: StringNullableFilter<"Media"> | string | null
+  }
+
   export type ReviewCreateWithoutPlaceInput = {
     id?: string
     rating: number
@@ -8054,6 +10121,48 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type MediaCreateWithoutPlaceInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    uploader?: UserCreateNestedOneWithoutUploadedMediaInput
+  }
+
+  export type MediaUncheckedCreateWithoutPlaceInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    uploadedBy?: string | null
+  }
+
+  export type MediaCreateOrConnectWithoutPlaceInput = {
+    where: MediaWhereUniqueInput
+    create: XOR<MediaCreateWithoutPlaceInput, MediaUncheckedCreateWithoutPlaceInput>
+  }
+
+  export type MediaCreateManyPlaceInputEnvelope = {
+    data: MediaCreateManyPlaceInput | MediaCreateManyPlaceInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ReviewUpsertWithWhereUniqueWithoutPlaceInput = {
     where: ReviewWhereUniqueInput
     update: XOR<ReviewUpdateWithoutPlaceInput, ReviewUncheckedUpdateWithoutPlaceInput>
@@ -8086,6 +10195,22 @@ export namespace Prisma {
     data: XOR<FavoriteUpdateManyMutationInput, FavoriteUncheckedUpdateManyWithoutPlaceInput>
   }
 
+  export type MediaUpsertWithWhereUniqueWithoutPlaceInput = {
+    where: MediaWhereUniqueInput
+    update: XOR<MediaUpdateWithoutPlaceInput, MediaUncheckedUpdateWithoutPlaceInput>
+    create: XOR<MediaCreateWithoutPlaceInput, MediaUncheckedCreateWithoutPlaceInput>
+  }
+
+  export type MediaUpdateWithWhereUniqueWithoutPlaceInput = {
+    where: MediaWhereUniqueInput
+    data: XOR<MediaUpdateWithoutPlaceInput, MediaUncheckedUpdateWithoutPlaceInput>
+  }
+
+  export type MediaUpdateManyWithWhereWithoutPlaceInput = {
+    where: MediaScalarWhereInput
+    data: XOR<MediaUpdateManyMutationInput, MediaUncheckedUpdateManyWithoutPlaceInput>
+  }
+
   export type UserCreateWithoutReviewsInput = {
     id?: string
     email: string
@@ -8099,6 +10224,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isActive?: boolean
     favorites?: FavoriteCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
   }
 
   export type UserUncheckedCreateWithoutReviewsInput = {
@@ -8114,6 +10240,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isActive?: boolean
     favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
   }
 
   export type UserCreateOrConnectWithoutReviewsInput = {
@@ -8137,12 +10264,14 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
     favorites?: FavoriteCreateNestedManyWithoutPlaceInput
+    media?: MediaCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateWithoutReviewsInput = {
@@ -8161,12 +10290,14 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
     favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
+    media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceCreateOrConnectWithoutReviewsInput = {
@@ -8198,6 +10329,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     favorites?: FavoriteUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewsInput = {
@@ -8213,6 +10345,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
   }
 
   export type PlaceUpsertWithoutReviewsInput = {
@@ -8242,12 +10375,14 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
+    media?: MediaUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateWithoutReviewsInput = {
@@ -8266,12 +10401,14 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
+    media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
   }
 
   export type UserCreateWithoutFavoritesInput = {
@@ -8287,6 +10424,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isActive?: boolean
     reviews?: ReviewCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
   }
 
   export type UserUncheckedCreateWithoutFavoritesInput = {
@@ -8302,6 +10440,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     isActive?: boolean
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
   }
 
   export type UserCreateOrConnectWithoutFavoritesInput = {
@@ -8325,12 +10464,14 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
     reviews?: ReviewCreateNestedManyWithoutPlaceInput
+    media?: MediaCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateWithoutFavoritesInput = {
@@ -8349,12 +10490,14 @@ export namespace Prisma {
     phoneNumber?: string | null
     website?: string | null
     imageUrl?: string | null
+    externalPlaceId?: string | null
     averageRating?: number
     totalReviews?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
     reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
+    media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceCreateOrConnectWithoutFavoritesInput = {
@@ -8386,6 +10529,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFavoritesInput = {
@@ -8401,6 +10545,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
   }
 
   export type PlaceUpsertWithoutFavoritesInput = {
@@ -8430,12 +10575,14 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUpdateManyWithoutPlaceNestedInput
+    media?: MediaUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateWithoutFavoritesInput = {
@@ -8454,12 +10601,214 @@ export namespace Prisma {
     phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
     website?: NullableStringFieldUpdateOperationsInput | string | null
     imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
     averageRating?: FloatFieldUpdateOperationsInput | number
     totalReviews?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
+    media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
+  }
+
+  export type PlaceCreateWithoutMediaInput = {
+    id?: string
+    name: string
+    description?: string | null
+    address: string
+    latitude: number
+    longitude: number
+    placeType: $Enums.PlaceType
+    minAge?: number
+    maxAge?: number
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    phoneNumber?: string | null
+    website?: string | null
+    imageUrl?: string | null
+    externalPlaceId?: string | null
+    averageRating?: number
+    totalReviews?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    reviews?: ReviewCreateNestedManyWithoutPlaceInput
+    favorites?: FavoriteCreateNestedManyWithoutPlaceInput
+  }
+
+  export type PlaceUncheckedCreateWithoutMediaInput = {
+    id?: string
+    name: string
+    description?: string | null
+    address: string
+    latitude: number
+    longitude: number
+    placeType: $Enums.PlaceType
+    minAge?: number
+    maxAge?: number
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    phoneNumber?: string | null
+    website?: string | null
+    imageUrl?: string | null
+    externalPlaceId?: string | null
+    averageRating?: number
+    totalReviews?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
+    favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
+  }
+
+  export type PlaceCreateOrConnectWithoutMediaInput = {
+    where: PlaceWhereUniqueInput
+    create: XOR<PlaceCreateWithoutMediaInput, PlaceUncheckedCreateWithoutMediaInput>
+  }
+
+  export type UserCreateWithoutUploadedMediaInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    phoneNumber?: string | null
+    address?: string | null
+    numberOfKids?: number
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    reviews?: ReviewCreateNestedManyWithoutUserInput
+    favorites?: FavoriteCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutUploadedMediaInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    phoneNumber?: string | null
+    address?: string | null
+    numberOfKids?: number
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutUploadedMediaInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutUploadedMediaInput, UserUncheckedCreateWithoutUploadedMediaInput>
+  }
+
+  export type PlaceUpsertWithoutMediaInput = {
+    update: XOR<PlaceUpdateWithoutMediaInput, PlaceUncheckedUpdateWithoutMediaInput>
+    create: XOR<PlaceCreateWithoutMediaInput, PlaceUncheckedCreateWithoutMediaInput>
+    where?: PlaceWhereInput
+  }
+
+  export type PlaceUpdateToOneWithWhereWithoutMediaInput = {
+    where?: PlaceWhereInput
+    data: XOR<PlaceUpdateWithoutMediaInput, PlaceUncheckedUpdateWithoutMediaInput>
+  }
+
+  export type PlaceUpdateWithoutMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: FloatFieldUpdateOperationsInput | number
+    longitude?: FloatFieldUpdateOperationsInput | number
+    placeType?: EnumPlaceTypeFieldUpdateOperationsInput | $Enums.PlaceType
+    minAge?: IntFieldUpdateOperationsInput | number
+    maxAge?: IntFieldUpdateOperationsInput | number
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    averageRating?: FloatFieldUpdateOperationsInput | number
+    totalReviews?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: ReviewUpdateManyWithoutPlaceNestedInput
+    favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
+  }
+
+  export type PlaceUncheckedUpdateWithoutMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: FloatFieldUpdateOperationsInput | number
+    longitude?: FloatFieldUpdateOperationsInput | number
+    placeType?: EnumPlaceTypeFieldUpdateOperationsInput | $Enums.PlaceType
+    minAge?: IntFieldUpdateOperationsInput | number
+    maxAge?: IntFieldUpdateOperationsInput | number
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    averageRating?: FloatFieldUpdateOperationsInput | number
+    totalReviews?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
+    favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
+  }
+
+  export type UserUpsertWithoutUploadedMediaInput = {
+    update: XOR<UserUpdateWithoutUploadedMediaInput, UserUncheckedUpdateWithoutUploadedMediaInput>
+    create: XOR<UserCreateWithoutUploadedMediaInput, UserUncheckedCreateWithoutUploadedMediaInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutUploadedMediaInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutUploadedMediaInput, UserUncheckedUpdateWithoutUploadedMediaInput>
+  }
+
+  export type UserUpdateWithoutUploadedMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    numberOfKids?: IntFieldUpdateOperationsInput | number
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: ReviewUpdateManyWithoutUserNestedInput
+    favorites?: FavoriteUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutUploadedMediaInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    numberOfKids?: IntFieldUpdateOperationsInput | number
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ReviewCreateManyUserInput = {
@@ -8474,6 +10823,22 @@ export namespace Prisma {
   export type FavoriteCreateManyUserInput = {
     id?: string
     createdAt?: Date | string
+    placeId: string
+  }
+
+  export type MediaCreateManyUploaderInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
     placeId: string
   }
 
@@ -8522,6 +10887,54 @@ export namespace Prisma {
     placeId?: StringFieldUpdateOperationsInput | string
   }
 
+  export type MediaUpdateWithoutUploaderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    place?: PlaceUpdateOneRequiredWithoutMediaNestedInput
+  }
+
+  export type MediaUncheckedUpdateWithoutUploaderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    placeId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type MediaUncheckedUpdateManyWithoutUploaderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    placeId?: StringFieldUpdateOperationsInput | string
+  }
+
   export type ReviewCreateManyPlaceInput = {
     id?: string
     rating: number
@@ -8535,6 +10948,22 @@ export namespace Prisma {
     id?: string
     createdAt?: Date | string
     userId: string
+  }
+
+  export type MediaCreateManyPlaceInput = {
+    id?: string
+    fileName: string
+    fileUrl: string
+    fileSize?: number | null
+    mimeType?: string | null
+    mediaType: $Enums.MediaType
+    title?: string | null
+    altText?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    uploadedBy?: string | null
   }
 
   export type ReviewUpdateWithoutPlaceInput = {
@@ -8580,6 +11009,54 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     userId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type MediaUpdateWithoutPlaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploader?: UserUpdateOneWithoutUploadedMediaNestedInput
+  }
+
+  export type MediaUncheckedUpdateWithoutPlaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type MediaUncheckedUpdateManyWithoutPlaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileUrl?: StringFieldUpdateOperationsInput | string
+    fileSize?: NullableIntFieldUpdateOperationsInput | number | null
+    mimeType?: NullableStringFieldUpdateOperationsInput | string | null
+    mediaType?: EnumMediaTypeFieldUpdateOperationsInput | $Enums.MediaType
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    altText?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 

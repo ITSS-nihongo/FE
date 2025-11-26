@@ -64,6 +64,12 @@ const metadata: ModelMeta = {
                     isDataModel: true,
                     isArray: true,
                     backLink: 'user',
+                }, uploadedMedia: {
+                    name: "uploadedMedia",
+                    type: "Media",
+                    isDataModel: true,
+                    isArray: true,
+                    backLink: 'uploader',
                 },
             }, uniqueConstraints: {
                 id: {
@@ -133,6 +139,10 @@ const metadata: ModelMeta = {
                     name: "imageUrl",
                     type: "String",
                     isOptional: true,
+                }, externalPlaceId: {
+                    name: "externalPlaceId",
+                    type: "String",
+                    isOptional: true,
                 }, averageRating: {
                     name: "averageRating",
                     type: "Float",
@@ -165,11 +175,20 @@ const metadata: ModelMeta = {
                     isDataModel: true,
                     isArray: true,
                     backLink: 'place',
+                }, media: {
+                    name: "media",
+                    type: "Media",
+                    isDataModel: true,
+                    isArray: true,
+                    backLink: 'place',
                 },
             }, uniqueConstraints: {
                 id: {
                     name: "id",
                     fields: ["id"]
+                }, externalPlaceId: {
+                    name: "externalPlaceId",
+                    fields: ["externalPlaceId"]
                 },
             },
         },
@@ -226,9 +245,6 @@ const metadata: ModelMeta = {
                 id: {
                     name: "id",
                     fields: ["id"]
-                }, userId_placeId: {
-                    name: "userId_placeId",
-                    fields: ["userId", "placeId"]
                 },
             },
         },
@@ -280,11 +296,95 @@ const metadata: ModelMeta = {
                 },
             },
         },
+        media: {
+            name: 'Media', fields: {
+                id: {
+                    name: "id",
+                    type: "String",
+                    isId: true,
+                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
+                }, fileName: {
+                    name: "fileName",
+                    type: "String",
+                }, fileUrl: {
+                    name: "fileUrl",
+                    type: "String",
+                }, fileSize: {
+                    name: "fileSize",
+                    type: "Int",
+                    isOptional: true,
+                }, mimeType: {
+                    name: "mimeType",
+                    type: "String",
+                    isOptional: true,
+                }, mediaType: {
+                    name: "mediaType",
+                    type: "MediaType",
+                }, title: {
+                    name: "title",
+                    type: "String",
+                    isOptional: true,
+                }, altText: {
+                    name: "altText",
+                    type: "String",
+                    isOptional: true,
+                }, sortOrder: {
+                    name: "sortOrder",
+                    type: "Int",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value", "value": 0 }] }],
+                }, createdAt: {
+                    name: "createdAt",
+                    type: "DateTime",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
+                }, updatedAt: {
+                    name: "updatedAt",
+                    type: "DateTime",
+                    attributes: [{ "name": "@updatedAt", "args": [] }],
+                }, isActive: {
+                    name: "isActive",
+                    type: "Boolean",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value", "value": true }] }],
+                }, placeId: {
+                    name: "placeId",
+                    type: "String",
+                    isForeignKey: true,
+                    relationField: 'place',
+                }, uploadedBy: {
+                    name: "uploadedBy",
+                    type: "String",
+                    isOptional: true,
+                    isForeignKey: true,
+                    relationField: 'uploader',
+                }, place: {
+                    name: "place",
+                    type: "Place",
+                    isDataModel: true,
+                    backLink: 'media',
+                    isRelationOwner: true,
+                    onDeleteAction: 'Cascade',
+                    foreignKeyMapping: { "id": "placeId" },
+                }, uploader: {
+                    name: "uploader",
+                    type: "User",
+                    isDataModel: true,
+                    isOptional: true,
+                    backLink: 'uploadedMedia',
+                    isRelationOwner: true,
+                    onDeleteAction: 'SetNull',
+                    foreignKeyMapping: { "id": "uploadedBy" },
+                },
+            }, uniqueConstraints: {
+                id: {
+                    name: "id",
+                    fields: ["id"]
+                },
+            },
+        },
 
     },
     deleteCascade: {
         user: ['Review', 'Favorite'],
-        place: ['Review', 'Favorite'],
+        place: ['Review', 'Favorite', 'Media'],
 
     },
     authModel: 'User'

@@ -1,7 +1,8 @@
 import { LoginForm } from "@/components/features/auth/login-form";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   return (
     <div className="bg-white rounded-lg shadow-md p-8">
       {/* Header */}
@@ -38,5 +39,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="bg-white rounded-lg shadow-md p-8">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -331,10 +331,7 @@ export default function SearchResultsPage() {
         </div>
       )}
 
-      {/* Copyright Footer */}
-      <div className="text-center text-xs text-gray-500 py-8 border-t mt-8">
-        © 2025 TheWeekend. All rights reserved.
-      </div>
+     
     </div>
   )
 }

@@ -13,15 +13,15 @@ export function middleware(request: NextRequest) {
   })
 
   // Public routes (không cần auth)
-  const publicRoutes = ['/login', '/register', '/forgot-password']
+  const publicRoutes = ['/login', '/register', '/forgot-password', '/dashboard', '/search', '/places']
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
   // Auth routes (đã login thì không cho vào)
   const authRoutes = ['/login', '/register']
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
-  // Protected routes (cần auth)
-  const protectedRoutes = ['/dashboard', '/profile', '/favorites', '/admin']
+  // Protected routes (cần auth) - profile, favorites, và recommendations
+  const protectedRoutes = ['/profile', '/favorites', '/recommendations', '/admin']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
 
   // Nếu đã có token và đang ở auth routes -> redirect về dashboard

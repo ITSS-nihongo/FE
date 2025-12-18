@@ -31,50 +31,59 @@ enum MediaType {
   VIDEO
 }
 
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id            String     @id() @default(uuid())
-  email         String     @unique()
-  password      String
-  name          String
-  phoneNumber   String?
-  address       String?
-  numberOfKids  Int        @default(0)
-  role          UserRole   @default(USER)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt()
-  isActive      Boolean    @default(true)
-  reviews       Review[]
-  favorites     Favorite[]
-  uploadedMedia Media[]
+  id             String               @id() @default(uuid())
+  email          String               @unique()
+  password       String
+  name           String
+  phoneNumber    String?
+  address        String?
+  numberOfKids   Int                  @default(0)
+  role           UserRole             @default(USER)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt()
+  isActive       Boolean              @default(true)
+  reviews        Review[]
+  favorites      Favorite[]
+  uploadedMedia  Media[]
+  updateRequests PlaceUpdateRequest[]
 
   @@map("users")
 }
 
 model Place {
-  id              String     @id() @default(uuid())
+  id              String               @id() @default(uuid())
   name            String
   description     String?
   address         String
   latitude        Float
   longitude       Float
   placeType       PlaceType
-  minAge          Int        @default(0)
-  maxAge          Int        @default(100)
+  minAge          Int                  @default(0)
+  maxAge          Int                  @default(100)
   area            Float?
   openingTime     String?
   closingTime     String?
   phoneNumber     String?
   website         String?
   imageUrl        String?
-  externalPlaceId String?    @unique()
-  averageRating   Float      @default(0)
-  totalReviews    Int        @default(0)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt()
-  isActive        Boolean    @default(true)
+  externalPlaceId String?              @unique()
+  averageRating   Float                @default(0)
+  totalReviews    Int                  @default(0)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt()
+  isActive        Boolean              @default(true)
+  price           Float?
   reviews         Review[]
   favorites       Favorite[]
   media           Media[]
+  updateRequests  PlaceUpdateRequest[]
 
   @@map("places")
 }
@@ -106,22 +115,46 @@ model Favorite {
 }
 
 model Media {
-  id         String    @id() @default(uuid())
-  fileName   String
-  fileUrl    String
-  fileSize   Int?
-  mimeType   String?
-  mediaType  MediaType
-  title      String?
-  altText    String?
-  sortOrder  Int       @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt()
-  isActive   Boolean   @default(true)
-  placeId    String
-  uploadedBy String?
-  place      Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
-  uploader   User?     @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+  id                String    @id() @default(uuid())
+  fileName          String
+  fileUrl           String
+  fileSize          Int?
+  mimeType          String?
+  mediaType         MediaType
+  title             String?
+  altText           String?
+  sortOrder         Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt()
+  isActive          Boolean   @default(true)
+  isPendingApproval Boolean   @default(false)
+  placeId           String
+  uploadedBy        String?
+  place             Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  uploader          User?     @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
 
   @@map("media")
+}
+
+model PlaceUpdateRequest {
+  id              String        @id() @default(uuid())
+  status          RequestStatus @default(PENDING)
+  description     String?
+  area            Float?
+  openingTime     String?
+  closingTime     String?
+  minAge          Int?
+  maxAge          Int?
+  price           Float?
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt()
+  reviewedAt      DateTime?
+  placeId         String
+  userId          String
+  reviewedBy      String?
+  place           Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("place_update_requests")
 }

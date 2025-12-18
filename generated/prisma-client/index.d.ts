@@ -38,6 +38,11 @@ export type Favorite = $Result.DefaultSelection<Prisma.$FavoritePayload>
  * 
  */
 export type Media = $Result.DefaultSelection<Prisma.$MediaPayload>
+/**
+ * Model PlaceUpdateRequest
+ * 
+ */
+export type PlaceUpdateRequest = $Result.DefaultSelection<Prisma.$PlaceUpdateRequestPayload>
 
 /**
  * Enums
@@ -66,6 +71,15 @@ export const MediaType: {
 
 export type MediaType = (typeof MediaType)[keyof typeof MediaType]
 
+
+export const RequestStatus: {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
+export type RequestStatus = (typeof RequestStatus)[keyof typeof RequestStatus]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -79,6 +93,10 @@ export const PlaceType: typeof $Enums.PlaceType
 export type MediaType = $Enums.MediaType
 
 export const MediaType: typeof $Enums.MediaType
+
+export type RequestStatus = $Enums.RequestStatus
+
+export const RequestStatus: typeof $Enums.RequestStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -257,6 +275,16 @@ export class PrismaClient<
     * ```
     */
   get media(): Prisma.MediaDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.placeUpdateRequest`: Exposes CRUD operations for the **PlaceUpdateRequest** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlaceUpdateRequests
+    * const placeUpdateRequests = await prisma.placeUpdateRequest.findMany()
+    * ```
+    */
+  get placeUpdateRequest(): Prisma.PlaceUpdateRequestDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -702,7 +730,8 @@ export namespace Prisma {
     Place: 'Place',
     Review: 'Review',
     Favorite: 'Favorite',
-    Media: 'Media'
+    Media: 'Media',
+    PlaceUpdateRequest: 'PlaceUpdateRequest'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -721,7 +750,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "place" | "review" | "favorite" | "media"
+      modelProps: "user" | "place" | "review" | "favorite" | "media" | "placeUpdateRequest"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1095,6 +1124,80 @@ export namespace Prisma {
           }
         }
       }
+      PlaceUpdateRequest: {
+        payload: Prisma.$PlaceUpdateRequestPayload<ExtArgs>
+        fields: Prisma.PlaceUpdateRequestFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlaceUpdateRequestFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlaceUpdateRequestFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>
+          }
+          findFirst: {
+            args: Prisma.PlaceUpdateRequestFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlaceUpdateRequestFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>
+          }
+          findMany: {
+            args: Prisma.PlaceUpdateRequestFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>[]
+          }
+          create: {
+            args: Prisma.PlaceUpdateRequestCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>
+          }
+          createMany: {
+            args: Prisma.PlaceUpdateRequestCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlaceUpdateRequestCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>[]
+          }
+          delete: {
+            args: Prisma.PlaceUpdateRequestDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>
+          }
+          update: {
+            args: Prisma.PlaceUpdateRequestUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlaceUpdateRequestDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlaceUpdateRequestUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PlaceUpdateRequestUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>[]
+          }
+          upsert: {
+            args: Prisma.PlaceUpdateRequestUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlaceUpdateRequestPayload>
+          }
+          aggregate: {
+            args: Prisma.PlaceUpdateRequestAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlaceUpdateRequest>
+          }
+          groupBy: {
+            args: Prisma.PlaceUpdateRequestGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlaceUpdateRequestGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlaceUpdateRequestCountArgs<ExtArgs>
+            result: $Utils.Optional<PlaceUpdateRequestCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1200,6 +1303,7 @@ export namespace Prisma {
     review?: ReviewOmit
     favorite?: FavoriteOmit
     media?: MediaOmit
+    placeUpdateRequest?: PlaceUpdateRequestOmit
   }
 
   /* Types for Logging */
@@ -1283,12 +1387,14 @@ export namespace Prisma {
     reviews: number
     favorites: number
     uploadedMedia: number
+    updateRequests: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | UserCountOutputTypeCountReviewsArgs
     favorites?: boolean | UserCountOutputTypeCountFavoritesArgs
     uploadedMedia?: boolean | UserCountOutputTypeCountUploadedMediaArgs
+    updateRequests?: boolean | UserCountOutputTypeCountUpdateRequestsArgs
   }
 
   // Custom InputTypes
@@ -1323,6 +1429,13 @@ export namespace Prisma {
     where?: MediaWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountUpdateRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlaceUpdateRequestWhereInput
+  }
+
 
   /**
    * Count Type PlaceCountOutputType
@@ -1332,12 +1445,14 @@ export namespace Prisma {
     reviews: number
     favorites: number
     media: number
+    updateRequests: number
   }
 
   export type PlaceCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | PlaceCountOutputTypeCountReviewsArgs
     favorites?: boolean | PlaceCountOutputTypeCountFavoritesArgs
     media?: boolean | PlaceCountOutputTypeCountMediaArgs
+    updateRequests?: boolean | PlaceCountOutputTypeCountUpdateRequestsArgs
   }
 
   // Custom InputTypes
@@ -1370,6 +1485,13 @@ export namespace Prisma {
    */
   export type PlaceCountOutputTypeCountMediaArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MediaWhereInput
+  }
+
+  /**
+   * PlaceCountOutputType without action
+   */
+  export type PlaceCountOutputTypeCountUpdateRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlaceUpdateRequestWhereInput
   }
 
 
@@ -1626,6 +1748,7 @@ export namespace Prisma {
     reviews?: boolean | User$reviewsArgs<ExtArgs>
     favorites?: boolean | User$favoritesArgs<ExtArgs>
     uploadedMedia?: boolean | User$uploadedMediaArgs<ExtArgs>
+    updateRequests?: boolean | User$updateRequestsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1676,6 +1799,7 @@ export namespace Prisma {
     reviews?: boolean | User$reviewsArgs<ExtArgs>
     favorites?: boolean | User$favoritesArgs<ExtArgs>
     uploadedMedia?: boolean | User$uploadedMediaArgs<ExtArgs>
+    updateRequests?: boolean | User$updateRequestsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1687,6 +1811,7 @@ export namespace Prisma {
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       favorites: Prisma.$FavoritePayload<ExtArgs>[]
       uploadedMedia: Prisma.$MediaPayload<ExtArgs>[]
+      updateRequests: Prisma.$PlaceUpdateRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2097,6 +2222,7 @@ export namespace Prisma {
     reviews<T extends User$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, User$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     favorites<T extends User$favoritesArgs<ExtArgs> = {}>(args?: Subset<T, User$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     uploadedMedia<T extends User$uploadedMediaArgs<ExtArgs> = {}>(args?: Subset<T, User$uploadedMediaArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    updateRequests<T extends User$updateRequestsArgs<ExtArgs> = {}>(args?: Subset<T, User$updateRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2597,6 +2723,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.updateRequests
+   */
+  export type User$updateRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    where?: PlaceUpdateRequestWhereInput
+    orderBy?: PlaceUpdateRequestOrderByWithRelationInput | PlaceUpdateRequestOrderByWithRelationInput[]
+    cursor?: PlaceUpdateRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlaceUpdateRequestScalarFieldEnum | PlaceUpdateRequestScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2635,6 +2785,7 @@ export namespace Prisma {
     area: number | null
     averageRating: number | null
     totalReviews: number | null
+    price: number | null
   }
 
   export type PlaceSumAggregateOutputType = {
@@ -2645,6 +2796,7 @@ export namespace Prisma {
     area: number | null
     averageRating: number | null
     totalReviews: number | null
+    price: number | null
   }
 
   export type PlaceMinAggregateOutputType = {
@@ -2669,6 +2821,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     isActive: boolean | null
+    price: number | null
   }
 
   export type PlaceMaxAggregateOutputType = {
@@ -2693,6 +2846,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     isActive: boolean | null
+    price: number | null
   }
 
   export type PlaceCountAggregateOutputType = {
@@ -2717,6 +2871,7 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     isActive: number
+    price: number
     _all: number
   }
 
@@ -2729,6 +2884,7 @@ export namespace Prisma {
     area?: true
     averageRating?: true
     totalReviews?: true
+    price?: true
   }
 
   export type PlaceSumAggregateInputType = {
@@ -2739,6 +2895,7 @@ export namespace Prisma {
     area?: true
     averageRating?: true
     totalReviews?: true
+    price?: true
   }
 
   export type PlaceMinAggregateInputType = {
@@ -2763,6 +2920,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     isActive?: true
+    price?: true
   }
 
   export type PlaceMaxAggregateInputType = {
@@ -2787,6 +2945,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     isActive?: true
+    price?: true
   }
 
   export type PlaceCountAggregateInputType = {
@@ -2811,6 +2970,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     isActive?: true
+    price?: true
     _all?: true
   }
 
@@ -2922,6 +3082,7 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     isActive: boolean
+    price: number | null
     _count: PlaceCountAggregateOutputType | null
     _avg: PlaceAvgAggregateOutputType | null
     _sum: PlaceSumAggregateOutputType | null
@@ -2965,9 +3126,11 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    price?: boolean
     reviews?: boolean | Place$reviewsArgs<ExtArgs>
     favorites?: boolean | Place$favoritesArgs<ExtArgs>
     media?: boolean | Place$mediaArgs<ExtArgs>
+    updateRequests?: boolean | Place$updateRequestsArgs<ExtArgs>
     _count?: boolean | PlaceCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["place"]>
 
@@ -2993,6 +3156,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    price?: boolean
   }, ExtArgs["result"]["place"]>
 
   export type PlaceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -3017,6 +3181,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    price?: boolean
   }, ExtArgs["result"]["place"]>
 
   export type PlaceSelectScalar = {
@@ -3041,13 +3206,15 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    price?: boolean
   }
 
-  export type PlaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "address" | "latitude" | "longitude" | "placeType" | "minAge" | "maxAge" | "area" | "openingTime" | "closingTime" | "phoneNumber" | "website" | "imageUrl" | "externalPlaceId" | "averageRating" | "totalReviews" | "createdAt" | "updatedAt" | "isActive", ExtArgs["result"]["place"]>
+  export type PlaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "address" | "latitude" | "longitude" | "placeType" | "minAge" | "maxAge" | "area" | "openingTime" | "closingTime" | "phoneNumber" | "website" | "imageUrl" | "externalPlaceId" | "averageRating" | "totalReviews" | "createdAt" | "updatedAt" | "isActive" | "price", ExtArgs["result"]["place"]>
   export type PlaceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     reviews?: boolean | Place$reviewsArgs<ExtArgs>
     favorites?: boolean | Place$favoritesArgs<ExtArgs>
     media?: boolean | Place$mediaArgs<ExtArgs>
+    updateRequests?: boolean | Place$updateRequestsArgs<ExtArgs>
     _count?: boolean | PlaceCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PlaceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3059,6 +3226,7 @@ export namespace Prisma {
       reviews: Prisma.$ReviewPayload<ExtArgs>[]
       favorites: Prisma.$FavoritePayload<ExtArgs>[]
       media: Prisma.$MediaPayload<ExtArgs>[]
+      updateRequests: Prisma.$PlaceUpdateRequestPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3082,6 +3250,7 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       isActive: boolean
+      price: number | null
     }, ExtArgs["result"]["place"]>
     composites: {}
   }
@@ -3479,6 +3648,7 @@ export namespace Prisma {
     reviews<T extends Place$reviewsArgs<ExtArgs> = {}>(args?: Subset<T, Place$reviewsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReviewPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     favorites<T extends Place$favoritesArgs<ExtArgs> = {}>(args?: Subset<T, Place$favoritesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FavoritePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     media<T extends Place$mediaArgs<ExtArgs> = {}>(args?: Subset<T, Place$mediaArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MediaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    updateRequests<T extends Place$updateRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Place$updateRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3529,6 +3699,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"Place", 'DateTime'>
     readonly updatedAt: FieldRef<"Place", 'DateTime'>
     readonly isActive: FieldRef<"Place", 'Boolean'>
+    readonly price: FieldRef<"Place", 'Float'>
   }
     
 
@@ -3986,6 +4157,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: MediaScalarFieldEnum | MediaScalarFieldEnum[]
+  }
+
+  /**
+   * Place.updateRequests
+   */
+  export type Place$updateRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    where?: PlaceUpdateRequestWhereInput
+    orderBy?: PlaceUpdateRequestOrderByWithRelationInput | PlaceUpdateRequestOrderByWithRelationInput[]
+    cursor?: PlaceUpdateRequestWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlaceUpdateRequestScalarFieldEnum | PlaceUpdateRequestScalarFieldEnum[]
   }
 
   /**
@@ -6221,6 +6416,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     isActive: boolean | null
+    isPendingApproval: boolean | null
     placeId: string | null
     uploadedBy: string | null
   }
@@ -6238,6 +6434,7 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     isActive: boolean | null
+    isPendingApproval: boolean | null
     placeId: string | null
     uploadedBy: string | null
   }
@@ -6255,6 +6452,7 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     isActive: number
+    isPendingApproval: number
     placeId: number
     uploadedBy: number
     _all: number
@@ -6284,6 +6482,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     isActive?: true
+    isPendingApproval?: true
     placeId?: true
     uploadedBy?: true
   }
@@ -6301,6 +6500,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     isActive?: true
+    isPendingApproval?: true
     placeId?: true
     uploadedBy?: true
   }
@@ -6318,6 +6518,7 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     isActive?: true
+    isPendingApproval?: true
     placeId?: true
     uploadedBy?: true
     _all?: true
@@ -6422,6 +6623,7 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     isActive: boolean
+    isPendingApproval: boolean
     placeId: string
     uploadedBy: string | null
     _count: MediaCountAggregateOutputType | null
@@ -6458,6 +6660,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId?: boolean
     uploadedBy?: boolean
     place?: boolean | PlaceDefaultArgs<ExtArgs>
@@ -6477,6 +6680,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId?: boolean
     uploadedBy?: boolean
     place?: boolean | PlaceDefaultArgs<ExtArgs>
@@ -6496,6 +6700,7 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId?: boolean
     uploadedBy?: boolean
     place?: boolean | PlaceDefaultArgs<ExtArgs>
@@ -6515,11 +6720,12 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId?: boolean
     uploadedBy?: boolean
   }
 
-  export type MediaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fileName" | "fileUrl" | "fileSize" | "mimeType" | "mediaType" | "title" | "altText" | "sortOrder" | "createdAt" | "updatedAt" | "isActive" | "placeId" | "uploadedBy", ExtArgs["result"]["media"]>
+  export type MediaOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fileName" | "fileUrl" | "fileSize" | "mimeType" | "mediaType" | "title" | "altText" | "sortOrder" | "createdAt" | "updatedAt" | "isActive" | "isPendingApproval" | "placeId" | "uploadedBy", ExtArgs["result"]["media"]>
   export type MediaInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     place?: boolean | PlaceDefaultArgs<ExtArgs>
     uploader?: boolean | Media$uploaderArgs<ExtArgs>
@@ -6552,6 +6758,7 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       isActive: boolean
+      isPendingApproval: boolean
       placeId: string
       uploadedBy: string | null
     }, ExtArgs["result"]["media"]>
@@ -6991,6 +7198,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"Media", 'DateTime'>
     readonly updatedAt: FieldRef<"Media", 'DateTime'>
     readonly isActive: FieldRef<"Media", 'Boolean'>
+    readonly isPendingApproval: FieldRef<"Media", 'Boolean'>
     readonly placeId: FieldRef<"Media", 'String'>
     readonly uploadedBy: FieldRef<"Media", 'String'>
   }
@@ -7427,6 +7635,1261 @@ export namespace Prisma {
 
 
   /**
+   * Model PlaceUpdateRequest
+   */
+
+  export type AggregatePlaceUpdateRequest = {
+    _count: PlaceUpdateRequestCountAggregateOutputType | null
+    _avg: PlaceUpdateRequestAvgAggregateOutputType | null
+    _sum: PlaceUpdateRequestSumAggregateOutputType | null
+    _min: PlaceUpdateRequestMinAggregateOutputType | null
+    _max: PlaceUpdateRequestMaxAggregateOutputType | null
+  }
+
+  export type PlaceUpdateRequestAvgAggregateOutputType = {
+    area: number | null
+    minAge: number | null
+    maxAge: number | null
+    price: number | null
+  }
+
+  export type PlaceUpdateRequestSumAggregateOutputType = {
+    area: number | null
+    minAge: number | null
+    maxAge: number | null
+    price: number | null
+  }
+
+  export type PlaceUpdateRequestMinAggregateOutputType = {
+    id: string | null
+    status: $Enums.RequestStatus | null
+    description: string | null
+    area: number | null
+    openingTime: string | null
+    closingTime: string | null
+    minAge: number | null
+    maxAge: number | null
+    price: number | null
+    rejectionReason: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    reviewedAt: Date | null
+    placeId: string | null
+    userId: string | null
+    reviewedBy: string | null
+  }
+
+  export type PlaceUpdateRequestMaxAggregateOutputType = {
+    id: string | null
+    status: $Enums.RequestStatus | null
+    description: string | null
+    area: number | null
+    openingTime: string | null
+    closingTime: string | null
+    minAge: number | null
+    maxAge: number | null
+    price: number | null
+    rejectionReason: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    reviewedAt: Date | null
+    placeId: string | null
+    userId: string | null
+    reviewedBy: string | null
+  }
+
+  export type PlaceUpdateRequestCountAggregateOutputType = {
+    id: number
+    status: number
+    description: number
+    area: number
+    openingTime: number
+    closingTime: number
+    minAge: number
+    maxAge: number
+    price: number
+    rejectionReason: number
+    createdAt: number
+    updatedAt: number
+    reviewedAt: number
+    placeId: number
+    userId: number
+    reviewedBy: number
+    _all: number
+  }
+
+
+  export type PlaceUpdateRequestAvgAggregateInputType = {
+    area?: true
+    minAge?: true
+    maxAge?: true
+    price?: true
+  }
+
+  export type PlaceUpdateRequestSumAggregateInputType = {
+    area?: true
+    minAge?: true
+    maxAge?: true
+    price?: true
+  }
+
+  export type PlaceUpdateRequestMinAggregateInputType = {
+    id?: true
+    status?: true
+    description?: true
+    area?: true
+    openingTime?: true
+    closingTime?: true
+    minAge?: true
+    maxAge?: true
+    price?: true
+    rejectionReason?: true
+    createdAt?: true
+    updatedAt?: true
+    reviewedAt?: true
+    placeId?: true
+    userId?: true
+    reviewedBy?: true
+  }
+
+  export type PlaceUpdateRequestMaxAggregateInputType = {
+    id?: true
+    status?: true
+    description?: true
+    area?: true
+    openingTime?: true
+    closingTime?: true
+    minAge?: true
+    maxAge?: true
+    price?: true
+    rejectionReason?: true
+    createdAt?: true
+    updatedAt?: true
+    reviewedAt?: true
+    placeId?: true
+    userId?: true
+    reviewedBy?: true
+  }
+
+  export type PlaceUpdateRequestCountAggregateInputType = {
+    id?: true
+    status?: true
+    description?: true
+    area?: true
+    openingTime?: true
+    closingTime?: true
+    minAge?: true
+    maxAge?: true
+    price?: true
+    rejectionReason?: true
+    createdAt?: true
+    updatedAt?: true
+    reviewedAt?: true
+    placeId?: true
+    userId?: true
+    reviewedBy?: true
+    _all?: true
+  }
+
+  export type PlaceUpdateRequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlaceUpdateRequest to aggregate.
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlaceUpdateRequests to fetch.
+     */
+    orderBy?: PlaceUpdateRequestOrderByWithRelationInput | PlaceUpdateRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlaceUpdateRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlaceUpdateRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlaceUpdateRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlaceUpdateRequests
+    **/
+    _count?: true | PlaceUpdateRequestCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PlaceUpdateRequestAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PlaceUpdateRequestSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlaceUpdateRequestMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlaceUpdateRequestMaxAggregateInputType
+  }
+
+  export type GetPlaceUpdateRequestAggregateType<T extends PlaceUpdateRequestAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlaceUpdateRequest]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlaceUpdateRequest[P]>
+      : GetScalarType<T[P], AggregatePlaceUpdateRequest[P]>
+  }
+
+
+
+
+  export type PlaceUpdateRequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlaceUpdateRequestWhereInput
+    orderBy?: PlaceUpdateRequestOrderByWithAggregationInput | PlaceUpdateRequestOrderByWithAggregationInput[]
+    by: PlaceUpdateRequestScalarFieldEnum[] | PlaceUpdateRequestScalarFieldEnum
+    having?: PlaceUpdateRequestScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlaceUpdateRequestCountAggregateInputType | true
+    _avg?: PlaceUpdateRequestAvgAggregateInputType
+    _sum?: PlaceUpdateRequestSumAggregateInputType
+    _min?: PlaceUpdateRequestMinAggregateInputType
+    _max?: PlaceUpdateRequestMaxAggregateInputType
+  }
+
+  export type PlaceUpdateRequestGroupByOutputType = {
+    id: string
+    status: $Enums.RequestStatus
+    description: string | null
+    area: number | null
+    openingTime: string | null
+    closingTime: string | null
+    minAge: number | null
+    maxAge: number | null
+    price: number | null
+    rejectionReason: string | null
+    createdAt: Date
+    updatedAt: Date
+    reviewedAt: Date | null
+    placeId: string
+    userId: string
+    reviewedBy: string | null
+    _count: PlaceUpdateRequestCountAggregateOutputType | null
+    _avg: PlaceUpdateRequestAvgAggregateOutputType | null
+    _sum: PlaceUpdateRequestSumAggregateOutputType | null
+    _min: PlaceUpdateRequestMinAggregateOutputType | null
+    _max: PlaceUpdateRequestMaxAggregateOutputType | null
+  }
+
+  type GetPlaceUpdateRequestGroupByPayload<T extends PlaceUpdateRequestGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlaceUpdateRequestGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlaceUpdateRequestGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlaceUpdateRequestGroupByOutputType[P]>
+            : GetScalarType<T[P], PlaceUpdateRequestGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlaceUpdateRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    status?: boolean
+    description?: boolean
+    area?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    minAge?: boolean
+    maxAge?: boolean
+    price?: boolean
+    rejectionReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    reviewedAt?: boolean
+    placeId?: boolean
+    userId?: boolean
+    reviewedBy?: boolean
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["placeUpdateRequest"]>
+
+  export type PlaceUpdateRequestSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    status?: boolean
+    description?: boolean
+    area?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    minAge?: boolean
+    maxAge?: boolean
+    price?: boolean
+    rejectionReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    reviewedAt?: boolean
+    placeId?: boolean
+    userId?: boolean
+    reviewedBy?: boolean
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["placeUpdateRequest"]>
+
+  export type PlaceUpdateRequestSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    status?: boolean
+    description?: boolean
+    area?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    minAge?: boolean
+    maxAge?: boolean
+    price?: boolean
+    rejectionReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    reviewedAt?: boolean
+    placeId?: boolean
+    userId?: boolean
+    reviewedBy?: boolean
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["placeUpdateRequest"]>
+
+  export type PlaceUpdateRequestSelectScalar = {
+    id?: boolean
+    status?: boolean
+    description?: boolean
+    area?: boolean
+    openingTime?: boolean
+    closingTime?: boolean
+    minAge?: boolean
+    maxAge?: boolean
+    price?: boolean
+    rejectionReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    reviewedAt?: boolean
+    placeId?: boolean
+    userId?: boolean
+    reviewedBy?: boolean
+  }
+
+  export type PlaceUpdateRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "description" | "area" | "openingTime" | "closingTime" | "minAge" | "maxAge" | "price" | "rejectionReason" | "createdAt" | "updatedAt" | "reviewedAt" | "placeId" | "userId" | "reviewedBy", ExtArgs["result"]["placeUpdateRequest"]>
+  export type PlaceUpdateRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type PlaceUpdateRequestIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type PlaceUpdateRequestIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    place?: boolean | PlaceDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $PlaceUpdateRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlaceUpdateRequest"
+    objects: {
+      place: Prisma.$PlacePayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      status: $Enums.RequestStatus
+      description: string | null
+      area: number | null
+      openingTime: string | null
+      closingTime: string | null
+      minAge: number | null
+      maxAge: number | null
+      price: number | null
+      rejectionReason: string | null
+      createdAt: Date
+      updatedAt: Date
+      reviewedAt: Date | null
+      placeId: string
+      userId: string
+      reviewedBy: string | null
+    }, ExtArgs["result"]["placeUpdateRequest"]>
+    composites: {}
+  }
+
+  type PlaceUpdateRequestGetPayload<S extends boolean | null | undefined | PlaceUpdateRequestDefaultArgs> = $Result.GetResult<Prisma.$PlaceUpdateRequestPayload, S>
+
+  type PlaceUpdateRequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PlaceUpdateRequestFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PlaceUpdateRequestCountAggregateInputType | true
+    }
+
+  export interface PlaceUpdateRequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlaceUpdateRequest'], meta: { name: 'PlaceUpdateRequest' } }
+    /**
+     * Find zero or one PlaceUpdateRequest that matches the filter.
+     * @param {PlaceUpdateRequestFindUniqueArgs} args - Arguments to find a PlaceUpdateRequest
+     * @example
+     * // Get one PlaceUpdateRequest
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlaceUpdateRequestFindUniqueArgs>(args: SelectSubset<T, PlaceUpdateRequestFindUniqueArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one PlaceUpdateRequest that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PlaceUpdateRequestFindUniqueOrThrowArgs} args - Arguments to find a PlaceUpdateRequest
+     * @example
+     * // Get one PlaceUpdateRequest
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlaceUpdateRequestFindUniqueOrThrowArgs>(args: SelectSubset<T, PlaceUpdateRequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PlaceUpdateRequest that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestFindFirstArgs} args - Arguments to find a PlaceUpdateRequest
+     * @example
+     * // Get one PlaceUpdateRequest
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlaceUpdateRequestFindFirstArgs>(args?: SelectSubset<T, PlaceUpdateRequestFindFirstArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first PlaceUpdateRequest that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestFindFirstOrThrowArgs} args - Arguments to find a PlaceUpdateRequest
+     * @example
+     * // Get one PlaceUpdateRequest
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlaceUpdateRequestFindFirstOrThrowArgs>(args?: SelectSubset<T, PlaceUpdateRequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more PlaceUpdateRequests that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlaceUpdateRequests
+     * const placeUpdateRequests = await prisma.placeUpdateRequest.findMany()
+     * 
+     * // Get first 10 PlaceUpdateRequests
+     * const placeUpdateRequests = await prisma.placeUpdateRequest.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const placeUpdateRequestWithIdOnly = await prisma.placeUpdateRequest.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlaceUpdateRequestFindManyArgs>(args?: SelectSubset<T, PlaceUpdateRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a PlaceUpdateRequest.
+     * @param {PlaceUpdateRequestCreateArgs} args - Arguments to create a PlaceUpdateRequest.
+     * @example
+     * // Create one PlaceUpdateRequest
+     * const PlaceUpdateRequest = await prisma.placeUpdateRequest.create({
+     *   data: {
+     *     // ... data to create a PlaceUpdateRequest
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlaceUpdateRequestCreateArgs>(args: SelectSubset<T, PlaceUpdateRequestCreateArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many PlaceUpdateRequests.
+     * @param {PlaceUpdateRequestCreateManyArgs} args - Arguments to create many PlaceUpdateRequests.
+     * @example
+     * // Create many PlaceUpdateRequests
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlaceUpdateRequestCreateManyArgs>(args?: SelectSubset<T, PlaceUpdateRequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlaceUpdateRequests and returns the data saved in the database.
+     * @param {PlaceUpdateRequestCreateManyAndReturnArgs} args - Arguments to create many PlaceUpdateRequests.
+     * @example
+     * // Create many PlaceUpdateRequests
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlaceUpdateRequests and only return the `id`
+     * const placeUpdateRequestWithIdOnly = await prisma.placeUpdateRequest.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlaceUpdateRequestCreateManyAndReturnArgs>(args?: SelectSubset<T, PlaceUpdateRequestCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a PlaceUpdateRequest.
+     * @param {PlaceUpdateRequestDeleteArgs} args - Arguments to delete one PlaceUpdateRequest.
+     * @example
+     * // Delete one PlaceUpdateRequest
+     * const PlaceUpdateRequest = await prisma.placeUpdateRequest.delete({
+     *   where: {
+     *     // ... filter to delete one PlaceUpdateRequest
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlaceUpdateRequestDeleteArgs>(args: SelectSubset<T, PlaceUpdateRequestDeleteArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one PlaceUpdateRequest.
+     * @param {PlaceUpdateRequestUpdateArgs} args - Arguments to update one PlaceUpdateRequest.
+     * @example
+     * // Update one PlaceUpdateRequest
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlaceUpdateRequestUpdateArgs>(args: SelectSubset<T, PlaceUpdateRequestUpdateArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more PlaceUpdateRequests.
+     * @param {PlaceUpdateRequestDeleteManyArgs} args - Arguments to filter PlaceUpdateRequests to delete.
+     * @example
+     * // Delete a few PlaceUpdateRequests
+     * const { count } = await prisma.placeUpdateRequest.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlaceUpdateRequestDeleteManyArgs>(args?: SelectSubset<T, PlaceUpdateRequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlaceUpdateRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlaceUpdateRequests
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlaceUpdateRequestUpdateManyArgs>(args: SelectSubset<T, PlaceUpdateRequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlaceUpdateRequests and returns the data updated in the database.
+     * @param {PlaceUpdateRequestUpdateManyAndReturnArgs} args - Arguments to update many PlaceUpdateRequests.
+     * @example
+     * // Update many PlaceUpdateRequests
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more PlaceUpdateRequests and only return the `id`
+     * const placeUpdateRequestWithIdOnly = await prisma.placeUpdateRequest.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PlaceUpdateRequestUpdateManyAndReturnArgs>(args: SelectSubset<T, PlaceUpdateRequestUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one PlaceUpdateRequest.
+     * @param {PlaceUpdateRequestUpsertArgs} args - Arguments to update or create a PlaceUpdateRequest.
+     * @example
+     * // Update or create a PlaceUpdateRequest
+     * const placeUpdateRequest = await prisma.placeUpdateRequest.upsert({
+     *   create: {
+     *     // ... data to create a PlaceUpdateRequest
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlaceUpdateRequest we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlaceUpdateRequestUpsertArgs>(args: SelectSubset<T, PlaceUpdateRequestUpsertArgs<ExtArgs>>): Prisma__PlaceUpdateRequestClient<$Result.GetResult<Prisma.$PlaceUpdateRequestPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of PlaceUpdateRequests.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestCountArgs} args - Arguments to filter PlaceUpdateRequests to count.
+     * @example
+     * // Count the number of PlaceUpdateRequests
+     * const count = await prisma.placeUpdateRequest.count({
+     *   where: {
+     *     // ... the filter for the PlaceUpdateRequests we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlaceUpdateRequestCountArgs>(
+      args?: Subset<T, PlaceUpdateRequestCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlaceUpdateRequestCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlaceUpdateRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlaceUpdateRequestAggregateArgs>(args: Subset<T, PlaceUpdateRequestAggregateArgs>): Prisma.PrismaPromise<GetPlaceUpdateRequestAggregateType<T>>
+
+    /**
+     * Group by PlaceUpdateRequest.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlaceUpdateRequestGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlaceUpdateRequestGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlaceUpdateRequestGroupByArgs['orderBy'] }
+        : { orderBy?: PlaceUpdateRequestGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlaceUpdateRequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlaceUpdateRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlaceUpdateRequest model
+   */
+  readonly fields: PlaceUpdateRequestFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlaceUpdateRequest.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlaceUpdateRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    place<T extends PlaceDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlaceDefaultArgs<ExtArgs>>): Prisma__PlaceClient<$Result.GetResult<Prisma.$PlacePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlaceUpdateRequest model
+   */
+  interface PlaceUpdateRequestFieldRefs {
+    readonly id: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly status: FieldRef<"PlaceUpdateRequest", 'RequestStatus'>
+    readonly description: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly area: FieldRef<"PlaceUpdateRequest", 'Float'>
+    readonly openingTime: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly closingTime: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly minAge: FieldRef<"PlaceUpdateRequest", 'Int'>
+    readonly maxAge: FieldRef<"PlaceUpdateRequest", 'Int'>
+    readonly price: FieldRef<"PlaceUpdateRequest", 'Float'>
+    readonly rejectionReason: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly createdAt: FieldRef<"PlaceUpdateRequest", 'DateTime'>
+    readonly updatedAt: FieldRef<"PlaceUpdateRequest", 'DateTime'>
+    readonly reviewedAt: FieldRef<"PlaceUpdateRequest", 'DateTime'>
+    readonly placeId: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly userId: FieldRef<"PlaceUpdateRequest", 'String'>
+    readonly reviewedBy: FieldRef<"PlaceUpdateRequest", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlaceUpdateRequest findUnique
+   */
+  export type PlaceUpdateRequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which PlaceUpdateRequest to fetch.
+     */
+    where: PlaceUpdateRequestWhereUniqueInput
+  }
+
+  /**
+   * PlaceUpdateRequest findUniqueOrThrow
+   */
+  export type PlaceUpdateRequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which PlaceUpdateRequest to fetch.
+     */
+    where: PlaceUpdateRequestWhereUniqueInput
+  }
+
+  /**
+   * PlaceUpdateRequest findFirst
+   */
+  export type PlaceUpdateRequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which PlaceUpdateRequest to fetch.
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlaceUpdateRequests to fetch.
+     */
+    orderBy?: PlaceUpdateRequestOrderByWithRelationInput | PlaceUpdateRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlaceUpdateRequests.
+     */
+    cursor?: PlaceUpdateRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlaceUpdateRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlaceUpdateRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlaceUpdateRequests.
+     */
+    distinct?: PlaceUpdateRequestScalarFieldEnum | PlaceUpdateRequestScalarFieldEnum[]
+  }
+
+  /**
+   * PlaceUpdateRequest findFirstOrThrow
+   */
+  export type PlaceUpdateRequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which PlaceUpdateRequest to fetch.
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlaceUpdateRequests to fetch.
+     */
+    orderBy?: PlaceUpdateRequestOrderByWithRelationInput | PlaceUpdateRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlaceUpdateRequests.
+     */
+    cursor?: PlaceUpdateRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlaceUpdateRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlaceUpdateRequests.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlaceUpdateRequests.
+     */
+    distinct?: PlaceUpdateRequestScalarFieldEnum | PlaceUpdateRequestScalarFieldEnum[]
+  }
+
+  /**
+   * PlaceUpdateRequest findMany
+   */
+  export type PlaceUpdateRequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * Filter, which PlaceUpdateRequests to fetch.
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlaceUpdateRequests to fetch.
+     */
+    orderBy?: PlaceUpdateRequestOrderByWithRelationInput | PlaceUpdateRequestOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlaceUpdateRequests.
+     */
+    cursor?: PlaceUpdateRequestWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlaceUpdateRequests from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlaceUpdateRequests.
+     */
+    skip?: number
+    distinct?: PlaceUpdateRequestScalarFieldEnum | PlaceUpdateRequestScalarFieldEnum[]
+  }
+
+  /**
+   * PlaceUpdateRequest create
+   */
+  export type PlaceUpdateRequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PlaceUpdateRequest.
+     */
+    data: XOR<PlaceUpdateRequestCreateInput, PlaceUpdateRequestUncheckedCreateInput>
+  }
+
+  /**
+   * PlaceUpdateRequest createMany
+   */
+  export type PlaceUpdateRequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlaceUpdateRequests.
+     */
+    data: PlaceUpdateRequestCreateManyInput | PlaceUpdateRequestCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * PlaceUpdateRequest createManyAndReturn
+   */
+  export type PlaceUpdateRequestCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * The data used to create many PlaceUpdateRequests.
+     */
+    data: PlaceUpdateRequestCreateManyInput | PlaceUpdateRequestCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlaceUpdateRequest update
+   */
+  export type PlaceUpdateRequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PlaceUpdateRequest.
+     */
+    data: XOR<PlaceUpdateRequestUpdateInput, PlaceUpdateRequestUncheckedUpdateInput>
+    /**
+     * Choose, which PlaceUpdateRequest to update.
+     */
+    where: PlaceUpdateRequestWhereUniqueInput
+  }
+
+  /**
+   * PlaceUpdateRequest updateMany
+   */
+  export type PlaceUpdateRequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlaceUpdateRequests.
+     */
+    data: XOR<PlaceUpdateRequestUpdateManyMutationInput, PlaceUpdateRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which PlaceUpdateRequests to update
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * Limit how many PlaceUpdateRequests to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * PlaceUpdateRequest updateManyAndReturn
+   */
+  export type PlaceUpdateRequestUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * The data used to update PlaceUpdateRequests.
+     */
+    data: XOR<PlaceUpdateRequestUpdateManyMutationInput, PlaceUpdateRequestUncheckedUpdateManyInput>
+    /**
+     * Filter which PlaceUpdateRequests to update
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * Limit how many PlaceUpdateRequests to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlaceUpdateRequest upsert
+   */
+  export type PlaceUpdateRequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PlaceUpdateRequest to update in case it exists.
+     */
+    where: PlaceUpdateRequestWhereUniqueInput
+    /**
+     * In case the PlaceUpdateRequest found by the `where` argument doesn't exist, create a new PlaceUpdateRequest with this data.
+     */
+    create: XOR<PlaceUpdateRequestCreateInput, PlaceUpdateRequestUncheckedCreateInput>
+    /**
+     * In case the PlaceUpdateRequest was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlaceUpdateRequestUpdateInput, PlaceUpdateRequestUncheckedUpdateInput>
+  }
+
+  /**
+   * PlaceUpdateRequest delete
+   */
+  export type PlaceUpdateRequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+    /**
+     * Filter which PlaceUpdateRequest to delete.
+     */
+    where: PlaceUpdateRequestWhereUniqueInput
+  }
+
+  /**
+   * PlaceUpdateRequest deleteMany
+   */
+  export type PlaceUpdateRequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlaceUpdateRequests to delete
+     */
+    where?: PlaceUpdateRequestWhereInput
+    /**
+     * Limit how many PlaceUpdateRequests to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * PlaceUpdateRequest without action
+   */
+  export type PlaceUpdateRequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlaceUpdateRequest
+     */
+    select?: PlaceUpdateRequestSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PlaceUpdateRequest
+     */
+    omit?: PlaceUpdateRequestOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlaceUpdateRequestInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -7478,7 +8941,8 @@ export namespace Prisma {
     totalReviews: 'totalReviews',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
-    isActive: 'isActive'
+    isActive: 'isActive',
+    price: 'price'
   };
 
   export type PlaceScalarFieldEnum = (typeof PlaceScalarFieldEnum)[keyof typeof PlaceScalarFieldEnum]
@@ -7520,11 +8984,34 @@ export namespace Prisma {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     isActive: 'isActive',
+    isPendingApproval: 'isPendingApproval',
     placeId: 'placeId',
     uploadedBy: 'uploadedBy'
   };
 
   export type MediaScalarFieldEnum = (typeof MediaScalarFieldEnum)[keyof typeof MediaScalarFieldEnum]
+
+
+  export const PlaceUpdateRequestScalarFieldEnum: {
+    id: 'id',
+    status: 'status',
+    description: 'description',
+    area: 'area',
+    openingTime: 'openingTime',
+    closingTime: 'closingTime',
+    minAge: 'minAge',
+    maxAge: 'maxAge',
+    price: 'price',
+    rejectionReason: 'rejectionReason',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    reviewedAt: 'reviewedAt',
+    placeId: 'placeId',
+    userId: 'userId',
+    reviewedBy: 'reviewedBy'
+  };
+
+  export type PlaceUpdateRequestScalarFieldEnum = (typeof PlaceUpdateRequestScalarFieldEnum)[keyof typeof PlaceUpdateRequestScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -7659,6 +9146,20 @@ export namespace Prisma {
    */
   export type ListEnumMediaTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MediaType[]'>
     
+
+
+  /**
+   * Reference to a field of type 'RequestStatus'
+   */
+  export type EnumRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'RequestStatus[]'
+   */
+  export type ListEnumRequestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RequestStatus[]'>
+    
   /**
    * Deep Input Types
    */
@@ -7682,6 +9183,7 @@ export namespace Prisma {
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
     uploadedMedia?: MediaListRelationFilter
+    updateRequests?: PlaceUpdateRequestListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -7699,6 +9201,7 @@ export namespace Prisma {
     reviews?: ReviewOrderByRelationAggregateInput
     favorites?: FavoriteOrderByRelationAggregateInput
     uploadedMedia?: MediaOrderByRelationAggregateInput
+    updateRequests?: PlaceUpdateRequestOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -7719,6 +9222,7 @@ export namespace Prisma {
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
     uploadedMedia?: MediaListRelationFilter
+    updateRequests?: PlaceUpdateRequestListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -7782,9 +9286,11 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Place"> | Date | string
     updatedAt?: DateTimeFilter<"Place"> | Date | string
     isActive?: BoolFilter<"Place"> | boolean
+    price?: FloatNullableFilter<"Place"> | number | null
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
     media?: MediaListRelationFilter
+    updateRequests?: PlaceUpdateRequestListRelationFilter
   }
 
   export type PlaceOrderByWithRelationInput = {
@@ -7809,9 +9315,11 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    price?: SortOrderInput | SortOrder
     reviews?: ReviewOrderByRelationAggregateInput
     favorites?: FavoriteOrderByRelationAggregateInput
     media?: MediaOrderByRelationAggregateInput
+    updateRequests?: PlaceUpdateRequestOrderByRelationAggregateInput
   }
 
   export type PlaceWhereUniqueInput = Prisma.AtLeast<{
@@ -7839,9 +9347,11 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Place"> | Date | string
     updatedAt?: DateTimeFilter<"Place"> | Date | string
     isActive?: BoolFilter<"Place"> | boolean
+    price?: FloatNullableFilter<"Place"> | number | null
     reviews?: ReviewListRelationFilter
     favorites?: FavoriteListRelationFilter
     media?: MediaListRelationFilter
+    updateRequests?: PlaceUpdateRequestListRelationFilter
   }, "id" | "externalPlaceId">
 
   export type PlaceOrderByWithAggregationInput = {
@@ -7866,6 +9376,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    price?: SortOrderInput | SortOrder
     _count?: PlaceCountOrderByAggregateInput
     _avg?: PlaceAvgOrderByAggregateInput
     _max?: PlaceMaxOrderByAggregateInput
@@ -7898,6 +9409,7 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Place"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Place"> | Date | string
     isActive?: BoolWithAggregatesFilter<"Place"> | boolean
+    price?: FloatNullableWithAggregatesFilter<"Place"> | number | null
   }
 
   export type ReviewWhereInput = {
@@ -8040,6 +9552,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Media"> | Date | string
     updatedAt?: DateTimeFilter<"Media"> | Date | string
     isActive?: BoolFilter<"Media"> | boolean
+    isPendingApproval?: BoolFilter<"Media"> | boolean
     placeId?: StringFilter<"Media"> | string
     uploadedBy?: StringNullableFilter<"Media"> | string | null
     place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
@@ -8059,6 +9572,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    isPendingApproval?: SortOrder
     placeId?: SortOrder
     uploadedBy?: SortOrderInput | SortOrder
     place?: PlaceOrderByWithRelationInput
@@ -8081,6 +9595,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Media"> | Date | string
     updatedAt?: DateTimeFilter<"Media"> | Date | string
     isActive?: BoolFilter<"Media"> | boolean
+    isPendingApproval?: BoolFilter<"Media"> | boolean
     placeId?: StringFilter<"Media"> | string
     uploadedBy?: StringNullableFilter<"Media"> | string | null
     place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
@@ -8100,6 +9615,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    isPendingApproval?: SortOrder
     placeId?: SortOrder
     uploadedBy?: SortOrderInput | SortOrder
     _count?: MediaCountOrderByAggregateInput
@@ -8125,8 +9641,124 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Media"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Media"> | Date | string
     isActive?: BoolWithAggregatesFilter<"Media"> | boolean
+    isPendingApproval?: BoolWithAggregatesFilter<"Media"> | boolean
     placeId?: StringWithAggregatesFilter<"Media"> | string
     uploadedBy?: StringNullableWithAggregatesFilter<"Media"> | string | null
+  }
+
+  export type PlaceUpdateRequestWhereInput = {
+    AND?: PlaceUpdateRequestWhereInput | PlaceUpdateRequestWhereInput[]
+    OR?: PlaceUpdateRequestWhereInput[]
+    NOT?: PlaceUpdateRequestWhereInput | PlaceUpdateRequestWhereInput[]
+    id?: StringFilter<"PlaceUpdateRequest"> | string
+    status?: EnumRequestStatusFilter<"PlaceUpdateRequest"> | $Enums.RequestStatus
+    description?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    area?: FloatNullableFilter<"PlaceUpdateRequest"> | number | null
+    openingTime?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    closingTime?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    minAge?: IntNullableFilter<"PlaceUpdateRequest"> | number | null
+    maxAge?: IntNullableFilter<"PlaceUpdateRequest"> | number | null
+    price?: FloatNullableFilter<"PlaceUpdateRequest"> | number | null
+    rejectionReason?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    createdAt?: DateTimeFilter<"PlaceUpdateRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"PlaceUpdateRequest"> | Date | string
+    reviewedAt?: DateTimeNullableFilter<"PlaceUpdateRequest"> | Date | string | null
+    placeId?: StringFilter<"PlaceUpdateRequest"> | string
+    userId?: StringFilter<"PlaceUpdateRequest"> | string
+    reviewedBy?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type PlaceUpdateRequestOrderByWithRelationInput = {
+    id?: SortOrder
+    status?: SortOrder
+    description?: SortOrderInput | SortOrder
+    area?: SortOrderInput | SortOrder
+    openingTime?: SortOrderInput | SortOrder
+    closingTime?: SortOrderInput | SortOrder
+    minAge?: SortOrderInput | SortOrder
+    maxAge?: SortOrderInput | SortOrder
+    price?: SortOrderInput | SortOrder
+    rejectionReason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
+    placeId?: SortOrder
+    userId?: SortOrder
+    reviewedBy?: SortOrderInput | SortOrder
+    place?: PlaceOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type PlaceUpdateRequestWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlaceUpdateRequestWhereInput | PlaceUpdateRequestWhereInput[]
+    OR?: PlaceUpdateRequestWhereInput[]
+    NOT?: PlaceUpdateRequestWhereInput | PlaceUpdateRequestWhereInput[]
+    status?: EnumRequestStatusFilter<"PlaceUpdateRequest"> | $Enums.RequestStatus
+    description?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    area?: FloatNullableFilter<"PlaceUpdateRequest"> | number | null
+    openingTime?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    closingTime?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    minAge?: IntNullableFilter<"PlaceUpdateRequest"> | number | null
+    maxAge?: IntNullableFilter<"PlaceUpdateRequest"> | number | null
+    price?: FloatNullableFilter<"PlaceUpdateRequest"> | number | null
+    rejectionReason?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    createdAt?: DateTimeFilter<"PlaceUpdateRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"PlaceUpdateRequest"> | Date | string
+    reviewedAt?: DateTimeNullableFilter<"PlaceUpdateRequest"> | Date | string | null
+    placeId?: StringFilter<"PlaceUpdateRequest"> | string
+    userId?: StringFilter<"PlaceUpdateRequest"> | string
+    reviewedBy?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    place?: XOR<PlaceScalarRelationFilter, PlaceWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type PlaceUpdateRequestOrderByWithAggregationInput = {
+    id?: SortOrder
+    status?: SortOrder
+    description?: SortOrderInput | SortOrder
+    area?: SortOrderInput | SortOrder
+    openingTime?: SortOrderInput | SortOrder
+    closingTime?: SortOrderInput | SortOrder
+    minAge?: SortOrderInput | SortOrder
+    maxAge?: SortOrderInput | SortOrder
+    price?: SortOrderInput | SortOrder
+    rejectionReason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    reviewedAt?: SortOrderInput | SortOrder
+    placeId?: SortOrder
+    userId?: SortOrder
+    reviewedBy?: SortOrderInput | SortOrder
+    _count?: PlaceUpdateRequestCountOrderByAggregateInput
+    _avg?: PlaceUpdateRequestAvgOrderByAggregateInput
+    _max?: PlaceUpdateRequestMaxOrderByAggregateInput
+    _min?: PlaceUpdateRequestMinOrderByAggregateInput
+    _sum?: PlaceUpdateRequestSumOrderByAggregateInput
+  }
+
+  export type PlaceUpdateRequestScalarWhereWithAggregatesInput = {
+    AND?: PlaceUpdateRequestScalarWhereWithAggregatesInput | PlaceUpdateRequestScalarWhereWithAggregatesInput[]
+    OR?: PlaceUpdateRequestScalarWhereWithAggregatesInput[]
+    NOT?: PlaceUpdateRequestScalarWhereWithAggregatesInput | PlaceUpdateRequestScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlaceUpdateRequest"> | string
+    status?: EnumRequestStatusWithAggregatesFilter<"PlaceUpdateRequest"> | $Enums.RequestStatus
+    description?: StringNullableWithAggregatesFilter<"PlaceUpdateRequest"> | string | null
+    area?: FloatNullableWithAggregatesFilter<"PlaceUpdateRequest"> | number | null
+    openingTime?: StringNullableWithAggregatesFilter<"PlaceUpdateRequest"> | string | null
+    closingTime?: StringNullableWithAggregatesFilter<"PlaceUpdateRequest"> | string | null
+    minAge?: IntNullableWithAggregatesFilter<"PlaceUpdateRequest"> | number | null
+    maxAge?: IntNullableWithAggregatesFilter<"PlaceUpdateRequest"> | number | null
+    price?: FloatNullableWithAggregatesFilter<"PlaceUpdateRequest"> | number | null
+    rejectionReason?: StringNullableWithAggregatesFilter<"PlaceUpdateRequest"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"PlaceUpdateRequest"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"PlaceUpdateRequest"> | Date | string
+    reviewedAt?: DateTimeNullableWithAggregatesFilter<"PlaceUpdateRequest"> | Date | string | null
+    placeId?: StringWithAggregatesFilter<"PlaceUpdateRequest"> | string
+    userId?: StringWithAggregatesFilter<"PlaceUpdateRequest"> | string
+    reviewedBy?: StringNullableWithAggregatesFilter<"PlaceUpdateRequest"> | string | null
   }
 
   export type UserCreateInput = {
@@ -8144,6 +9776,7 @@ export namespace Prisma {
     reviews?: ReviewCreateNestedManyWithoutUserInput
     favorites?: FavoriteCreateNestedManyWithoutUserInput
     uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -8161,6 +9794,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
     favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
     uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -8178,6 +9812,7 @@ export namespace Prisma {
     reviews?: ReviewUpdateManyWithoutUserNestedInput
     favorites?: FavoriteUpdateManyWithoutUserNestedInput
     uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -8195,6 +9830,7 @@ export namespace Prisma {
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
     favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
     uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -8261,9 +9897,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     reviews?: ReviewCreateNestedManyWithoutPlaceInput
     favorites?: FavoriteCreateNestedManyWithoutPlaceInput
     media?: MediaCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateInput = {
@@ -8288,9 +9926,11 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
     favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
     media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUpdateInput = {
@@ -8315,9 +9955,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     reviews?: ReviewUpdateManyWithoutPlaceNestedInput
     favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
     media?: MediaUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateInput = {
@@ -8342,9 +9984,11 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
     favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
     media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceCreateManyInput = {
@@ -8369,6 +10013,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
   }
 
   export type PlaceUpdateManyMutationInput = {
@@ -8393,6 +10038,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type PlaceUncheckedUpdateManyInput = {
@@ -8417,6 +10063,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
   }
 
   export type ReviewCreateInput = {
@@ -8547,6 +10194,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     place: PlaceCreateNestedOneWithoutMediaInput
     uploader?: UserCreateNestedOneWithoutUploadedMediaInput
   }
@@ -8564,6 +10212,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId: string
     uploadedBy?: string | null
   }
@@ -8581,6 +10230,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     place?: PlaceUpdateOneRequiredWithoutMediaNestedInput
     uploader?: UserUpdateOneWithoutUploadedMediaNestedInput
   }
@@ -8598,6 +10248,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     placeId?: StringFieldUpdateOperationsInput | string
     uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
@@ -8615,6 +10266,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId: string
     uploadedBy?: string | null
   }
@@ -8632,6 +10284,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type MediaUncheckedUpdateManyInput = {
@@ -8647,8 +10300,140 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     placeId?: StringFieldUpdateOperationsInput | string
     uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlaceUpdateRequestCreateInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    reviewedBy?: string | null
+    place: PlaceCreateNestedOneWithoutUpdateRequestsInput
+    user: UserCreateNestedOneWithoutUpdateRequestsInput
+  }
+
+  export type PlaceUpdateRequestUncheckedCreateInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    placeId: string
+    userId: string
+    reviewedBy?: string | null
+  }
+
+  export type PlaceUpdateRequestUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    place?: PlaceUpdateOneRequiredWithoutUpdateRequestsNestedInput
+    user?: UserUpdateOneRequiredWithoutUpdateRequestsNestedInput
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placeId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlaceUpdateRequestCreateManyInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    placeId: string
+    userId: string
+    reviewedBy?: string | null
+  }
+
+  export type PlaceUpdateRequestUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placeId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -8733,6 +10518,12 @@ export namespace Prisma {
     none?: MediaWhereInput
   }
 
+  export type PlaceUpdateRequestListRelationFilter = {
+    every?: PlaceUpdateRequestWhereInput
+    some?: PlaceUpdateRequestWhereInput
+    none?: PlaceUpdateRequestWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -8747,6 +10538,10 @@ export namespace Prisma {
   }
 
   export type MediaOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlaceUpdateRequestOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -8935,6 +10730,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    price?: SortOrder
   }
 
   export type PlaceAvgOrderByAggregateInput = {
@@ -8945,6 +10741,7 @@ export namespace Prisma {
     area?: SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
+    price?: SortOrder
   }
 
   export type PlaceMaxOrderByAggregateInput = {
@@ -8969,6 +10766,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    price?: SortOrder
   }
 
   export type PlaceMinOrderByAggregateInput = {
@@ -8993,6 +10791,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    price?: SortOrder
   }
 
   export type PlaceSumOrderByAggregateInput = {
@@ -9003,6 +10802,7 @@ export namespace Prisma {
     area?: SortOrder
     averageRating?: SortOrder
     totalReviews?: SortOrder
+    price?: SortOrder
   }
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -9157,6 +10957,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    isPendingApproval?: SortOrder
     placeId?: SortOrder
     uploadedBy?: SortOrder
   }
@@ -9179,6 +10980,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    isPendingApproval?: SortOrder
     placeId?: SortOrder
     uploadedBy?: SortOrder
   }
@@ -9196,6 +10998,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
+    isPendingApproval?: SortOrder
     placeId?: SortOrder
     uploadedBy?: SortOrder
   }
@@ -9231,6 +11034,119 @@ export namespace Prisma {
     _max?: NestedEnumMediaTypeFilter<$PrismaModel>
   }
 
+  export type EnumRequestStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusFilter<$PrismaModel> | $Enums.RequestStatus
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type PlaceUpdateRequestCountOrderByAggregateInput = {
+    id?: SortOrder
+    status?: SortOrder
+    description?: SortOrder
+    area?: SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    minAge?: SortOrder
+    maxAge?: SortOrder
+    price?: SortOrder
+    rejectionReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    reviewedAt?: SortOrder
+    placeId?: SortOrder
+    userId?: SortOrder
+    reviewedBy?: SortOrder
+  }
+
+  export type PlaceUpdateRequestAvgOrderByAggregateInput = {
+    area?: SortOrder
+    minAge?: SortOrder
+    maxAge?: SortOrder
+    price?: SortOrder
+  }
+
+  export type PlaceUpdateRequestMaxOrderByAggregateInput = {
+    id?: SortOrder
+    status?: SortOrder
+    description?: SortOrder
+    area?: SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    minAge?: SortOrder
+    maxAge?: SortOrder
+    price?: SortOrder
+    rejectionReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    reviewedAt?: SortOrder
+    placeId?: SortOrder
+    userId?: SortOrder
+    reviewedBy?: SortOrder
+  }
+
+  export type PlaceUpdateRequestMinOrderByAggregateInput = {
+    id?: SortOrder
+    status?: SortOrder
+    description?: SortOrder
+    area?: SortOrder
+    openingTime?: SortOrder
+    closingTime?: SortOrder
+    minAge?: SortOrder
+    maxAge?: SortOrder
+    price?: SortOrder
+    rejectionReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    reviewedAt?: SortOrder
+    placeId?: SortOrder
+    userId?: SortOrder
+    reviewedBy?: SortOrder
+  }
+
+  export type PlaceUpdateRequestSumOrderByAggregateInput = {
+    area?: SortOrder
+    minAge?: SortOrder
+    maxAge?: SortOrder
+    price?: SortOrder
+  }
+
+  export type EnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel> | $Enums.RequestStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRequestStatusFilter<$PrismaModel>
+    _max?: NestedEnumRequestStatusFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type ReviewCreateNestedManyWithoutUserInput = {
     create?: XOR<ReviewCreateWithoutUserInput, ReviewUncheckedCreateWithoutUserInput> | ReviewCreateWithoutUserInput[] | ReviewUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
@@ -9252,6 +11168,13 @@ export namespace Prisma {
     connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
   }
 
+  export type PlaceUpdateRequestCreateNestedManyWithoutUserInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutUserInput, PlaceUpdateRequestUncheckedCreateWithoutUserInput> | PlaceUpdateRequestCreateWithoutUserInput[] | PlaceUpdateRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutUserInput | PlaceUpdateRequestCreateOrConnectWithoutUserInput[]
+    createMany?: PlaceUpdateRequestCreateManyUserInputEnvelope
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+  }
+
   export type ReviewUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<ReviewCreateWithoutUserInput, ReviewUncheckedCreateWithoutUserInput> | ReviewCreateWithoutUserInput[] | ReviewUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
@@ -9271,6 +11194,13 @@ export namespace Prisma {
     connectOrCreate?: MediaCreateOrConnectWithoutUploaderInput | MediaCreateOrConnectWithoutUploaderInput[]
     createMany?: MediaCreateManyUploaderInputEnvelope
     connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+  }
+
+  export type PlaceUpdateRequestUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutUserInput, PlaceUpdateRequestUncheckedCreateWithoutUserInput> | PlaceUpdateRequestCreateWithoutUserInput[] | PlaceUpdateRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutUserInput | PlaceUpdateRequestCreateOrConnectWithoutUserInput[]
+    createMany?: PlaceUpdateRequestCreateManyUserInputEnvelope
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -9343,6 +11273,20 @@ export namespace Prisma {
     deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
   }
 
+  export type PlaceUpdateRequestUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutUserInput, PlaceUpdateRequestUncheckedCreateWithoutUserInput> | PlaceUpdateRequestCreateWithoutUserInput[] | PlaceUpdateRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutUserInput | PlaceUpdateRequestCreateOrConnectWithoutUserInput[]
+    upsert?: PlaceUpdateRequestUpsertWithWhereUniqueWithoutUserInput | PlaceUpdateRequestUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PlaceUpdateRequestCreateManyUserInputEnvelope
+    set?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    disconnect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    delete?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    update?: PlaceUpdateRequestUpdateWithWhereUniqueWithoutUserInput | PlaceUpdateRequestUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PlaceUpdateRequestUpdateManyWithWhereWithoutUserInput | PlaceUpdateRequestUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PlaceUpdateRequestScalarWhereInput | PlaceUpdateRequestScalarWhereInput[]
+  }
+
   export type ReviewUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<ReviewCreateWithoutUserInput, ReviewUncheckedCreateWithoutUserInput> | ReviewCreateWithoutUserInput[] | ReviewUncheckedCreateWithoutUserInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutUserInput | ReviewCreateOrConnectWithoutUserInput[]
@@ -9385,6 +11329,20 @@ export namespace Prisma {
     deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
   }
 
+  export type PlaceUpdateRequestUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutUserInput, PlaceUpdateRequestUncheckedCreateWithoutUserInput> | PlaceUpdateRequestCreateWithoutUserInput[] | PlaceUpdateRequestUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutUserInput | PlaceUpdateRequestCreateOrConnectWithoutUserInput[]
+    upsert?: PlaceUpdateRequestUpsertWithWhereUniqueWithoutUserInput | PlaceUpdateRequestUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PlaceUpdateRequestCreateManyUserInputEnvelope
+    set?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    disconnect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    delete?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    update?: PlaceUpdateRequestUpdateWithWhereUniqueWithoutUserInput | PlaceUpdateRequestUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PlaceUpdateRequestUpdateManyWithWhereWithoutUserInput | PlaceUpdateRequestUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PlaceUpdateRequestScalarWhereInput | PlaceUpdateRequestScalarWhereInput[]
+  }
+
   export type ReviewCreateNestedManyWithoutPlaceInput = {
     create?: XOR<ReviewCreateWithoutPlaceInput, ReviewUncheckedCreateWithoutPlaceInput> | ReviewCreateWithoutPlaceInput[] | ReviewUncheckedCreateWithoutPlaceInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutPlaceInput | ReviewCreateOrConnectWithoutPlaceInput[]
@@ -9406,6 +11364,13 @@ export namespace Prisma {
     connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
   }
 
+  export type PlaceUpdateRequestCreateNestedManyWithoutPlaceInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutPlaceInput, PlaceUpdateRequestUncheckedCreateWithoutPlaceInput> | PlaceUpdateRequestCreateWithoutPlaceInput[] | PlaceUpdateRequestUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutPlaceInput | PlaceUpdateRequestCreateOrConnectWithoutPlaceInput[]
+    createMany?: PlaceUpdateRequestCreateManyPlaceInputEnvelope
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+  }
+
   export type ReviewUncheckedCreateNestedManyWithoutPlaceInput = {
     create?: XOR<ReviewCreateWithoutPlaceInput, ReviewUncheckedCreateWithoutPlaceInput> | ReviewCreateWithoutPlaceInput[] | ReviewUncheckedCreateWithoutPlaceInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutPlaceInput | ReviewCreateOrConnectWithoutPlaceInput[]
@@ -9425,6 +11390,13 @@ export namespace Prisma {
     connectOrCreate?: MediaCreateOrConnectWithoutPlaceInput | MediaCreateOrConnectWithoutPlaceInput[]
     createMany?: MediaCreateManyPlaceInputEnvelope
     connect?: MediaWhereUniqueInput | MediaWhereUniqueInput[]
+  }
+
+  export type PlaceUpdateRequestUncheckedCreateNestedManyWithoutPlaceInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutPlaceInput, PlaceUpdateRequestUncheckedCreateWithoutPlaceInput> | PlaceUpdateRequestCreateWithoutPlaceInput[] | PlaceUpdateRequestUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutPlaceInput | PlaceUpdateRequestCreateOrConnectWithoutPlaceInput[]
+    createMany?: PlaceUpdateRequestCreateManyPlaceInputEnvelope
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -9489,6 +11461,20 @@ export namespace Prisma {
     deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
   }
 
+  export type PlaceUpdateRequestUpdateManyWithoutPlaceNestedInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutPlaceInput, PlaceUpdateRequestUncheckedCreateWithoutPlaceInput> | PlaceUpdateRequestCreateWithoutPlaceInput[] | PlaceUpdateRequestUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutPlaceInput | PlaceUpdateRequestCreateOrConnectWithoutPlaceInput[]
+    upsert?: PlaceUpdateRequestUpsertWithWhereUniqueWithoutPlaceInput | PlaceUpdateRequestUpsertWithWhereUniqueWithoutPlaceInput[]
+    createMany?: PlaceUpdateRequestCreateManyPlaceInputEnvelope
+    set?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    disconnect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    delete?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    update?: PlaceUpdateRequestUpdateWithWhereUniqueWithoutPlaceInput | PlaceUpdateRequestUpdateWithWhereUniqueWithoutPlaceInput[]
+    updateMany?: PlaceUpdateRequestUpdateManyWithWhereWithoutPlaceInput | PlaceUpdateRequestUpdateManyWithWhereWithoutPlaceInput[]
+    deleteMany?: PlaceUpdateRequestScalarWhereInput | PlaceUpdateRequestScalarWhereInput[]
+  }
+
   export type ReviewUncheckedUpdateManyWithoutPlaceNestedInput = {
     create?: XOR<ReviewCreateWithoutPlaceInput, ReviewUncheckedCreateWithoutPlaceInput> | ReviewCreateWithoutPlaceInput[] | ReviewUncheckedCreateWithoutPlaceInput[]
     connectOrCreate?: ReviewCreateOrConnectWithoutPlaceInput | ReviewCreateOrConnectWithoutPlaceInput[]
@@ -9529,6 +11515,20 @@ export namespace Prisma {
     update?: MediaUpdateWithWhereUniqueWithoutPlaceInput | MediaUpdateWithWhereUniqueWithoutPlaceInput[]
     updateMany?: MediaUpdateManyWithWhereWithoutPlaceInput | MediaUpdateManyWithWhereWithoutPlaceInput[]
     deleteMany?: MediaScalarWhereInput | MediaScalarWhereInput[]
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceNestedInput = {
+    create?: XOR<PlaceUpdateRequestCreateWithoutPlaceInput, PlaceUpdateRequestUncheckedCreateWithoutPlaceInput> | PlaceUpdateRequestCreateWithoutPlaceInput[] | PlaceUpdateRequestUncheckedCreateWithoutPlaceInput[]
+    connectOrCreate?: PlaceUpdateRequestCreateOrConnectWithoutPlaceInput | PlaceUpdateRequestCreateOrConnectWithoutPlaceInput[]
+    upsert?: PlaceUpdateRequestUpsertWithWhereUniqueWithoutPlaceInput | PlaceUpdateRequestUpsertWithWhereUniqueWithoutPlaceInput[]
+    createMany?: PlaceUpdateRequestCreateManyPlaceInputEnvelope
+    set?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    disconnect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    delete?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    connect?: PlaceUpdateRequestWhereUniqueInput | PlaceUpdateRequestWhereUniqueInput[]
+    update?: PlaceUpdateRequestUpdateWithWhereUniqueWithoutPlaceInput | PlaceUpdateRequestUpdateWithWhereUniqueWithoutPlaceInput[]
+    updateMany?: PlaceUpdateRequestUpdateManyWithWhereWithoutPlaceInput | PlaceUpdateRequestUpdateManyWithWhereWithoutPlaceInput[]
+    deleteMany?: PlaceUpdateRequestScalarWhereInput | PlaceUpdateRequestScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutReviewsInput = {
@@ -9627,6 +11627,42 @@ export namespace Prisma {
     delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutUploadedMediaInput, UserUpdateWithoutUploadedMediaInput>, UserUncheckedUpdateWithoutUploadedMediaInput>
+  }
+
+  export type PlaceCreateNestedOneWithoutUpdateRequestsInput = {
+    create?: XOR<PlaceCreateWithoutUpdateRequestsInput, PlaceUncheckedCreateWithoutUpdateRequestsInput>
+    connectOrCreate?: PlaceCreateOrConnectWithoutUpdateRequestsInput
+    connect?: PlaceWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutUpdateRequestsInput = {
+    create?: XOR<UserCreateWithoutUpdateRequestsInput, UserUncheckedCreateWithoutUpdateRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutUpdateRequestsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type EnumRequestStatusFieldUpdateOperationsInput = {
+    set?: $Enums.RequestStatus
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type PlaceUpdateOneRequiredWithoutUpdateRequestsNestedInput = {
+    create?: XOR<PlaceCreateWithoutUpdateRequestsInput, PlaceUncheckedCreateWithoutUpdateRequestsInput>
+    connectOrCreate?: PlaceCreateOrConnectWithoutUpdateRequestsInput
+    upsert?: PlaceUpsertWithoutUpdateRequestsInput
+    connect?: PlaceWhereUniqueInput
+    update?: XOR<XOR<PlaceUpdateToOneWithWhereWithoutUpdateRequestsInput, PlaceUpdateWithoutUpdateRequestsInput>, PlaceUncheckedUpdateWithoutUpdateRequestsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutUpdateRequestsNestedInput = {
+    create?: XOR<UserCreateWithoutUpdateRequestsInput, UserUncheckedCreateWithoutUpdateRequestsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutUpdateRequestsInput
+    upsert?: UserUpsertWithoutUpdateRequestsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutUpdateRequestsInput, UserUpdateWithoutUpdateRequestsInput>, UserUncheckedUpdateWithoutUpdateRequestsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -9888,6 +11924,48 @@ export namespace Prisma {
     _max?: NestedEnumMediaTypeFilter<$PrismaModel>
   }
 
+  export type NestedEnumRequestStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusFilter<$PrismaModel> | $Enums.RequestStatus
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.RequestStatus | EnumRequestStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.RequestStatus[] | ListEnumRequestStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumRequestStatusWithAggregatesFilter<$PrismaModel> | $Enums.RequestStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumRequestStatusFilter<$PrismaModel>
+    _max?: NestedEnumRequestStatusFilter<$PrismaModel>
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type ReviewCreateWithoutUserInput = {
     id?: string
     rating: number
@@ -9951,6 +12029,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     place: PlaceCreateNestedOneWithoutMediaInput
   }
 
@@ -9967,6 +12046,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId: string
   }
 
@@ -9977,6 +12057,52 @@ export namespace Prisma {
 
   export type MediaCreateManyUploaderInputEnvelope = {
     data: MediaCreateManyUploaderInput | MediaCreateManyUploaderInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PlaceUpdateRequestCreateWithoutUserInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    reviewedBy?: string | null
+    place: PlaceCreateNestedOneWithoutUpdateRequestsInput
+  }
+
+  export type PlaceUpdateRequestUncheckedCreateWithoutUserInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    placeId: string
+    reviewedBy?: string | null
+  }
+
+  export type PlaceUpdateRequestCreateOrConnectWithoutUserInput = {
+    where: PlaceUpdateRequestWhereUniqueInput
+    create: XOR<PlaceUpdateRequestCreateWithoutUserInput, PlaceUpdateRequestUncheckedCreateWithoutUserInput>
+  }
+
+  export type PlaceUpdateRequestCreateManyUserInputEnvelope = {
+    data: PlaceUpdateRequestCreateManyUserInput | PlaceUpdateRequestCreateManyUserInput[]
     skipDuplicates?: boolean
   }
 
@@ -10067,8 +12193,47 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Media"> | Date | string
     updatedAt?: DateTimeFilter<"Media"> | Date | string
     isActive?: BoolFilter<"Media"> | boolean
+    isPendingApproval?: BoolFilter<"Media"> | boolean
     placeId?: StringFilter<"Media"> | string
     uploadedBy?: StringNullableFilter<"Media"> | string | null
+  }
+
+  export type PlaceUpdateRequestUpsertWithWhereUniqueWithoutUserInput = {
+    where: PlaceUpdateRequestWhereUniqueInput
+    update: XOR<PlaceUpdateRequestUpdateWithoutUserInput, PlaceUpdateRequestUncheckedUpdateWithoutUserInput>
+    create: XOR<PlaceUpdateRequestCreateWithoutUserInput, PlaceUpdateRequestUncheckedCreateWithoutUserInput>
+  }
+
+  export type PlaceUpdateRequestUpdateWithWhereUniqueWithoutUserInput = {
+    where: PlaceUpdateRequestWhereUniqueInput
+    data: XOR<PlaceUpdateRequestUpdateWithoutUserInput, PlaceUpdateRequestUncheckedUpdateWithoutUserInput>
+  }
+
+  export type PlaceUpdateRequestUpdateManyWithWhereWithoutUserInput = {
+    where: PlaceUpdateRequestScalarWhereInput
+    data: XOR<PlaceUpdateRequestUpdateManyMutationInput, PlaceUpdateRequestUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type PlaceUpdateRequestScalarWhereInput = {
+    AND?: PlaceUpdateRequestScalarWhereInput | PlaceUpdateRequestScalarWhereInput[]
+    OR?: PlaceUpdateRequestScalarWhereInput[]
+    NOT?: PlaceUpdateRequestScalarWhereInput | PlaceUpdateRequestScalarWhereInput[]
+    id?: StringFilter<"PlaceUpdateRequest"> | string
+    status?: EnumRequestStatusFilter<"PlaceUpdateRequest"> | $Enums.RequestStatus
+    description?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    area?: FloatNullableFilter<"PlaceUpdateRequest"> | number | null
+    openingTime?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    closingTime?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    minAge?: IntNullableFilter<"PlaceUpdateRequest"> | number | null
+    maxAge?: IntNullableFilter<"PlaceUpdateRequest"> | number | null
+    price?: FloatNullableFilter<"PlaceUpdateRequest"> | number | null
+    rejectionReason?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
+    createdAt?: DateTimeFilter<"PlaceUpdateRequest"> | Date | string
+    updatedAt?: DateTimeFilter<"PlaceUpdateRequest"> | Date | string
+    reviewedAt?: DateTimeNullableFilter<"PlaceUpdateRequest"> | Date | string | null
+    placeId?: StringFilter<"PlaceUpdateRequest"> | string
+    userId?: StringFilter<"PlaceUpdateRequest"> | string
+    reviewedBy?: StringNullableFilter<"PlaceUpdateRequest"> | string | null
   }
 
   export type ReviewCreateWithoutPlaceInput = {
@@ -10134,6 +12299,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     uploader?: UserCreateNestedOneWithoutUploadedMediaInput
   }
 
@@ -10150,6 +12316,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     uploadedBy?: string | null
   }
 
@@ -10160,6 +12327,52 @@ export namespace Prisma {
 
   export type MediaCreateManyPlaceInputEnvelope = {
     data: MediaCreateManyPlaceInput | MediaCreateManyPlaceInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type PlaceUpdateRequestCreateWithoutPlaceInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    reviewedBy?: string | null
+    user: UserCreateNestedOneWithoutUpdateRequestsInput
+  }
+
+  export type PlaceUpdateRequestUncheckedCreateWithoutPlaceInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    userId: string
+    reviewedBy?: string | null
+  }
+
+  export type PlaceUpdateRequestCreateOrConnectWithoutPlaceInput = {
+    where: PlaceUpdateRequestWhereUniqueInput
+    create: XOR<PlaceUpdateRequestCreateWithoutPlaceInput, PlaceUpdateRequestUncheckedCreateWithoutPlaceInput>
+  }
+
+  export type PlaceUpdateRequestCreateManyPlaceInputEnvelope = {
+    data: PlaceUpdateRequestCreateManyPlaceInput | PlaceUpdateRequestCreateManyPlaceInput[]
     skipDuplicates?: boolean
   }
 
@@ -10211,6 +12424,22 @@ export namespace Prisma {
     data: XOR<MediaUpdateManyMutationInput, MediaUncheckedUpdateManyWithoutPlaceInput>
   }
 
+  export type PlaceUpdateRequestUpsertWithWhereUniqueWithoutPlaceInput = {
+    where: PlaceUpdateRequestWhereUniqueInput
+    update: XOR<PlaceUpdateRequestUpdateWithoutPlaceInput, PlaceUpdateRequestUncheckedUpdateWithoutPlaceInput>
+    create: XOR<PlaceUpdateRequestCreateWithoutPlaceInput, PlaceUpdateRequestUncheckedCreateWithoutPlaceInput>
+  }
+
+  export type PlaceUpdateRequestUpdateWithWhereUniqueWithoutPlaceInput = {
+    where: PlaceUpdateRequestWhereUniqueInput
+    data: XOR<PlaceUpdateRequestUpdateWithoutPlaceInput, PlaceUpdateRequestUncheckedUpdateWithoutPlaceInput>
+  }
+
+  export type PlaceUpdateRequestUpdateManyWithWhereWithoutPlaceInput = {
+    where: PlaceUpdateRequestScalarWhereInput
+    data: XOR<PlaceUpdateRequestUpdateManyMutationInput, PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceInput>
+  }
+
   export type UserCreateWithoutReviewsInput = {
     id?: string
     email: string
@@ -10225,6 +12454,7 @@ export namespace Prisma {
     isActive?: boolean
     favorites?: FavoriteCreateNestedManyWithoutUserInput
     uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutReviewsInput = {
@@ -10241,6 +12471,7 @@ export namespace Prisma {
     isActive?: boolean
     favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
     uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutReviewsInput = {
@@ -10270,8 +12501,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     favorites?: FavoriteCreateNestedManyWithoutPlaceInput
     media?: MediaCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateWithoutReviewsInput = {
@@ -10296,8 +12529,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
     media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceCreateOrConnectWithoutReviewsInput = {
@@ -10330,6 +12565,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     favorites?: FavoriteUpdateManyWithoutUserNestedInput
     uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReviewsInput = {
@@ -10346,6 +12582,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
     uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PlaceUpsertWithoutReviewsInput = {
@@ -10381,8 +12618,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
     media?: MediaUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateWithoutReviewsInput = {
@@ -10407,8 +12646,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
     media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceNestedInput
   }
 
   export type UserCreateWithoutFavoritesInput = {
@@ -10425,6 +12666,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewCreateNestedManyWithoutUserInput
     uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutFavoritesInput = {
@@ -10441,6 +12683,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
     uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutFavoritesInput = {
@@ -10470,8 +12713,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     reviews?: ReviewCreateNestedManyWithoutPlaceInput
     media?: MediaCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateWithoutFavoritesInput = {
@@ -10496,8 +12741,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
     media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceCreateOrConnectWithoutFavoritesInput = {
@@ -10530,6 +12777,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUpdateManyWithoutUserNestedInput
     uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutFavoritesInput = {
@@ -10546,6 +12794,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
     uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PlaceUpsertWithoutFavoritesInput = {
@@ -10581,8 +12830,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     reviews?: ReviewUpdateManyWithoutPlaceNestedInput
     media?: MediaUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateWithoutFavoritesInput = {
@@ -10607,8 +12858,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
     media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceCreateWithoutMediaInput = {
@@ -10633,8 +12886,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     reviews?: ReviewCreateNestedManyWithoutPlaceInput
     favorites?: FavoriteCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceUncheckedCreateWithoutMediaInput = {
@@ -10659,8 +12914,10 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    price?: number | null
     reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
     favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutPlaceInput
   }
 
   export type PlaceCreateOrConnectWithoutMediaInput = {
@@ -10682,6 +12939,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewCreateNestedManyWithoutUserInput
     favorites?: FavoriteCreateNestedManyWithoutUserInput
+    updateRequests?: PlaceUpdateRequestCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutUploadedMediaInput = {
@@ -10698,6 +12956,7 @@ export namespace Prisma {
     isActive?: boolean
     reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
     favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
+    updateRequests?: PlaceUpdateRequestUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutUploadedMediaInput = {
@@ -10738,8 +12997,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     reviews?: ReviewUpdateManyWithoutPlaceNestedInput
     favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutPlaceNestedInput
   }
 
   export type PlaceUncheckedUpdateWithoutMediaInput = {
@@ -10764,8 +13025,10 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
     reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
     favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceNestedInput
   }
 
   export type UserUpsertWithoutUploadedMediaInput = {
@@ -10793,6 +13056,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUpdateManyWithoutUserNestedInput
     favorites?: FavoriteUpdateManyWithoutUserNestedInput
+    updateRequests?: PlaceUpdateRequestUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUploadedMediaInput = {
@@ -10809,6 +13073,219 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
     favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
+    updateRequests?: PlaceUpdateRequestUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type PlaceCreateWithoutUpdateRequestsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    address: string
+    latitude: number
+    longitude: number
+    placeType: $Enums.PlaceType
+    minAge?: number
+    maxAge?: number
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    phoneNumber?: string | null
+    website?: string | null
+    imageUrl?: string | null
+    externalPlaceId?: string | null
+    averageRating?: number
+    totalReviews?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    price?: number | null
+    reviews?: ReviewCreateNestedManyWithoutPlaceInput
+    favorites?: FavoriteCreateNestedManyWithoutPlaceInput
+    media?: MediaCreateNestedManyWithoutPlaceInput
+  }
+
+  export type PlaceUncheckedCreateWithoutUpdateRequestsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    address: string
+    latitude: number
+    longitude: number
+    placeType: $Enums.PlaceType
+    minAge?: number
+    maxAge?: number
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    phoneNumber?: string | null
+    website?: string | null
+    imageUrl?: string | null
+    externalPlaceId?: string | null
+    averageRating?: number
+    totalReviews?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    price?: number | null
+    reviews?: ReviewUncheckedCreateNestedManyWithoutPlaceInput
+    favorites?: FavoriteUncheckedCreateNestedManyWithoutPlaceInput
+    media?: MediaUncheckedCreateNestedManyWithoutPlaceInput
+  }
+
+  export type PlaceCreateOrConnectWithoutUpdateRequestsInput = {
+    where: PlaceWhereUniqueInput
+    create: XOR<PlaceCreateWithoutUpdateRequestsInput, PlaceUncheckedCreateWithoutUpdateRequestsInput>
+  }
+
+  export type UserCreateWithoutUpdateRequestsInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    phoneNumber?: string | null
+    address?: string | null
+    numberOfKids?: number
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    reviews?: ReviewCreateNestedManyWithoutUserInput
+    favorites?: FavoriteCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaCreateNestedManyWithoutUploaderInput
+  }
+
+  export type UserUncheckedCreateWithoutUpdateRequestsInput = {
+    id?: string
+    email: string
+    password: string
+    name: string
+    phoneNumber?: string | null
+    address?: string | null
+    numberOfKids?: number
+    role?: $Enums.UserRole
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    isActive?: boolean
+    reviews?: ReviewUncheckedCreateNestedManyWithoutUserInput
+    favorites?: FavoriteUncheckedCreateNestedManyWithoutUserInput
+    uploadedMedia?: MediaUncheckedCreateNestedManyWithoutUploaderInput
+  }
+
+  export type UserCreateOrConnectWithoutUpdateRequestsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutUpdateRequestsInput, UserUncheckedCreateWithoutUpdateRequestsInput>
+  }
+
+  export type PlaceUpsertWithoutUpdateRequestsInput = {
+    update: XOR<PlaceUpdateWithoutUpdateRequestsInput, PlaceUncheckedUpdateWithoutUpdateRequestsInput>
+    create: XOR<PlaceCreateWithoutUpdateRequestsInput, PlaceUncheckedCreateWithoutUpdateRequestsInput>
+    where?: PlaceWhereInput
+  }
+
+  export type PlaceUpdateToOneWithWhereWithoutUpdateRequestsInput = {
+    where?: PlaceWhereInput
+    data: XOR<PlaceUpdateWithoutUpdateRequestsInput, PlaceUncheckedUpdateWithoutUpdateRequestsInput>
+  }
+
+  export type PlaceUpdateWithoutUpdateRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: FloatFieldUpdateOperationsInput | number
+    longitude?: FloatFieldUpdateOperationsInput | number
+    placeType?: EnumPlaceTypeFieldUpdateOperationsInput | $Enums.PlaceType
+    minAge?: IntFieldUpdateOperationsInput | number
+    maxAge?: IntFieldUpdateOperationsInput | number
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    averageRating?: FloatFieldUpdateOperationsInput | number
+    totalReviews?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    reviews?: ReviewUpdateManyWithoutPlaceNestedInput
+    favorites?: FavoriteUpdateManyWithoutPlaceNestedInput
+    media?: MediaUpdateManyWithoutPlaceNestedInput
+  }
+
+  export type PlaceUncheckedUpdateWithoutUpdateRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: StringFieldUpdateOperationsInput | string
+    latitude?: FloatFieldUpdateOperationsInput | number
+    longitude?: FloatFieldUpdateOperationsInput | number
+    placeType?: EnumPlaceTypeFieldUpdateOperationsInput | $Enums.PlaceType
+    minAge?: IntFieldUpdateOperationsInput | number
+    maxAge?: IntFieldUpdateOperationsInput | number
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    imageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    externalPlaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    averageRating?: FloatFieldUpdateOperationsInput | number
+    totalReviews?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    reviews?: ReviewUncheckedUpdateManyWithoutPlaceNestedInput
+    favorites?: FavoriteUncheckedUpdateManyWithoutPlaceNestedInput
+    media?: MediaUncheckedUpdateManyWithoutPlaceNestedInput
+  }
+
+  export type UserUpsertWithoutUpdateRequestsInput = {
+    update: XOR<UserUpdateWithoutUpdateRequestsInput, UserUncheckedUpdateWithoutUpdateRequestsInput>
+    create: XOR<UserCreateWithoutUpdateRequestsInput, UserUncheckedCreateWithoutUpdateRequestsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutUpdateRequestsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutUpdateRequestsInput, UserUncheckedUpdateWithoutUpdateRequestsInput>
+  }
+
+  export type UserUpdateWithoutUpdateRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    numberOfKids?: IntFieldUpdateOperationsInput | number
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: ReviewUpdateManyWithoutUserNestedInput
+    favorites?: FavoriteUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUpdateManyWithoutUploaderNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutUpdateRequestsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    phoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    numberOfKids?: IntFieldUpdateOperationsInput | number
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    reviews?: ReviewUncheckedUpdateManyWithoutUserNestedInput
+    favorites?: FavoriteUncheckedUpdateManyWithoutUserNestedInput
+    uploadedMedia?: MediaUncheckedUpdateManyWithoutUploaderNestedInput
   }
 
   export type ReviewCreateManyUserInput = {
@@ -10839,7 +13316,26 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     placeId: string
+  }
+
+  export type PlaceUpdateRequestCreateManyUserInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    placeId: string
+    reviewedBy?: string | null
   }
 
   export type ReviewUpdateWithoutUserInput = {
@@ -10900,6 +13396,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     place?: PlaceUpdateOneRequiredWithoutMediaNestedInput
   }
 
@@ -10916,6 +13413,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     placeId?: StringFieldUpdateOperationsInput | string
   }
 
@@ -10932,7 +13430,62 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     placeId?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type PlaceUpdateRequestUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    place?: PlaceUpdateOneRequiredWithoutUpdateRequestsNestedInput
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placeId?: StringFieldUpdateOperationsInput | string
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    placeId?: StringFieldUpdateOperationsInput | string
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ReviewCreateManyPlaceInput = {
@@ -10963,7 +13516,26 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
+    isPendingApproval?: boolean
     uploadedBy?: string | null
+  }
+
+  export type PlaceUpdateRequestCreateManyPlaceInput = {
+    id?: string
+    status?: $Enums.RequestStatus
+    description?: string | null
+    area?: number | null
+    openingTime?: string | null
+    closingTime?: string | null
+    minAge?: number | null
+    maxAge?: number | null
+    price?: number | null
+    rejectionReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reviewedAt?: Date | string | null
+    userId: string
+    reviewedBy?: string | null
   }
 
   export type ReviewUpdateWithoutPlaceInput = {
@@ -11024,6 +13596,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     uploader?: UserUpdateOneWithoutUploadedMediaNestedInput
   }
 
@@ -11040,6 +13613,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -11056,7 +13630,62 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    isPendingApproval?: BoolFieldUpdateOperationsInput | boolean
     uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlaceUpdateRequestUpdateWithoutPlaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: UserUpdateOneRequiredWithoutUpdateRequestsNestedInput
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateWithoutPlaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    userId?: StringFieldUpdateOperationsInput | string
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlaceUpdateRequestUncheckedUpdateManyWithoutPlaceInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: EnumRequestStatusFieldUpdateOperationsInput | $Enums.RequestStatus
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    area?: NullableFloatFieldUpdateOperationsInput | number | null
+    openingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    closingTime?: NullableStringFieldUpdateOperationsInput | string | null
+    minAge?: NullableIntFieldUpdateOperationsInput | number | null
+    maxAge?: NullableIntFieldUpdateOperationsInput | number | null
+    price?: NullableFloatFieldUpdateOperationsInput | number | null
+    rejectionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reviewedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    userId?: StringFieldUpdateOperationsInput | string
+    reviewedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
 

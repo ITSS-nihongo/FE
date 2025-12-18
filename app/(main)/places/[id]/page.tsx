@@ -13,40 +13,9 @@ import { useCreateReview, useFindManyReview } from '@/lib/api/generated'
 import { useUpdatePlace, useFindManyPlace } from '@/lib/api/generated'
 import { useCreateFavorite, useDeleteFavorite, useFindManyFavorite } from '@/lib/api/generated/favorite'
 import { useFindManyMedia, useCreateMedia, useDeleteMedia } from '@/lib/api/generated/media'
-import { tokenManager } from '@/lib/utils/token'
+import { useCreatePlaceUpdateRequest } from '@/lib/api/generated'
+import { useMe } from '@/lib/hooks/use-me'
 import { useState, useEffect } from 'react'
-
-// Helper function to decode JWT and get user ID
-const getUserIdFromToken = (): string | null => {
-  try {
-    const token = tokenManager.getToken()
-    if (!token) {
-      console.warn('No token found')
-      return null
-    }
-    
-    // Validate token format
-    const tokenParts = token.split('.')
-    if (tokenParts.length !== 3) {
-      console.error('Invalid token format')
-      return null
-    }
-    
-    // Decode JWT payload (simple base64 decode)
-    const payload = JSON.parse(atob(tokenParts[1]))
-    console.log('Token payload:', payload) // Debug log
-    
-    const userId = payload.userId || payload.sub || payload.id || null
-    if (!userId) {
-      console.error('No userId found in token payload')
-    }
-    
-    return userId
-  } catch (error) {
-    console.error('Error decoding token:', error)
-    return null
-  }
-}
 
 const { TextArea } = Input
 
@@ -60,6 +29,9 @@ export default function PlaceDetailPage() {
   const [savedPlaceId, setSavedPlaceId] = useState<string | null>(null)
   const [updateUploadedFiles, setUpdateUploadedFiles] = useState<{id?: string, url: string, type: 'IMAGE' | 'VIDEO', fileName: string}[]>([])
   const [showAllGallery, setShowAllGallery] = useState(false)
+  
+  // Get current user
+  const { userId, isAuthenticated } = useMe()
   
   // Form instances
   const [reviewForm] = Form.useForm()
@@ -110,18 +82,14 @@ export default function PlaceDetailPage() {
   // Use the first saved place if available
   const savedPlaceData = savedPlaceDetails?.[0]
 
-  // Get current user ID for favorites
-  const currentUserId = getUserIdFromToken()
-  console.log('Current User ID:', currentUserId)
-
   // Check if current place is favorited by user
   const { data: userFavorites } = useFindManyFavorite({
     where: {
-      userId: currentUserId!,
+      userId: userId!,
       placeId: savedPlaceId!
     }
   }, {
-    enabled: !!currentUserId && !!savedPlaceId,
+    enabled: !!userId && !!savedPlaceId && isAuthenticated,
   })
 
   const isFavorited = userFavorites && userFavorites.length > 0
@@ -207,6 +175,19 @@ export default function PlaceDetailPage() {
     },
     onError: (error: any) => {
       message.error(`地点情報の更新に失敗しました: ${error.message}`)
+    }
+  })
+
+  // Create update request mutation
+  const createUpdateRequestMutation = useCreatePlaceUpdateRequest({
+    onSuccess: () => {
+      message.success('更新リクエストを送信しました。管理者の承認をお待ちください。')
+      setIsUpdatePlaceModalOpen(false)
+      resetUpdatePlaceForm()
+      queryClient.invalidateQueries({ queryKey: ['PlaceUpdateRequest', 'findMany'] })
+    },
+    onError: (error: any) => {
+      message.error(`更新リクエストの送信に失敗しました: ${error.message}`)
     }
   })
 
@@ -359,7 +340,7 @@ export default function PlaceDetailPage() {
 
   // Handle favorite toggle
   const handleToggleFavorite = () => {
-    if (!currentUserId || !savedPlaceId) {
+    if (!userId || !savedPlaceId) {
       message.warning('お気に入りに追加するには、まずログインして地点を保存してください')
       return
     }
@@ -371,7 +352,7 @@ export default function PlaceDetailPage() {
     } else {
       addFavoriteMutation.mutate({
         data: {
-          userId: currentUserId,
+          userId: userId,
           placeId: savedPlaceId
         }
       })
@@ -459,7 +440,6 @@ export default function PlaceDetailPage() {
     }
 
     // Validate user authentication
-    const userId = getUserIdFromToken()
     if (!userId) {
       message.error('ログインが必要です。再度ログインしてください。')
       return
@@ -497,7 +477,6 @@ export default function PlaceDetailPage() {
       return
     }
 
-    const userId = getUserIdFromToken()
     if (!userId) {
       message.error('ログインが必要です。再度ログインしてください。')
       return
@@ -505,25 +484,26 @@ export default function PlaceDetailPage() {
 
     updatePlaceForm.validateFields().then(async (values) => {
       try {
-        // Update place with additional information
-        if (values.description || values.area || values.openingTime || values.closingTime || values.minAge !== undefined || values.maxAge !== undefined) {
-          await updatePlaceMutation.mutateAsync({
-            where: {
-              id: savedPlaceId
-            },
-            data: {
-              description: values.description || undefined,
-              area: values.area ? parseFloat(values.area) : undefined,
-              openingTime: values.openingTime ? values.openingTime.format('HH:mm') : undefined,
-              closingTime: values.closingTime ? values.closingTime.format('HH:mm') : undefined,
-              minAge: values.minAge !== undefined ? parseInt(values.minAge) : undefined,
-              maxAge: values.maxAge !== undefined ? parseInt(values.maxAge) : undefined,
-              updatedAt: new Date()
-            }
-          })
+        // Create update request instead of directly updating
+        const requestData: any = {
+          placeId: savedPlaceId,
+          userId: userId,
         }
 
-        // Save uploaded files as Media records
+        // Only include fields that have values
+        if (values.description) requestData.description = values.description
+        if (values.area) requestData.area = parseFloat(values.area)
+        if (values.openingTime) requestData.openingTime = values.openingTime.format('HH:mm')
+        if (values.closingTime) requestData.closingTime = values.closingTime.format('HH:mm')
+        if (values.minAge !== undefined && values.minAge !== '') requestData.minAge = parseInt(values.minAge)
+        if (values.maxAge !== undefined && values.maxAge !== '') requestData.maxAge = parseInt(values.maxAge)
+        if (values.price !== undefined && values.price !== '') requestData.price = parseFloat(values.price)
+
+        await createUpdateRequestMutation.mutateAsync({
+          data: requestData
+        })
+
+        // Save uploaded files as Media records with pending approval
         if (updateUploadedFiles.length > 0) {
           for (let i = 0; i < updateUploadedFiles.length; i++) {
             const file = updateUploadedFiles[i]
@@ -535,20 +515,20 @@ export default function PlaceDetailPage() {
                 placeId: savedPlaceId,
                 uploadedBy: userId,
                 sortOrder: (mediaData?.length || 0) + i,
-                isActive: true
+                isActive: true,
+                isPendingApproval: true // Requires admin approval
               }
             })
           }
+          message.info('アップロードされたメディアは管理者の承認待ちです')
         }
 
-        message.success('地点情報を更新しました')
         setIsUpdatePlaceModalOpen(false)
         resetUpdatePlaceForm()
-        queryClient.invalidateQueries({ queryKey: ['Place', 'findMany'] })
         queryClient.invalidateQueries({ queryKey: ['Media', 'findMany'] })
       } catch (error) {
-        console.error('Error in place update:', error)
-        message.error('地点情報の更新中にエラーが発生しました')
+        console.error('Error in place update request:', error)
+        message.error('更新リクエストの送信中にエラーが発生しました')
       }
     }).catch((errorInfo) => {
       console.log('Validation failed:', errorInfo)
@@ -799,6 +779,24 @@ export default function PlaceDetailPage() {
                   </div>
                 </div>
               )}
+
+              {/* Price information */}
+              {savedPlaceData?.price !== null && savedPlaceData?.price !== undefined && (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-600 text-sm font-bold">💰</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">料金</p>
+                    <p className="text-base font-medium">
+                      {savedPlaceData.price === 0 ? '無料' : `${savedPlaceData.price.toLocaleString()}円`}
+                    </p>
+                    <span className="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full mt-1 inline-block">
+                      ユーザー追加情報
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -955,8 +953,24 @@ export default function PlaceDetailPage() {
 
           {/* Action Buttons */}
           <div className="mt-8 space-y-4">
-            {/* Favorite Button */}
-            {savedPlaceId && (
+            {/* Show login prompt if not authenticated */}
+            {!isAuthenticated && (
+              <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-center">
+                <p className="text-purple-700 text-sm mb-3">
+                  レビューやお気に入り機能を利用するにはログインが必要です
+                </p>
+                <Button
+                  size="large"
+                  className="bg-purple-500 hover:bg-purple-400 border-0 h-12 rounded-full text-white font-bold text-base shadow-md"
+                  onClick={() => router.push('/login')}
+                >
+                  ログインする
+                </Button>
+              </div>
+            )}
+
+            {/* Favorite Button - Only show when authenticated */}
+            {isAuthenticated && savedPlaceId && (
               <Button
                 size="large"
                 block
@@ -973,8 +987,8 @@ export default function PlaceDetailPage() {
               </Button>
             )}
             
-            {/* Update Place Button */}
-            {savedPlaceId && (
+            {/* Update Place Button - Only show when authenticated */}
+            {isAuthenticated && savedPlaceId && (
               <Button
                 size="large"
                 block
@@ -985,22 +999,24 @@ export default function PlaceDetailPage() {
               </Button>
             )}
             
-            {/* Write Review Button */}
-            <Button
-              type="primary"
-              size="large"
-              block
-              className="bg-[#C058D3] hover:bg-[#b04cc3] border-0 h-12 rounded-full text-white font-bold text-base shadow-md"
-              onClick={() => {
-                if (!savedPlaceId) {
-                  handleSavePlace()
-                } else {
-                  setIsReviewModalOpen(true)
-                }
-              }}
-            >
-              {savedPlaceId ? 'レビューを書く' : '保存してレビューを書く'}
-            </Button>
+            {/* Write Review Button - Only show when authenticated */}
+            {isAuthenticated && (
+              <Button
+                type="primary"
+                size="large"
+                block
+                className="bg-[#C058D3] hover:bg-[#b04cc3] border-0 h-12 rounded-full text-white font-bold text-base shadow-md"
+                onClick={() => {
+                  if (!savedPlaceId) {
+                    handleSavePlace()
+                  } else {
+                    setIsReviewModalOpen(true)
+                  }
+                }}
+              >
+                {savedPlaceId ? 'レビューを書く' : '保存してレビューを書く'}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -1088,7 +1104,8 @@ export default function PlaceDetailPage() {
             openingTime: null,
             closingTime: null,
             minAge: savedPlaceData?.minAge || 0,
-            maxAge: savedPlaceData?.maxAge || 18
+            maxAge: savedPlaceData?.maxAge || 18,
+            price: savedPlaceData?.price || ''
           }}
           className="space-y-6 py-4"
         >
@@ -1121,6 +1138,35 @@ export default function PlaceDetailPage() {
                 className="rounded-lg"
               />
             </Form.Item>
+
+            {/* Price */}
+            <Form.Item
+              label="料金"
+              name="price"
+              rules={[
+                {
+                  validator(_, value) {
+                    if (value === undefined || value === '') return Promise.resolve()
+                    const num = Number(value)
+                    if (isNaN(num) || num < 0) {
+                      return Promise.reject(new Error('0円以上で入力してください'))
+                    }
+                    return Promise.resolve()
+                  },
+                }
+              ]}
+            >
+              <Input
+                type="number"
+                placeholder="料金を入力（0円で無料）"
+                suffix="円"
+                className="rounded-lg"
+                min={0}
+              />
+            </Form.Item>
+            <p className="text-xs text-gray-500 -mt-4 mb-4">
+              入場料金を入力してください（無料の場合は0を入力）
+            </p>
 
             {/* Age Range Section */}
             <div>

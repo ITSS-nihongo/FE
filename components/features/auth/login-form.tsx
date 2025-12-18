@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Form, Input, Button, Alert, Checkbox } from 'antd'
 import { LockOutlined, MailOutlined } from '@ant-design/icons'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 
 type LoginFormValues = {
   email: string
@@ -18,11 +19,40 @@ export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // Check if user already has token on mount
+  useEffect(() => {
+    if (tokenManager.hasToken()) {
+      // Already logged in, redirect to dashboard
+      const redirectTo = searchParams.get('redirect') || '/dashboard'
+      router.push(redirectTo)
+      return
+    }
+
+    // Load saved email if remember me was checked
+    const savedEmail = tokenManager.getRememberEmail()
+    if (savedEmail) {
+      form.setFieldsValue({
+        email: savedEmail,
+        remember: true,
+      })
+    }
+  }, [form, router, searchParams])
+
   const loginMutation = useMutation({
     ...postApiAuthLoginMutation(),
     onSuccess: (data) => {
-      // Save token
-      tokenManager.setToken(data.token)
+      const remember = form.getFieldValue('remember')
+      const email = form.getFieldValue('email')
+      
+      // Save token with remember flag
+      tokenManager.setToken(data.token, remember)
+      
+      // Save email if remember is checked
+      if (remember) {
+        tokenManager.setRememberEmail(email)
+      } else {
+        tokenManager.clearRemember()
+      }
       
       // Redirect to original page or dashboard
       const redirectTo = searchParams.get('redirect') || '/dashboard'

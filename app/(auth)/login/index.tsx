@@ -19,7 +19,9 @@ function LoginContent() {
       </div>
 
       {/* Login Form */}
-      <LoginForm />
+      <Suspense fallback={<div>Loading form...</div>}>
+        <LoginForm />
+      </Suspense>
 
       {/* Footer Links */}
       <div className="mt-6 text-center space-y-3">

@@ -70,6 +70,12 @@ const metadata: ModelMeta = {
                     isDataModel: true,
                     isArray: true,
                     backLink: 'uploader',
+                }, updateRequests: {
+                    name: "updateRequests",
+                    type: "PlaceUpdateRequest",
+                    isDataModel: true,
+                    isArray: true,
+                    backLink: 'user',
                 },
             }, uniqueConstraints: {
                 id: {
@@ -163,6 +169,10 @@ const metadata: ModelMeta = {
                     name: "isActive",
                     type: "Boolean",
                     attributes: [{ "name": "@default", "args": [{ "name": "value", "value": true }] }],
+                }, price: {
+                    name: "price",
+                    type: "Float",
+                    isOptional: true,
                 }, reviews: {
                     name: "reviews",
                     type: "Review",
@@ -178,6 +188,12 @@ const metadata: ModelMeta = {
                 }, media: {
                     name: "media",
                     type: "Media",
+                    isDataModel: true,
+                    isArray: true,
+                    backLink: 'place',
+                }, updateRequests: {
+                    name: "updateRequests",
+                    type: "PlaceUpdateRequest",
                     isDataModel: true,
                     isArray: true,
                     backLink: 'place',
@@ -344,6 +360,10 @@ const metadata: ModelMeta = {
                     name: "isActive",
                     type: "Boolean",
                     attributes: [{ "name": "@default", "args": [{ "name": "value", "value": true }] }],
+                }, isPendingApproval: {
+                    name: "isPendingApproval",
+                    type: "Boolean",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value", "value": false }] }],
                 }, placeId: {
                     name: "placeId",
                     type: "String",
@@ -380,11 +400,104 @@ const metadata: ModelMeta = {
                 },
             },
         },
+        placeUpdateRequest: {
+            name: 'PlaceUpdateRequest', fields: {
+                id: {
+                    name: "id",
+                    type: "String",
+                    isId: true,
+                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
+                }, status: {
+                    name: "status",
+                    type: "RequestStatus",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
+                }, description: {
+                    name: "description",
+                    type: "String",
+                    isOptional: true,
+                }, area: {
+                    name: "area",
+                    type: "Float",
+                    isOptional: true,
+                }, openingTime: {
+                    name: "openingTime",
+                    type: "String",
+                    isOptional: true,
+                }, closingTime: {
+                    name: "closingTime",
+                    type: "String",
+                    isOptional: true,
+                }, minAge: {
+                    name: "minAge",
+                    type: "Int",
+                    isOptional: true,
+                }, maxAge: {
+                    name: "maxAge",
+                    type: "Int",
+                    isOptional: true,
+                }, price: {
+                    name: "price",
+                    type: "Float",
+                    isOptional: true,
+                }, rejectionReason: {
+                    name: "rejectionReason",
+                    type: "String",
+                    isOptional: true,
+                }, createdAt: {
+                    name: "createdAt",
+                    type: "DateTime",
+                    attributes: [{ "name": "@default", "args": [{ "name": "value" }] }],
+                }, updatedAt: {
+                    name: "updatedAt",
+                    type: "DateTime",
+                    attributes: [{ "name": "@updatedAt", "args": [] }],
+                }, reviewedAt: {
+                    name: "reviewedAt",
+                    type: "DateTime",
+                    isOptional: true,
+                }, placeId: {
+                    name: "placeId",
+                    type: "String",
+                    isForeignKey: true,
+                    relationField: 'place',
+                }, userId: {
+                    name: "userId",
+                    type: "String",
+                    isForeignKey: true,
+                    relationField: 'user',
+                }, reviewedBy: {
+                    name: "reviewedBy",
+                    type: "String",
+                    isOptional: true,
+                }, place: {
+                    name: "place",
+                    type: "Place",
+                    isDataModel: true,
+                    backLink: 'updateRequests',
+                    isRelationOwner: true,
+                    onDeleteAction: 'Cascade',
+                    foreignKeyMapping: { "id": "placeId" },
+                }, user: {
+                    name: "user",
+                    type: "User",
+                    isDataModel: true,
+                    backLink: 'updateRequests',
+                    isRelationOwner: true,
+                    onDeleteAction: 'Cascade',
+                    foreignKeyMapping: { "id": "userId" },
+                },
+            }, uniqueConstraints: {
+                id: {
+                    name: "id",
+                    fields: ["id"]
+                },
+            },
+        },
 
     },
     deleteCascade: {
-        user: ['Review', 'Favorite'],
-        place: ['Review', 'Favorite', 'Media'],
+        user: ['Review', 'Favorite', 'PlaceUpdateRequest'],
+        place: ['Review', 'Favorite', 'Media', 'PlaceUpdateRequest'],
 
     },
     authModel: 'User'

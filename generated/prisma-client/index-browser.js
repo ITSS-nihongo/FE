@@ -155,7 +155,8 @@ exports.Prisma.PlaceScalarFieldEnum = {
   totalReviews: 'totalReviews',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  isActive: 'isActive'
+  isActive: 'isActive',
+  price: 'price'
 };
 
 exports.Prisma.ReviewScalarFieldEnum = {
@@ -188,8 +189,28 @@ exports.Prisma.MediaScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   isActive: 'isActive',
+  isPendingApproval: 'isPendingApproval',
   placeId: 'placeId',
   uploadedBy: 'uploadedBy'
+};
+
+exports.Prisma.PlaceUpdateRequestScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  description: 'description',
+  area: 'area',
+  openingTime: 'openingTime',
+  closingTime: 'closingTime',
+  minAge: 'minAge',
+  maxAge: 'maxAge',
+  price: 'price',
+  rejectionReason: 'rejectionReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  reviewedAt: 'reviewedAt',
+  placeId: 'placeId',
+  userId: 'userId',
+  reviewedBy: 'reviewedBy'
 };
 
 exports.Prisma.SortOrder = {
@@ -221,12 +242,19 @@ exports.MediaType = exports.$Enums.MediaType = {
   VIDEO: 'VIDEO'
 };
 
+exports.RequestStatus = exports.$Enums.RequestStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   Place: 'Place',
   Review: 'Review',
   Favorite: 'Favorite',
-  Media: 'Media'
+  Media: 'Media',
+  PlaceUpdateRequest: 'PlaceUpdateRequest'
 };
 
 /**

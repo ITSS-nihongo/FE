@@ -1,6 +1,5 @@
 'use client'
 
-import { tokenManager } from '@/lib/utils/token'
 import { useRouter } from 'next/navigation'
 import { Input, Card, Slider, Rate, Avatar } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
@@ -11,7 +10,7 @@ import { useState } from 'react'
 export default function DashboardPage() {
   const router = useRouter()
   const [searchText, setSearchText] = useState('')
-  const [ageRange, setAgeRange] = useState<[number, number]>([1, 8])
+  const [ageRange, setAgeRange] = useState<[number, number]>([0, 8])
 
   // Fetch places data từ ZenStack
   const { data: placesData, isLoading } = useFindManyPlace({
@@ -27,6 +26,15 @@ export default function DashboardPage() {
           rating: true
         }
       },
+      media: {
+        where: {
+          isActive: true
+        },
+        orderBy: {
+          sortOrder: 'asc'
+        },
+        take: 1
+      },
       _count: {
         select: {
           reviews: true
@@ -35,18 +43,13 @@ export default function DashboardPage() {
     },
     take: 4,
     orderBy: {
-      createdAt: 'desc'
+      averageRating: 'desc' // Sort by highest rating
     }
   })
 
-  const handleLogout = () => {
-    tokenManager.removeToken()
-    router.push('/login')
-  }
-
   const handleSearch = () => {
     if (searchText.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchText)}`)
+      router.push(`/search?q=${encodeURIComponent(searchText)}&minAge=${ageRange[0]}&maxAge=${ageRange[1]}`)
     }
   }
 
@@ -77,9 +80,10 @@ export default function DashboardPage() {
               prefix={<SearchOutlined className="text-gray-400" />}
               suffix={
                 <button 
-                  className="bg-cyan-400 hover:bg-cyan-500 text-white px-6 py-2 rounded-md font-medium transition-colors"
+                  className="bg-cyan-400 hover:bg-cyan-500 text-black px-6 py-2 rounded-md font-medium transition-colors flex items-center gap-2"
                   onClick={handleSearch}
                 >
+                  <SearchOutlined />
                   検索
                 </button>
               }
@@ -97,7 +101,7 @@ export default function DashboardPage() {
             </div>
             <Slider
               range
-              min={1}
+              min={0}
               max={18}
               value={ageRange}
               onChange={(value) => setAgeRange(value as [number, number])}
@@ -123,14 +127,36 @@ export default function DashboardPage() {
             {placesData?.map((place) => {
               const avgRating = calculateAvgRating(place)
               const reviewCount = place._count?.reviews || 0
+              
+              // Use externalPlaceId for the link, fallback to regular id if not available
+              const linkId = place.externalPlaceId || place.id
+
+              // Get first media image if available
+              const firstMedia = place.media?.[0]
+              const imageUrl = firstMedia?.fileUrl
 
               return (
-                <Link key={place.id} href={`/places/${place.id}`}>
+                <Link key={place.id} href={`/places/${linkId}`}>
                   <Card
                     hoverable
                     cover={
-                      <div className="h-40 bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400 text-lg">Image</span>
+                      <div className="h-40 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center overflow-hidden">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={firstMedia?.altText || place.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                            </svg>
+                          </div>
+                        )}
                       </div>
                     }
                     className="h-full"

@@ -328,7 +328,7 @@ export function useSuspenseCountMedia<TArgs extends Prisma.MediaCountArgs, TQuer
 }
 import type { MediaType } from '../../../generated/prisma-client';
 
-export function useCheckMedia<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; fileName?: string; fileUrl?: string; fileSize?: number; mimeType?: string; mediaType?: MediaType; title?: string; altText?: string; sortOrder?: number; isActive?: boolean; placeId?: string; uploadedBy?: string }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
+export function useCheckMedia<TError = DefaultError>(args: { operation: PolicyCrudKind; where?: { id?: string; fileName?: string; fileUrl?: string; fileSize?: number; mimeType?: string; mediaType?: MediaType; title?: string; altText?: string; sortOrder?: number; isActive?: boolean; isPendingApproval?: boolean; placeId?: string; uploadedBy?: string }; }, options?: (Omit<UseQueryOptions<boolean, TError, boolean>, 'queryKey'> & ExtraQueryOptions)) {
     const { endpoint, fetch } = getHooksContext();
     return useModelQuery<boolean, boolean, TError>('Media', `${endpoint}/media/check`, args, options, fetch);
 }

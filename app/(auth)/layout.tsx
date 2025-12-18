@@ -16,17 +16,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-700 hover:text-gray-900 flex items-center gap-2">
+              <Link href="/dashboard" className="text-gray-700 hover:text-gray-900 flex items-center gap-2">
                 <HomeOutlined />
                 <span>ホーム</span>
-              </Link>
-              <Link href="/favorites" className="text-gray-700 hover:text-gray-900 flex items-center gap-2">
-                <HeartOutlined />
-                <span>おすすめ</span>
-              </Link>
-              <Link href="/favorites" className="text-gray-700 hover:text-gray-900 flex items-center gap-2">
-                <HeartOutlined />
-                <span>お気に入り</span>
               </Link>
             </nav>
 
@@ -51,7 +43,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-white py-4">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-500">
+        <div className="container mx-auto px-4 text-left text-sm text-gray-500">
           © 2025 TheWeekend. All rights reserved.
         </div>
       </footer>

@@ -6,37 +6,26 @@ import { HeartFilled, HeartOutlined, EnvironmentOutlined, ClockCircleOutlined, S
 import { useFindManyFavorite, useDeleteFavorite } from '@/lib/api/generated/favorite'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
-import { tokenManager } from '@/lib/utils/token'
-
-// Helper function to get user ID from token
-const getUserIdFromToken = (): string | null => {
-  try {
-    const token = tokenManager.getToken()
-    if (!token) return null
-    
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.userId || payload.sub || payload.id || null
-  } catch (error) {
-    return null
-  }
-}
+import { useMe } from '@/lib/hooks/use-me'
 
 export default function FavoritesPage() {
   const [selectedPlace, setSelectedPlace] = useState<any>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const queryClient = useQueryClient()
-  const currentUserId = getUserIdFromToken()
+  
+  // Get current user
+  const { userId, isAuthenticated } = useMe()
 
   // Fetch user's favorites
   const { data: favorites, isLoading: favoritesLoading } = useFindManyFavorite({
     where: {
-      userId: currentUserId!
+      userId: userId!
     },
     include: {
       place: true
     }
   }, {
-    enabled: !!currentUserId,
+    enabled: !!userId && isAuthenticated,
   })
 
   // Remove favorite mutation
@@ -91,25 +80,30 @@ export default function FavoritesPage() {
                   key={favorite.id}
                   className="rounded-2xl shadow-sm hover:shadow-md transition-shadow"
                   cover={
-                    <div className="h-48 bg-gray-100 rounded-t-2xl overflow-hidden relative flex items-center justify-center">
+                    <div className="h-48 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-t-2xl overflow-hidden relative flex items-center justify-center">
                       {place.photos && place.photos.length > 0 ? (
                         <img
                           src={place.photos[0]}
                           alt={place.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <p>写真準備中</p>
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                          </svg>
                         </div>
                       )}
                       
                       {/* Heart Icon - Remove from favorites */}
                       <button
                         onClick={() => handleRemoveFavorite(favorite.id)}
-                        className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:shadow-lg transition-shadow"
+                        className="absolute top-3 right-3 rounded-full p-2 hover:scale-110 transition-transform"
                       >
-                        <HeartFilled className="text-red-500 text-lg" />
+                        <HeartFilled className="text-red-500 text-2xl drop-shadow-lg" />
                       </button>
                     </div>
                   }
@@ -199,16 +193,21 @@ export default function FavoritesPage() {
         {selectedPlace && (
           <div className="space-y-6">
             {/* Image */}
-            <div className="w-full max-h-96 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
+            <div className="w-full max-h-96 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-xl overflow-hidden flex items-center justify-center">
               {selectedPlace.photos && selectedPlace.photos.length > 0 ? (
                 <img
                   src={selectedPlace.photos[0]}
                   alt={selectedPlace.name}
                   className="w-full h-auto max-h-96 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
                 />
               ) : (
-                <div className="w-full h-64 flex items-center justify-center text-gray-400">
-                  <span className="text-lg">Image</span>
+                <div className="w-full h-64 flex items-center justify-center text-gray-300">
+                  <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                  </svg>
                 </div>
               )}
             </div>

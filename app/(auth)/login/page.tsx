@@ -1,7 +1,8 @@
 import { LoginForm } from "@/components/features/auth/login-form";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginContent() {
   return (
     <div className="bg-white rounded-lg shadow-md p-8">
       {/* Header */}
@@ -18,19 +19,21 @@ export default function LoginPage() {
       </div>
 
       {/* Login Form */}
-      <LoginForm />
+      <Suspense fallback={<div>Loading form...</div>}>
+        <LoginForm />
+      </Suspense>
 
       {/* Footer Links */}
       <div className="mt-6 text-center space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <Link 
-            href="/forgot-password" 
+          <Link
+            href="/forgot-password"
             className="text-gray-500 hover:text-gray-700"
           >
             パスワードを忘れた場合
           </Link>
-          <Link 
-            href="/register" 
+          <Link
+            href="/register"
             className="text-pink-500 hover:text-pink-600 font-medium"
           >
             新規登録はこちら
@@ -38,5 +41,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="bg-white rounded-lg shadow-md p-8">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

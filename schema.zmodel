@@ -41,6 +41,13 @@ enum MediaType {
   VIDEO
 }
 
+// Enum cho trạng thái đề xuất
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // Model User - Quản lý người dùng
 model User {
   id            String    @id @default(uuid())
@@ -59,6 +66,7 @@ model User {
   reviews       Review[]
   favorites     Favorite[]
   uploadedMedia Media[]    // Media files uploaded by this user
+  updateRequests PlaceUpdateRequest[] // Update requests submitted by this user
   
   // Access Control Rules
   // Cho phép tất cả người dùng đọc thông tin user (trừ password)
@@ -99,11 +107,12 @@ model Place {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   isActive        Boolean     @default(true)
-  
+  price           Float?      // Giá vé vào cổng (nếu có)
   // Relations
   reviews         Review[]
   favorites       Favorite[]
   media           Media[]     // One-to-many relation with media files
+  updateRequests  PlaceUpdateRequest[] // Update requests for this place
   
   // Access Control Rules
   // Tất cả người dùng đều có thể đọc địa điểm
@@ -188,6 +197,7 @@ model Media {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   isActive    Boolean     @default(true)
+  isPendingApproval Boolean @default(false) // Đang chờ phê duyệt từ admin
   
   // Foreign Keys
   placeId     String
@@ -198,8 +208,11 @@ model Media {
   uploader    User?       @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
   
   // Access Control Rules
-  // Tất cả người dùng có thể đọc media của place active
-  @@allow('read', place.isActive == true && isActive == true)
+  // Tất cả người dùng có thể đọc media của place active (không pending approval)
+  @@allow('read', place.isActive == true && isActive == true && isPendingApproval == false)
+  
+  // Admin có thể đọc tất cả media kể cả pending
+  @@allow('read', auth().role == ADMIN)
   
   // Người đăng nhập có thể tạo media
   @@allow('create', auth() != null)
@@ -211,4 +224,57 @@ model Media {
   @@allow('all', auth().role == ADMIN)
   
   @@map("media")
+}
+
+// Model PlaceUpdateRequest - Đề xuất cập nhật thông tin địa điểm
+model PlaceUpdateRequest {
+  id              String        @id @default(uuid())
+  status          RequestStatus @default(PENDING)
+  
+  // Proposed changes (nullable fields - only filled if user wants to change them)
+  description     String?
+  area            Float?
+  openingTime     String?
+  closingTime     String?
+  minAge          Int?
+  maxAge          Int?
+  price           Float?
+  
+  // Rejection reason (if rejected by admin)
+  rejectionReason String?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  reviewedAt      DateTime?     // When admin approved/rejected
+  
+  // Foreign Keys
+  placeId         String
+  userId          String
+  reviewedBy      String?       // Admin who reviewed the request
+  
+  // Relations
+  place           Place         @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Access Control Rules
+  // User có thể đọc requests của mình
+  @@allow('read', auth().id == userId)
+  
+  // Admin có thể đọc tất cả requests
+  @@allow('read', auth().role == ADMIN)
+  
+  // User có thể tạo request
+  @@allow('create', auth() != null)
+  
+  // Chỉ admin mới được update (approve/reject)
+  @@allow('update', auth().role == ADMIN)
+  
+  // User có thể xóa request PENDING của mình
+  @@allow('delete', auth().id == userId && status == PENDING)
+  
+  // Admin có thể xóa bất kỳ request nào
+  @@allow('delete', auth().role == ADMIN)
+  
+  @@map("place_update_requests")
 }

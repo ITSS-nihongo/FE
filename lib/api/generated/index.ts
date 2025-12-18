@@ -9,6 +9,7 @@ export * from './place';
 export * from './review';
 export * from './favorite';
 export * from './media';
+export * from './place-update-request';
 export { getQueryKey } from '@zenstackhq/tanstack-query/runtime-v5';
 export { Provider } from '@zenstackhq/tanstack-query/runtime-v5/react';
 export { default as metadata } from './__model_meta';

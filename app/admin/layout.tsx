@@ -25,7 +25,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const handleLogout = () => {
     tokenManager.removeToken()
     setIsDropdownOpen(false)
-    router.push('/login')
+    window.location.href = '/dashboard'
   }
 
   return (

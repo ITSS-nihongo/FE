@@ -19,7 +19,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const handleLogout = () => {
     tokenManager.removeToken()
     setIsDropdownOpen(false)
-    router.push('/dashboard')
+    window.location.href = '/dashboard'
   }
 
   return (

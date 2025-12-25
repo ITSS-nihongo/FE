@@ -12,6 +12,7 @@ const { Option } = Select
 export default function AdminUsersPage() {
   const queryClient = useQueryClient()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<any>(null)
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const [currentEditIndex, setCurrentEditIndex] = useState(0)
@@ -108,34 +109,30 @@ export default function AdminUsersPage() {
       message.warning('削除するユーザーを選択してください')
       return
     }
+    setIsDeleteModalOpen(true)
+  }
 
-    Modal.confirm({
-      title: '削除確認',
-      content: `選択した${selectedUserIds.length}人のユーザーを削除してもよろしいですか？`,
-      okText: '削除',
-      cancelText: 'キャンセル',
-      okButtonProps: { danger: true },
-      onOk: async () => {
-        try {
-          // Delete all selected users
-          await Promise.all(
-            selectedUserIds.map(userId =>
-              deleteUserMutation.mutateAsync({
-                where: { id: userId },
-                data: {
-                  isActive: false,
-                  updatedAt: new Date()
-                }
-              })
-            )
-          )
-          message.success(`${selectedUserIds.length}人のユーザーを削除しました`)
-          setSelectedUserIds([])
-        } catch (error) {
-          console.error('Delete error:', error)
-        }
-      }
-    })
+  const confirmDelete = async () => {
+    try {
+      // Delete all selected users (soft delete)
+      await Promise.all(
+        selectedUserIds.map(userId =>
+          deleteUserMutation.mutateAsync({
+            where: { id: userId },
+            data: {
+              isActive: false,
+              updatedAt: new Date()
+            }
+          })
+        )
+      )
+      message.success(`${selectedUserIds.length}人のユーザーを削除しました`)
+      setSelectedUserIds([])
+      setIsDeleteModalOpen(false)
+    } catch (error) {
+      console.error('Delete error:', error)
+      message.error('削除に失敗しました')
+    }
   }
 
   const handleSubmit = () => {
@@ -387,6 +384,20 @@ export default function AdminUsersPage() {
             </div>
           </Form>
         </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="削除確認"
+        open={isDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        onOk={confirmDelete}
+        okText="削除"
+        cancelText="キャンセル"
+        okButtonProps={{ danger: true, loading: deleteUserMutation.isPending }}
+      >
+        <p>選択した{selectedUserIds.length}人のユーザーを削除してもよろしいですか？</p>
+        <p className="text-gray-500 text-sm mt-2">※この操作は元に戻せません</p>
       </Modal>
 
       <style jsx global>{`

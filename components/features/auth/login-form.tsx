@@ -4,7 +4,7 @@ import { postApiAuthLoginMutation } from '@/lib/api/generated-openAPI/@tanstack/
 import { tokenManager } from '@/lib/utils/token'
 import { useMutation } from '@tanstack/react-query'
 import { Form, Input, Button, Alert, Checkbox } from 'antd'
-import { LockOutlined, MailOutlined } from '@ant-design/icons'
+
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 
@@ -82,40 +82,48 @@ export function LoginForm() {
       {/* Email Field */}
       <Form.Item
         name="email"
-        label={<span className="text-gray-700 text-sm">メールアドレス</span>}
+        label={<span className="text-gray-900 font-medium">メールアドレス</span>}
         rules={[
           { required: true, message: 'メールアドレスを入力してください' },
           { type: 'email', message: '有効なメールアドレスを入力してください' },
         ]}
       >
         <Input 
-          prefix={<MailOutlined className="text-gray-400" />} 
-          placeholder="example@email.com"
-          className="rounded-md"
+          placeholder=""
+          className="rounded-lg border-2 h-12"
+          style={{ borderColor: '#BC41C7' }}
         />
       </Form.Item>
 
       {/* Password Field */}
       <Form.Item
         name="password"
-        label={<span className="text-gray-700 text-sm">パスワード</span>}
+        label={<span className="text-gray-900 font-medium">パスワード</span>}
         rules={[
           { required: true, message: 'パスワードを入力してください' },
           { min: 1, message: 'パスワードは6文字以上である必要があります' },
         ]}
+        className="mb-2"
       >
         <Input.Password 
-          prefix={<LockOutlined className="text-gray-400" />} 
           placeholder="パスワード"
-          className="rounded-md"
+          className="rounded-lg border-2 h-12"
+          style={{ borderColor: '#BC41C7' }}
         />
       </Form.Item>
 
-      {/* Remember Me Checkbox */}
-      <Form.Item name="remember" valuePropName="checked">
-        <Checkbox className="text-sm text-gray-600">
-          ログイン情報を保存する
-        </Checkbox>
+      {/* Remember Me Checkbox and Forgot Password */}
+      <Form.Item className="mb-4">
+        <div className="flex items-center justify-between">
+          <Form.Item name="remember" valuePropName="checked" noStyle>
+            <Checkbox className="text-sm text-gray-900">
+              ログイン状態を保持
+            </Checkbox>
+          </Form.Item>
+          <a href="/forgot-password" className="text-sm hover:underline" style={{ color: '#BC41C7' }}>
+            パスワードを忘れた？
+          </a>
+        </div>
       </Form.Item>
 
       {/* Error Message */}
@@ -142,22 +150,25 @@ export function LoginForm() {
       )}
 
       {/* Submit Button */}
-      <Form.Item className="mb-0">
+      <Form.Item className="mb-4">
         <Button
           type="primary"
           htmlType="submit"
           loading={loginMutation.isPending}
           block
-          className="h-12 rounded-full border-0 text-white font-medium shadow-md"
+          className="h-14 rounded-full border-0 text-white font-semibold text-lg shadow-md"
           style={{
-            background: loginMutation.isPending 
-              ? undefined 
-              : 'linear-gradient(90deg, #ec4899 0%, #a855f7 100%)'
+            backgroundColor: '#BC41C7'
           }}
         >
           {loginMutation.isPending ? 'ログイン中...' : 'ログイン'}
         </Button>
       </Form.Item>
+
+      {/* Register Link */}
+      <div className="text-center text-sm text-gray-900">
+        アカウントをお持ちでない方は、<a href="/register" className="font-medium hover:underline" style={{ color: '#BC41C7' }}>👉 新規登録</a>
+      </div>
     </Form>
   )
 }

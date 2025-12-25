@@ -193,7 +193,7 @@ export default function FavoritesPage() {
         {selectedPlace && (
           <div className="space-y-6">
             {/* Image */}
-            <div className="w-full max-h-96 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-xl overflow-hidden flex items-center justify-center">
+            <div className="w-full max-h-96 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
               {selectedPlace.photos && selectedPlace.photos.length > 0 ? (
                 <img
                   src={selectedPlace.photos[0]}

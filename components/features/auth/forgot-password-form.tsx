@@ -1,142 +1,118 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Form, Input, message, Card } from 'antd'
+import { Button, Form, Input, Alert } from 'antd'
 import { MailOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 import Link from 'next/link'
-import { client } from '@/lib/api/client'
+import { useMutation } from '@tanstack/react-query'
+import { postApiAuthForgotPasswordMutation } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { toast } from '@/lib/hooks/use-toast'
+
+type ForgotPasswordFormValues = {
+  email: string
+}
 
 export function ForgotPasswordForm() {
-  const [loading, setLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
+  const [form] = Form.useForm<ForgotPasswordFormValues>()
   const router = useRouter()
 
-  const onFinish = async (values: { email: string }) => {
-    setLoading(true)
-    try {
-      const response = await client.POST('/api/auth/forgot-password', {
-        body: {
-          email: values.email,
-        },
-      })
+  const forgotPasswordMutation = useMutation({
+    ...postApiAuthForgotPasswordMutation(),
+    onSuccess: (data) => {
+      toast.success('送信成功', 'パスワードリセット用のメールを送信しました。メールボックスをご確認ください。')
+      form.resetFields()
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
+    },
+  })
 
-      if (response.error) {
-        message.error('メールアドレスが見つかりません')
-        return
-      }
-
-      setEmailSent(true)
-      message.success('パスワードリセットのメールを送信しました')
-    } catch (error) {
-      console.error('Forgot password error:', error)
-      message.error('エラーが発生しました。もう一度お試しください。')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (emailSent) {
-    return (
-      <Card className="text-center">
-        <div className="mb-6">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <MailOutlined className="text-3xl text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            メール送信完了
-          </h2>
-          <p className="text-gray-600">
-            パスワードリセットのリンクをメールで送信しました。
-          </p>
-        </div>
-
-        <div className="space-y-4 text-left bg-blue-50 p-4 rounded-lg mb-6">
-          <p className="text-sm text-gray-700">
-            <strong>次のステップ：</strong>
-          </p>
-          <ol className="list-decimal list-inside space-y-2 text-sm text-gray-600">
-            <li>メールボックスを確認してください</li>
-            <li>「パスワードをリセット」ボタンをクリックしてください</li>
-            <li>新しいパスワードを設定してください</li>
-          </ol>
-          <p className="text-xs text-gray-500 mt-3">
-            ⚠️ リンクは1時間で無効になります
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <Button
-            type="primary"
-            block
-            size="large"
-            onClick={() => router.push('/login')}
-            className="bg-pink-500 hover:!bg-pink-600"
-          >
-            ログインページに戻る
-          </Button>
-          <Button
-            block
-            onClick={() => setEmailSent(false)}
-          >
-            メールが届かない場合、再送信
-          </Button>
-        </div>
-      </Card>
-    )
+  const onFinish = (values: ForgotPasswordFormValues) => {
+    forgotPasswordMutation.mutate({
+      body: {
+        email: values.email,
+      },
+    })
   }
 
   return (
-    <Form
-      name="forgot-password"
-      onFinish={onFinish}
-      layout="vertical"
-      size="large"
-      requiredMark={false}
-    >
-      <Form.Item
-        name="email"
-        label="メールアドレス"
-        rules={[
-          { required: true, message: 'メールアドレスを入力してください' },
-          { type: 'email', message: '有効なメールアドレスを入力してください' },
-        ]}
-      >
-        <Input
-          prefix={<MailOutlined className="text-gray-400" />}
-          placeholder="example@email.com"
-          autoComplete="email"
+    <div>
+      {/* Error Alert */}
+      {forgotPasswordMutation.isError && (
+        <Alert
+          message="エラーが発生しました"
+          description={
+            (() => {
+              const error = forgotPasswordMutation.error as any
+              if (error?.error && typeof error.error === 'string') return error.error
+              if (error?.message && typeof error.message === 'string') return error.message
+              if (error?.data?.error) return error.data.error
+              return 'メールアドレスが見つかりません。もう一度お試しください。'
+            })()
+          }
+          type="error"
+          showIcon
+          closable
+          className="mb-6 rounded-lg"
+          onClose={() => forgotPasswordMutation.reset()}
         />
-      </Form.Item>
+      )}
 
-      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p className="text-sm text-gray-700">
-          登録されたメールアドレスを入力してください。パスワードリセット用のリンクを送信します。
-        </p>
-      </div>
-
-      <Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          block
-          size="large"
-          loading={loading}
-          className="bg-pink-500 hover:!bg-pink-600 h-12 text-base font-medium"
+      <Form
+        form={form}
+        name="forgot-password"
+        onFinish={onFinish}
+        layout="vertical"
+        size="large"
+        requiredMark={false}
+      >
+        <Form.Item
+          name="email"
+          label={<span className="text-gray-700 font-medium">メールアドレス</span>}
+          rules={[
+            { required: true, message: 'メールアドレスを入力してください' },
+            { type: 'email', message: '有効なメールアドレスを入力してください' },
+          ]}
         >
-          リセットリンクを送信
-        </Button>
-      </Form.Item>
+          <Input
+            prefix={<MailOutlined className="text-gray-400" />}
+            placeholder="example@email.com"
+            autoComplete="email"
+            className="rounded-lg h-12"
+          />
+        </Form.Item>
 
-      <div className="text-center">
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800"
-        >
-          <ArrowLeftOutlined />
-          <span>ログインページに戻る</span>
-        </Link>
-      </div>
-    </Form>
+    
+
+        <Form.Item className="mb-4">
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            size="large"
+            loading={forgotPasswordMutation.isPending}
+            className="h-12 rounded-full border-0 font-medium shadow-md"
+            style={{
+              background: forgotPasswordMutation.isPending
+                ? undefined
+                : '#BC41C7'
+            }}
+          >
+            {forgotPasswordMutation.isPending ? '送信中...' : 'リセットリンクを送信'}
+          </Button>
+        </Form.Item>
+
+        <div className="text-center">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeftOutlined className="text-sm" />
+            <span className="font-medium">ログインページに戻る</span>
+          </Link>
+        </div>
+      </Form>
+    </div>
   )
 }

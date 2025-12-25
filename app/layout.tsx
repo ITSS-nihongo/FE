@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { ToastProvider } from '@/components/providers/toast-provider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
-          <AntdRegistry>{children}</AntdRegistry>
+          <AntdRegistry>
+            <ToastProvider />
+            {children}
+          </AntdRegistry>
         </QueryProvider>
       </body>
     </html>

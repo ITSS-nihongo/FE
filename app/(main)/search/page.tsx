@@ -394,7 +394,7 @@ function SearchResultsContent() {
                   <div className="flex w-full">
                     {/* Image */}
                     <Link href={`/places/${linkId}`} className="shrink-0">
-                      <div className="w-80 h-64 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center overflow-hidden cursor-pointer">
+                      <div className="w-80 h-64 bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer">
                         {imageUrl ? (
                           <img
                             src={imageUrl}
@@ -489,7 +489,7 @@ function SearchResultsContent() {
                   <div className="flex w-full">
                     {/* Image Placeholder */}
                     <div
-                      className="w-80 h-64 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 shrink-0 flex items-center justify-center cursor-pointer"
+                      className="w-80 h-64 bg-gray-100 shrink-0 flex items-center justify-center cursor-pointer"
                       onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
                     >
                       <div className="w-full h-full flex items-center justify-center text-gray-300">

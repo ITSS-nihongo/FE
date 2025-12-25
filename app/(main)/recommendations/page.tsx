@@ -344,7 +344,7 @@ export default function RecommendationsPage() {
                   className="shadow-md hover:shadow-xl transition-shadow relative overflow-hidden"
                   bodyStyle={{ padding: 0 }}
                 >
-                  <div className="relative h-56 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center overflow-hidden">
+                  <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
                     {imageUrl ? (
                       <img
                         src={imageUrl}

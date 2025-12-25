@@ -4,7 +4,6 @@ import { postApiAuthRegisterMutation } from '@/lib/api/generated-openAPI/@tansta
 import { tokenManager } from '@/lib/utils/token'
 import { useMutation } from '@tanstack/react-query'
 import { Form, Input, InputNumber, Button, Alert } from 'antd'
-import { LockOutlined, MailOutlined, UserOutlined, PhoneOutlined, HomeOutlined, TeamOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 
 type RegisterFormValues = {
@@ -55,44 +54,55 @@ export function RegisterForm() {
       {/* Name */}
       <Form.Item
         name="name"
-        label={<span className="text-gray-700 text-sm">お名前</span>}
+        label={<span className="text-gray-900 font-medium">お名前</span>}
         rules={[
           { required: true, message: 'お名前を入力してください' },
           { min: 2, message: 'お名前は2文字以上である必要があります' },
         ]}
       >
-        <Input prefix={<UserOutlined className="text-gray-400" />} placeholder="山田太郎" />
+        <Input placeholder="" className="rounded-lg border-2 h-12" style={{ borderColor: '#BC41C7' }} />
       </Form.Item>
 
       {/* Email */}
       <Form.Item
         name="email"
-        label={<span className="text-gray-700 text-sm">メールアドレス</span>}
+        label={<span className="text-gray-900 font-medium">メールアドレス</span>}
         rules={[
           { required: true, message: 'メールアドレスを入力してください' },
           { type: 'email', message: '有効なメールアドレスを入力してください' },
         ]}
       >
-        <Input prefix={<MailOutlined className="text-gray-400" />} placeholder="example@email.com" />
+        <Input placeholder="" className="rounded-lg border-2 h-12" style={{ borderColor: '#BC41C7' }} />
+      </Form.Item>
+
+      {/* Phone Number (Optional) */}
+      <Form.Item
+        name="phoneNumber"
+        label={<span className="text-gray-900 font-medium">電話番号</span>}
+        rules={[
+          { pattern: /^[0-9]{10,11}$/, message: '有効な電話番号を入力してください' },
+        ]}
+      >
+        <Input placeholder="" className="rounded-lg border-2 h-12" style={{ borderColor: '#BC41C7' }} />
       </Form.Item>
 
       {/* Password */}
       <Form.Item
         name="password"
-        label={<span className="text-gray-700 text-sm">パスワード</span>}
+        label={<span className="text-gray-900 font-medium">パスワード</span>}
         rules={[
           { required: true, message: 'パスワードを入力してください' },
           { min: 1, message: 'パスワードは6文字以上である必要があります' },
         ]}
         hasFeedback
       >
-        <Input.Password prefix={<LockOutlined className="text-gray-400" />} placeholder="パスワード" />
+        <Input.Password placeholder="パスワード" className="rounded-lg border-2 h-12" style={{ borderColor: '#BC41C7' }} />
       </Form.Item>
 
       {/* Confirm Password */}
       <Form.Item
         name="confirmPassword"
-        label={<span className="text-gray-700 text-sm">パスワード確認</span>}
+        label={<span className="text-gray-900 font-medium">パスワード確認</span>}
         dependencies={['password']}
         hasFeedback
         rules={[
@@ -107,37 +117,26 @@ export function RegisterForm() {
           }),
         ]}
       >
-        <Input.Password prefix={<LockOutlined className="text-gray-400" />} placeholder="パスワード確認" />
+        <Input.Password placeholder="パスワード確認" className="rounded-lg border-2 h-12" style={{ borderColor: '#BC41C7' }} />
       </Form.Item>
 
-      {/* Phone Number (Optional) */}
-      <Form.Item
-        name="phoneNumber"
-        label={<span className="text-gray-700 text-sm">電話番号（任意）</span>}
-        rules={[
-          { pattern: /^[0-9]{10,11}$/, message: '有効な電話番号を入力してください' },
-        ]}
-      >
-        <Input prefix={<PhoneOutlined className="text-gray-400" />} placeholder="09012345678" />
-      </Form.Item>
-
-      {/* Address (Optional) */}
-      <Form.Item name="address" label={<span className="text-gray-700 text-sm">住所（任意）</span>}>
-        <Input.TextArea 
-          placeholder="東京都渋谷区..." 
-          rows={2}
-          showCount
-          maxLength={200}
-        />
-      </Form.Item>
-
-      {/* Number of Kids (Optional) */}
-      <Form.Item name="numberOfKids" label={<span className="text-gray-700 text-sm">お子様の人数（任意）</span>}>
+      {/* Number of Kids */}
+      <Form.Item name="numberOfKids" label={<span className="text-gray-900 font-medium">お子様の人数</span>}>
         <InputNumber
           placeholder="0"
           min={0}
           max={20}
-          style={{ width: '100%' }}
+          className="rounded-lg border-2 h-12"
+          style={{ width: '100%', borderColor: '#BC41C7' }}
+        />
+      </Form.Item>
+
+      {/* Address */}
+      <Form.Item name="address" label={<span className="text-gray-900 font-medium">住所</span>}>
+        <Input 
+          placeholder="" 
+          className="rounded-lg border-2 h-12" 
+          style={{ borderColor: '#BC41C7' }}
         />
       </Form.Item>
 
@@ -146,30 +145,37 @@ export function RegisterForm() {
         <Form.Item>
           <Alert
             message="登録失敗"
-            description={registerMutation.error.error || 'もう一度お試しください'}
+            description={
+              (() => {
+                const error = registerMutation.error as any
+                if (typeof error === 'string') return error
+                if (error?.error && typeof error.error === 'string') return error.error
+                if (error?.message && typeof error.message === 'string') return error.message
+                if (error?.data?.error) return error.data.error
+                return 'もう一度お試しください'
+              })()
+            }
             type="error"
             showIcon
             closable
+            onClose={() => registerMutation.reset()}
           />
         </Form.Item>
       )}
 
       {/* Submit Button */}
-      <Form.Item className="mb-0">
+      <Form.Item className="mb-4">
         <Button
           type="primary"
           htmlType="submit"
           loading={registerMutation.isPending}
           block
-          className="h-12 rounded-full text-white font-medium shadow-md"
+          className="h-14 rounded-full text-white font-semibold text-lg shadow-md"
           style={{
-            background: registerMutation.isPending 
-              ? undefined 
-              : 'linear-gradient(90deg, #ec4899 0%, #a855f7 100%)',
-            border: 'none'
+            backgroundColor: '#BC41C7'
           }}
         >
-          {registerMutation.isPending ? 'アカウント作成中...' : '新規登録'}
+          {registerMutation.isPending ? 'アカウント作成中...' : '登録'}
         </Button>
       </Form.Item>
     </Form>

@@ -3,16 +3,16 @@ import Link from "next/link";
 
 export default function RegisterPage() {
   return (
-    <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="bg-white rounded-lg shadow-md p-8 max-w-2xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          TheWeekend
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          TheWeekendへようこそ！
         </h1>
-        <p className="text-sm text-gray-600">
-          子供たちの楽しい週末を作りましょう!
+        <p className="text-base text-gray-700 mb-8">
+          お子様の遊び場を探すためのアカウントを作成しましょう。
         </p>
-        <h2 className="text-xl font-semibold text-gray-800 mt-6 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
           新規登録
         </h2>
       </div>
@@ -21,16 +21,8 @@ export default function RegisterPage() {
       <RegisterForm />
 
       {/* Footer Links */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
-          すでにアカウントをお持ちですか？{' '}
-          <Link 
-            href="/login" 
-            className="text-pink-500 hover:text-pink-600 font-medium"
-          >
-            ログインはこちら
-          </Link>
-        </p>
+      <div className="mt-6 text-center text-sm text-gray-900">
+        すでにアカウントをお持ちの方は、<Link href="/login" className="font-medium hover:underline" style={{ color: '#BC41C7' }}>👉ログイン</Link>
       </div>
     </div>
   );

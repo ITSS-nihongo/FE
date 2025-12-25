@@ -63,7 +63,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-pink-400 via-purple-400 to-pink-500 text-white rounded-2xl p-8 md:p-12">
+      <div className="text-white rounded-2xl p-8 md:p-12" style={{ backgroundColor: '#BC41C7' }}>
         <h1 className="text-3xl md:text-4xl font-bold mb-2 text-center">
           子供の遊び場を探す
         </h1>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                   <Card
                     hoverable
                     cover={
-                      <div className="h-40 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center overflow-hidden">
+                      <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
                         {imageUrl ? (
                           <img
                             src={imageUrl}
@@ -199,10 +199,10 @@ export default function DashboardPage() {
           background-color: #e5e7eb;
         }
         .custom-slider .ant-slider-track {
-          background: linear-gradient(90deg, #ec4899 0%, #a855f7 100%);
+          background: #BC41C7;
         }
         .custom-slider .ant-slider-handle {
-          border-color: #ec4899;
+          border-color: #BC41C7;
         }
       `}</style>
     </div>

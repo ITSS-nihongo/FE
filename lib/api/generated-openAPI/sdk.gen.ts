@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeleteFileData, DeleteFileErrors, DeleteFileResponses, GeneratePresignedUploadUrlData, GeneratePresignedUploadUrlErrors, GeneratePresignedUploadUrlResponses, GetApiMapsAutocompleteData, GetApiMapsAutocompleteErrors, GetApiMapsAutocompleteResponses, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsErrors, GetApiMapsPlaceDetailsResponses, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponses, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsErrors, GetApiMapsSearchNearbyWithDetailsResponses, GetApiMapsV2AutocompleteData, GetApiMapsV2AutocompleteErrors, GetApiMapsV2AutocompleteResponses, GetApiMapsV2PlaceDetailsData, GetApiMapsV2PlaceDetailsErrors, GetApiMapsV2PlaceDetailsResponses, GetApiMapsV2PlaceTypesData, GetApiMapsV2PlaceTypesResponses, GetApiMapsV2SearchNearbyWithDetailsData, GetApiMapsV2SearchNearbyWithDetailsErrors, GetApiMapsV2SearchNearbyWithDetailsResponses, GetApiPlacesByIdData, GetApiPlacesByIdErrors, GetApiPlacesByIdResponses, GetApiPlacesData, GetApiPlacesErrors, GetApiPlacesResponses, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdErrors, GetApiReviewsPlaceByPlaceIdResponses, GetFileInfoData, GetFileInfoErrors, GetFileInfoResponses, ListFilesData, ListFilesErrors, ListFilesResponses, PatchApiPlacesByPlaceIdData, PatchApiPlacesByPlaceIdErrors, PatchApiPlacesByPlaceIdResponses, PostApiAuthLoginData, PostApiAuthLoginErrors, PostApiAuthLoginResponses, PostApiAuthRegisterData, PostApiAuthRegisterErrors, PostApiAuthRegisterResponses, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapErrors, PostApiPlacesImportFromMapResponses, PostApiReviewsData, PostApiReviewsErrors, PostApiReviewsResponses, UploadFileData, UploadFileErrors, UploadFileResponses } from './types.gen';
+import type { DeleteApiMediaByIdData, DeleteApiMediaByIdErrors, DeleteApiMediaByIdResponses, DeleteFileData, DeleteFileErrors, DeleteFileResponses, GeneratePresignedUploadUrlData, GeneratePresignedUploadUrlErrors, GeneratePresignedUploadUrlResponses, GetApiMapsAutocompleteData, GetApiMapsAutocompleteErrors, GetApiMapsAutocompleteResponses, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsErrors, GetApiMapsPlaceDetailsResponses, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponses, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsErrors, GetApiMapsSearchNearbyWithDetailsResponses, GetApiMapsV2AutocompleteData, GetApiMapsV2AutocompleteErrors, GetApiMapsV2AutocompleteResponses, GetApiMapsV2PlaceDetailsData, GetApiMapsV2PlaceDetailsErrors, GetApiMapsV2PlaceDetailsResponses, GetApiMapsV2PlaceTypesData, GetApiMapsV2PlaceTypesResponses, GetApiMapsV2SearchNearbyWithDetailsData, GetApiMapsV2SearchNearbyWithDetailsErrors, GetApiMapsV2SearchNearbyWithDetailsResponses, GetApiMediaData, GetApiMediaErrors, GetApiMediaResponses, GetApiPlacesByIdData, GetApiPlacesByIdErrors, GetApiPlacesByIdResponses, GetApiPlacesData, GetApiPlacesErrors, GetApiPlacesResponses, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdErrors, GetApiReviewsPlaceByPlaceIdResponses, GetFileInfoData, GetFileInfoErrors, GetFileInfoResponses, ListFilesData, ListFilesErrors, ListFilesResponses, PatchApiMediaByIdData, PatchApiMediaByIdErrors, PatchApiMediaByIdResponses, PatchApiPlacesByPlaceIdData, PatchApiPlacesByPlaceIdErrors, PatchApiPlacesByPlaceIdResponses, PostApiAuthForgotPasswordData, PostApiAuthForgotPasswordErrors, PostApiAuthForgotPasswordResponses, PostApiAuthLoginData, PostApiAuthLoginErrors, PostApiAuthLoginResponses, PostApiAuthRegisterData, PostApiAuthRegisterErrors, PostApiAuthRegisterResponses, PostApiAuthResetPasswordData, PostApiAuthResetPasswordErrors, PostApiAuthResetPasswordResponses, PostApiMediaData, PostApiMediaErrors, PostApiMediaResponses, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapErrors, PostApiPlacesImportFromMapResponses, PostApiReviewsData, PostApiReviewsErrors, PostApiReviewsResponses, RefreshBucketPolicyData, RefreshBucketPolicyErrors, RefreshBucketPolicyResponses, UploadFileData, UploadFileErrors, UploadFileResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -42,6 +42,38 @@ export const postApiAuthLogin = <ThrowOnError extends boolean = false>(options?:
 export const postApiAuthRegister = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthRegisterData, ThrowOnError>) => {
     return (options?.client ?? client).post<PostApiAuthRegisterResponses, PostApiAuthRegisterErrors, ThrowOnError>({
         url: '/api/auth/register',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        }
+    });
+};
+
+/**
+ * Forgot Password
+ *
+ * Send password reset email to user
+ */
+export const postApiAuthForgotPassword = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthForgotPasswordData, ThrowOnError>) => {
+    return (options?.client ?? client).post<PostApiAuthForgotPasswordResponses, PostApiAuthForgotPasswordErrors, ThrowOnError>({
+        url: '/api/auth/forgot-password',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        }
+    });
+};
+
+/**
+ * Reset Password
+ *
+ * Reset password using token from email
+ */
+export const postApiAuthResetPassword = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthResetPasswordData, ThrowOnError>) => {
+    return (options?.client ?? client).post<PostApiAuthResetPasswordResponses, PostApiAuthResetPasswordErrors, ThrowOnError>({
+        url: '/api/auth/reset-password',
         ...options,
         headers: {
             'Content-Type': 'application/json',
@@ -280,5 +312,71 @@ export const listFiles = <ThrowOnError extends boolean = false>(options?: Option
     return (options?.client ?? client).get<ListFilesResponses, ListFilesErrors, ThrowOnError>({
         url: '/api/minio/files',
         ...options
+    });
+};
+
+/**
+ * Refresh bucket policy for public access
+ */
+export const refreshBucketPolicy = <ThrowOnError extends boolean = false>(options?: Options<RefreshBucketPolicyData, ThrowOnError>) => {
+    return (options?.client ?? client).post<RefreshBucketPolicyResponses, RefreshBucketPolicyErrors, ThrowOnError>({
+        url: '/api/minio/refresh-policy',
+        ...options
+    });
+};
+
+/**
+ * Get media files
+ *
+ * Get list of media files with optional filters
+ */
+export const getApiMedia = <ThrowOnError extends boolean = false>(options?: Options<GetApiMediaData, ThrowOnError>) => {
+    return (options?.client ?? client).get<GetApiMediaResponses, GetApiMediaErrors, ThrowOnError>({
+        url: '/api/media',
+        ...options
+    });
+};
+
+/**
+ * Create new media file
+ *
+ * Add a new media file to a place (requires authentication)
+ */
+export const postApiMedia = <ThrowOnError extends boolean = false>(options?: Options<PostApiMediaData, ThrowOnError>) => {
+    return (options?.client ?? client).post<PostApiMediaResponses, PostApiMediaErrors, ThrowOnError>({
+        url: '/api/media',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options?.headers
+        }
+    });
+};
+
+/**
+ * Delete media file
+ *
+ * Delete a media file (requires authentication)
+ */
+export const deleteApiMediaById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiMediaByIdData, ThrowOnError>) => {
+    return (options.client ?? client).delete<DeleteApiMediaByIdResponses, DeleteApiMediaByIdErrors, ThrowOnError>({
+        url: '/api/media/{id}',
+        ...options
+    });
+};
+
+/**
+ * Update media information
+ *
+ * Update media metadata (requires authentication)
+ */
+export const patchApiMediaById = <ThrowOnError extends boolean = false>(options: Options<PatchApiMediaByIdData, ThrowOnError>) => {
+    return (options.client ?? client).patch<PatchApiMediaByIdResponses, PatchApiMediaByIdErrors, ThrowOnError>({
+        url: '/api/media/{id}',
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...options.headers
+        }
     });
 };

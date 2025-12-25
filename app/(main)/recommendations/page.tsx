@@ -265,21 +265,21 @@ export default function RecommendationsPage() {
               <span className="px-4 py-1.5 bg-pink-100 text-pink-700 rounded-full text-sm font-medium">
                 📍 {user.address || '住所未設定'}
               </span>
-              <button 
+              {/* <button 
                 className="px-4 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm font-medium hover:bg-purple-200"
                 onClick={() => router.push('/profile')}
               >
                 追加設定
-              </button>
+              </button> */}
             </div>
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <button 
                 className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-1"
                 onClick={() => router.push('/search')}
               >
                 🔍 他の検索
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </Card>

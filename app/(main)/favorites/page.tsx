@@ -80,8 +80,8 @@ export default function FavoritesPage() {
                   key={favorite.id}
                   className="rounded-2xl shadow-sm hover:shadow-md transition-shadow"
                   cover={
-                    <div className="h-48 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-t-2xl overflow-hidden relative flex items-center justify-center">
-                      {place.photos && place.photos.length > 0 ? (
+                    <div >
+                      {/* {place.photos && place.photos.length > 0 ? (
                         <img
                           src={place.photos[0]}
                           alt={place.name}
@@ -96,7 +96,7 @@ export default function FavoritesPage() {
                             <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
                           </svg>
                         </div>
-                      )}
+                      )} */}
                       
                       {/* Heart Icon - Remove from favorites */}
                       <button
@@ -229,43 +229,49 @@ export default function FavoritesPage() {
                 <span className="font-medium">{selectedPlace.rating || '5.0'}</span>
               </div>
 
-              {/* Details */}
-              <div className="space-y-2 text-sm">
-                {/* Age Range */}
-                {(selectedPlace.minAge !== undefined && selectedPlace.maxAge !== undefined) && (
+              {/* Details - 2 columns */}
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                {/* Left Column */}
+                <div className="space-y-2">
+                  {/* Age Range */}
+                  {(selectedPlace.minAge !== undefined && selectedPlace.maxAge !== undefined) && (
+                    <div>
+                      <span className="font-medium text-gray-800">対象年齢: </span>
+                      <span className="text-gray-600">{selectedPlace.minAge}歳 - {selectedPlace.maxAge}歳</span>
+                    </div>
+                  )}
+                  
+                  {/* Price */}
                   <div>
-                    <span className="font-medium text-gray-800">対象年齢: </span>
-                    <span className="text-gray-600">{selectedPlace.minAge}歳 - {selectedPlace.maxAge}歳</span>
+                    <span className="font-medium text-gray-800">料金: </span>
+                    <span className="text-gray-600">{selectedPlace.placeType === 'OUTDOOR' ? '無料' : '150円'}</span>
                   </div>
-                )}
-
-                {/* Opening Hours */}
-                <div>
-                  <span className="font-medium text-gray-800">営業時間: </span>
-                  <span className="text-gray-600">
-                    {selectedPlace.openingTime && selectedPlace.closingTime 
-                      ? `${selectedPlace.openingTime} - ${selectedPlace.closingTime}`
-                      : '8:00-18:00'
-                    }
-                  </span>
                 </div>
 
-                {/* Type */}
-                <div>
-                  <span className="font-medium text-gray-800">施設タイプ: </span>
-                  <span className="text-gray-600">{selectedPlace.placeType === 'OUTDOOR' ? '屋外' : '屋内'}</span>
-                </div>
+                {/* Right Column */}
+                <div className="space-y-2">
+                  {/* Opening Hours */}
+                  <div>
+                    <span className="font-medium text-gray-800">営業時間: </span>
+                    <span className="text-gray-600">
+                      {selectedPlace.openingTime && selectedPlace.closingTime 
+                        ? `${selectedPlace.openingTime} - ${selectedPlace.closingTime}`
+                        : '8:00-18:00'
+                      }
+                    </span>
+                  </div>
 
-                {/* Price */}
-                <div>
-                  <span className="font-medium text-gray-800">料金: </span>
-                  <span className="text-gray-600">{selectedPlace.placeType === 'OUTDOOR' ? '無料' : '150円'}</span>
-                </div>
+                  {/* Type */}
+                  <div>
+                    <span className="font-medium text-gray-800">施設タイプ: </span>
+                    <span className="text-gray-600">{selectedPlace.placeType === 'OUTDOOR' ? '屋外' : '屋内'}</span>
+                  </div>
 
-                {/* Address */}
-                <div>
-                  <span className="font-medium text-gray-800">所在地: </span>
-                  <span className="text-gray-600">{selectedPlace.address || selectedPlace.vicinity || 'ダム周辺道路'}</span>
+                  {/* Address */}
+                  <div>
+                    <span className="font-medium text-gray-800">住所: </span>
+                    <span className="text-gray-600">{selectedPlace.address || selectedPlace.vicinity || 'ダム周辺道路'}</span>
+                  </div>
                 </div>
               </div>
 

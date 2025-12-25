@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Button, Modal, Form, Input, Select, message, Pagination, Checkbox } from 'antd'
+import { Button, Modal, Form, Input, Select, message, Table } from 'antd'
 import { SearchOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons'
 import { Edit, Trash2 } from 'lucide-react'
-import { useFindManyUser, useUpdateUser, useDeleteUser } from '@/lib/api/generated'
+import { useFindManyUser, useUpdateUser } from '@/lib/api/generated'
 import { useQueryClient } from '@tanstack/react-query'
 
 const { Option } = Select
@@ -16,8 +16,6 @@ export default function AdminUsersPage() {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const [currentEditIndex, setCurrentEditIndex] = useState(0)
   const [searchText, setSearchText] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
   const [form] = Form.useForm()
 
   // Fetch all users
@@ -42,13 +40,6 @@ export default function AdminUsersPage() {
     )
   }, [users, searchText])
 
-  // Paginated users
-  const paginatedUsers = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize
-    const endIndex = startIndex + pageSize
-    return filteredUsers.slice(startIndex, endIndex)
-  }, [filteredUsers, currentPage, pageSize])
-
   // Update user mutation
   const updateUserMutation = useUpdateUser({
     onSuccess: () => {
@@ -63,11 +54,9 @@ export default function AdminUsersPage() {
     }
   })
 
-  // Delete user mutation
-  const deleteUserMutation = useDeleteUser({
+  // Delete user mutation (soft delete) - separate instance
+  const deleteUserMutation = useUpdateUser({
     onSuccess: () => {
-      message.success('ユーザーを削除しました')
-      setSelectedUserIds([])
       queryClient.invalidateQueries({ queryKey: ['User', 'findMany'] })
     },
     onError: (error: any) => {
@@ -126,12 +115,25 @@ export default function AdminUsersPage() {
       okText: '削除',
       cancelText: 'キャンセル',
       okButtonProps: { danger: true },
-      onOk: () => {
-        selectedUserIds.forEach(userId => {
-          deleteUserMutation.mutate({
-            where: { id: userId }
-          })
-        })
+      onOk: async () => {
+        try {
+          // Delete all selected users
+          await Promise.all(
+            selectedUserIds.map(userId =>
+              deleteUserMutation.mutateAsync({
+                where: { id: userId },
+                data: {
+                  isActive: false,
+                  updatedAt: new Date()
+                }
+              })
+            )
+          )
+          message.success(`${selectedUserIds.length}人のユーザーを削除しました`)
+          setSelectedUserIds([])
+        } catch (error) {
+          console.error('Delete error:', error)
+        }
       }
     })
   }
@@ -154,23 +156,43 @@ export default function AdminUsersPage() {
     })
   }
 
-  const toggleSelectUser = (userId: string) => {
-    setSelectedUserIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    )
-  }
+  const columns = [
+    {
+      title: '名前',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'メールアドレス',
+      dataIndex: 'email',
+      key: 'email',
+    },
+    {
+      title: '電話番号',
+      dataIndex: 'phoneNumber',
+      key: 'phoneNumber',
+      render: (text: string) => text || '-',
+    },
+    {
+      title: '子供の数',
+      dataIndex: 'numberOfKids',
+      key: 'numberOfKids',
+      align: 'center' as const,
+    },
+    {
+      title: '住所',
+      dataIndex: 'address',
+      key: 'address',
+      render: (text: string) => text || '-',
+    },
+  ]
 
-  const toggleSelectAll = () => {
-    if (selectedUserIds.length === paginatedUsers?.length) {
-      setSelectedUserIds([])
-    } else {
-      setSelectedUserIds(paginatedUsers?.map(u => u.id) || [])
-    }
+  const rowSelection = {
+    selectedRowKeys: selectedUserIds,
+    onChange: (selectedRowKeys: React.Key[]) => {
+      setSelectedUserIds(selectedRowKeys as string[])
+    },
   }
-
-  const isAllSelected = paginatedUsers?.length > 0 && selectedUserIds.length === paginatedUsers?.length
 
   return (
     <div className="min-h-screen bg-white px-8 py-6">
@@ -196,100 +218,41 @@ export default function AdminUsersPage() {
           <Button
             onClick={handleEdit}
             size="large"
+            type='primary'
             icon={<Edit size={18} />}
-            className="px-8 h-12 bg-purple-600 text-white border-none rounded-full hover:!bg-purple-700 font-medium"
+            className="px-8 h-12 text-white border-none rounded-full font-medium"
           >
-            Edit
+            編集
           </Button>
           <Button
             onClick={handleDelete}
             size="large"
-            icon={<Trash2 size={18} />}
+            type="primary"
             danger
-            className="px-8 h-12 bg-red-500 text-white border-none rounded-full hover:!bg-red-600 font-medium"
+            icon={<Trash2 size={18} />}
+            className="px-8 h-12 rounded-full font-medium"
           >
-            Delete
+            削除
           </Button>
         </div>
 
         {/* Table */}
-        <div className="border-2 border-gray-200 rounded-2xl overflow-hidden shadow-sm w-full">
-          {/* Table Header */}
-          <div className="grid grid-cols-[50px_60px_1fr_2fr_1.2fr_100px_2.5fr] gap-4 px-6 py-4 bg-gray-50 border-b-2 border-gray-200">
-            <div className="flex items-center justify-center">
-              <Checkbox
-                checked={isAllSelected}
-                onChange={toggleSelectAll}
-                className="custom-checkbox"
-              />
-            </div>
-            <div className="font-semibold text-gray-700">No.</div>
-            <div className="font-semibold text-gray-700">名前</div>
-            <div className="font-semibold text-gray-700">メールアドレス</div>
-            <div className="font-semibold text-gray-700">電話番号</div>
-            <div className="font-semibold text-gray-700">子供の数</div>
-            <div className="font-semibold text-gray-700">住所</div>
-          </div>
-
-          {/* Table Body */}
-          {isLoading ? (
-            <div className="py-12 text-center text-gray-500">読み込み中...</div>
-          ) : paginatedUsers?.length === 0 ? (
-            <div className="py-12 text-center text-gray-500">ユーザーが見つかりません</div>
-          ) : (
-            paginatedUsers?.map((user, index) => (
-              <div
-                key={user.id}
-                className="grid grid-cols-[50px_60px_1fr_2fr_1.2fr_100px_2.5fr] gap-4 px-6 py-4 border-b border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-center">
-                  <Checkbox
-                    checked={selectedUserIds.includes(user.id)}
-                    onChange={() => toggleSelectUser(user.id)}
-                    className="custom-checkbox"
-                  />
-                </div>
-                <div className="flex items-center text-gray-700">{(currentPage - 1) * pageSize + index + 1}</div>
-                <div className="flex items-center text-gray-900">{user.name}</div>
-                <div className="flex items-center text-gray-700">{user.email}</div>
-                <div className="flex items-center text-gray-700">{user.phoneNumber || '-'}</div>
-                <div className="flex items-center text-gray-700">{user.numberOfKids}</div>
-                <div className="flex items-center text-gray-700">{user.address || '-'}</div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        {filteredUsers?.length > 0 && (
-          <div className="mt-6 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <span className="text-gray-600">表示件数:</span>
-              <Select
-                value={pageSize}
-                onChange={(value) => {
-                  setPageSize(value)
-                  setCurrentPage(1)
-                }}
-                className="w-24"
-              >
-                <Option value={5}>5</Option>
-                <Option value={10}>10</Option>
-                <Option value={20}>20</Option>
-                <Option value={50}>50</Option>
-              </Select>
-            </div>
-            
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={filteredUsers.length}
-              onChange={(page) => setCurrentPage(page)}
-              showSizeChanger={false}
-              showTotal={(total, range) => `${range[0]}-${range[1]} / ${total}件`}
-            />
-          </div>
-        )}
+        <Table
+          columns={columns}
+          dataSource={filteredUsers}
+          rowKey="id"
+          loading={isLoading}
+          rowSelection={rowSelection}
+          pagination={{
+            pageSize: 10,
+            showTotal: (total, range) => `${range[0]}-${range[1]} / ${total}件`,
+            showSizeChanger: true,
+            pageSizeOptions: ['5', '10', '20', '50'],
+          }}
+          locale={{
+            emptyText: 'ユーザーが見つかりません'
+          }}
+        />
       </div>
 
       {/* Edit Modal */}
@@ -313,6 +276,7 @@ export default function AdminUsersPage() {
             {selectedUserIds.length > 1 && (
               <div className="flex items-center gap-3">
                 <Button
+                  
                   onClick={() => handleNavigateUser('prev')}
                   disabled={currentEditIndex === 0}
                   className="px-4 py-2 h-10 bg-purple-600 text-white border-none rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -403,11 +367,13 @@ export default function AdminUsersPage() {
               <Button
                 onClick={handleSubmit}
                 loading={updateUserMutation.isPending}
-                className="flex-1 h-12 bg-purple-600 text-white border-none rounded-full hover:bg-purple-700 font-medium text-base"
+                type="primary"
+                className="flex-1 h-12 font-medium text-base"
               >
                 変更を保存
               </Button>
               <Button
+                type='default'
                 onClick={() => {
                   setIsModalOpen(false)
                   setEditingUser(null)

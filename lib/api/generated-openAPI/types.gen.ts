@@ -138,6 +138,108 @@ export type PostApiAuthRegisterResponses = {
 
 export type PostApiAuthRegisterResponse = PostApiAuthRegisterResponses[keyof PostApiAuthRegisterResponses];
 
+export type PostApiAuthForgotPasswordData = {
+    body?: {
+        /**
+         * Email address
+         */
+        email: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/auth/forgot-password';
+};
+
+export type PostApiAuthForgotPasswordErrors = {
+    /**
+     * User not found
+     */
+    404: {
+        /**
+         * Error message
+         */
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        /**
+         * Error message
+         */
+        error: string;
+    };
+};
+
+export type PostApiAuthForgotPasswordError = PostApiAuthForgotPasswordErrors[keyof PostApiAuthForgotPasswordErrors];
+
+export type PostApiAuthForgotPasswordResponses = {
+    /**
+     * Password reset email sent
+     */
+    200: {
+        /**
+         * Success message
+         */
+        message: string;
+    };
+};
+
+export type PostApiAuthForgotPasswordResponse = PostApiAuthForgotPasswordResponses[keyof PostApiAuthForgotPasswordResponses];
+
+export type PostApiAuthResetPasswordData = {
+    body?: {
+        /**
+         * Reset password token
+         */
+        token: string;
+        /**
+         * New password (minimum 6 characters)
+         */
+        newPassword: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/auth/reset-password';
+};
+
+export type PostApiAuthResetPasswordErrors = {
+    /**
+     * Invalid or expired token
+     */
+    400: {
+        /**
+         * Error message
+         */
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        /**
+         * Error message
+         */
+        error: string;
+    };
+};
+
+export type PostApiAuthResetPasswordError = PostApiAuthResetPasswordErrors[keyof PostApiAuthResetPasswordErrors];
+
+export type PostApiAuthResetPasswordResponses = {
+    /**
+     * Password reset successful
+     */
+    200: {
+        /**
+         * Success message
+         */
+        message: string;
+    };
+};
+
+export type PostApiAuthResetPasswordResponse = PostApiAuthResetPasswordResponses[keyof PostApiAuthResetPasswordResponses];
+
 export type GetApiPlacesData = {
     body?: never;
     path?: never;
@@ -1192,3 +1294,311 @@ export type ListFilesResponses = {
 };
 
 export type ListFilesResponse = ListFilesResponses[keyof ListFilesResponses];
+
+export type RefreshBucketPolicyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/minio/refresh-policy';
+};
+
+export type RefreshBucketPolicyErrors = {
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+        details?: string;
+    };
+};
+
+export type RefreshBucketPolicyError = RefreshBucketPolicyErrors[keyof RefreshBucketPolicyErrors];
+
+export type RefreshBucketPolicyResponses = {
+    /**
+     * Policy refreshed successfully
+     */
+    200: {
+        success: boolean;
+        message: string;
+        policy?: string;
+    };
+};
+
+export type RefreshBucketPolicyResponse = RefreshBucketPolicyResponses[keyof RefreshBucketPolicyResponses];
+
+export type GetApiMediaData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter by place ID
+         */
+        placeId?: string;
+        /**
+         * Filter by media type
+         */
+        mediaType?: 'IMAGE' | 'VIDEO';
+        /**
+         * Number of results
+         */
+        limit?: string;
+        /**
+         * Offset for pagination
+         */
+        offset?: string;
+    };
+    url: '/api/media';
+};
+
+export type GetApiMediaErrors = {
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type GetApiMediaError = GetApiMediaErrors[keyof GetApiMediaErrors];
+
+export type GetApiMediaResponses = {
+    /**
+     * List of media files
+     */
+    200: {
+        media: Array<{
+            id: string;
+            fileName: string;
+            fileUrl: string;
+            fileSize: number | null;
+            mimeType: string | null;
+            mediaType: 'IMAGE' | 'VIDEO';
+            title: string | null;
+            altText: string | null;
+            sortOrder: number;
+            placeId: string;
+            uploadedBy: string | null;
+            createdAt: string;
+            updatedAt: string;
+            isActive: boolean;
+        }>;
+        total: number;
+    };
+};
+
+export type GetApiMediaResponse = GetApiMediaResponses[keyof GetApiMediaResponses];
+
+export type PostApiMediaData = {
+    body?: {
+        /**
+         * ID của địa điểm
+         */
+        placeId: string;
+        /**
+         * Public URL của file từ MinIO
+         */
+        fileUrl: string;
+        /**
+         * Tên file gốc
+         */
+        fileName: string;
+        /**
+         * Kích thước file (bytes)
+         */
+        fileSize?: number;
+        /**
+         * MIME type của file
+         */
+        mimeType?: string;
+        /**
+         * Loại media
+         */
+        mediaType: 'IMAGE' | 'VIDEO';
+        /**
+         * Tiêu đề cho media
+         */
+        title?: string;
+        /**
+         * Alt text cho accessibility
+         */
+        altText?: string;
+        /**
+         * Thứ tự hiển thị
+         */
+        sortOrder?: number;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/media';
+};
+
+export type PostApiMediaErrors = {
+    /**
+     * Invalid data
+     */
+    400: {
+        error: string;
+    };
+    /**
+     * Place not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type PostApiMediaError = PostApiMediaErrors[keyof PostApiMediaErrors];
+
+export type PostApiMediaResponses = {
+    /**
+     * Media created successfully
+     */
+    201: {
+        id: string;
+        fileName: string;
+        fileUrl: string;
+        fileSize: number | null;
+        mimeType: string | null;
+        mediaType: 'IMAGE' | 'VIDEO';
+        title: string | null;
+        altText: string | null;
+        sortOrder: number;
+        placeId: string;
+        uploadedBy: string | null;
+        createdAt: string;
+        updatedAt: string;
+        isActive: boolean;
+    };
+};
+
+export type PostApiMediaResponse = PostApiMediaResponses[keyof PostApiMediaResponses];
+
+export type DeleteApiMediaByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Media ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/media/{id}';
+};
+
+export type DeleteApiMediaByIdErrors = {
+    /**
+     * Access denied
+     */
+    403: {
+        error: string;
+    };
+    /**
+     * Media not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type DeleteApiMediaByIdError = DeleteApiMediaByIdErrors[keyof DeleteApiMediaByIdErrors];
+
+export type DeleteApiMediaByIdResponses = {
+    /**
+     * Media deleted successfully
+     */
+    200: {
+        success: boolean;
+        message: string;
+    };
+};
+
+export type DeleteApiMediaByIdResponse = DeleteApiMediaByIdResponses[keyof DeleteApiMediaByIdResponses];
+
+export type PatchApiMediaByIdData = {
+    body?: {
+        /**
+         * Tiêu đề cho media
+         */
+        title?: string;
+        /**
+         * Alt text cho accessibility
+         */
+        altText?: string;
+        /**
+         * Thứ tự hiển thị
+         */
+        sortOrder?: number;
+        /**
+         * Trạng thái active
+         */
+        isActive?: boolean;
+    };
+    path: {
+        /**
+         * Media ID
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/media/{id}';
+};
+
+export type PatchApiMediaByIdErrors = {
+    /**
+     * Access denied
+     */
+    403: {
+        error: string;
+    };
+    /**
+     * Media not found
+     */
+    404: {
+        error: string;
+    };
+    /**
+     * Internal server error
+     */
+    500: {
+        error: string;
+    };
+};
+
+export type PatchApiMediaByIdError = PatchApiMediaByIdErrors[keyof PatchApiMediaByIdErrors];
+
+export type PatchApiMediaByIdResponses = {
+    /**
+     * Media updated successfully
+     */
+    200: {
+        id: string;
+        fileName: string;
+        fileUrl: string;
+        fileSize: number | null;
+        mimeType: string | null;
+        mediaType: 'IMAGE' | 'VIDEO';
+        title: string | null;
+        altText: string | null;
+        sortOrder: number;
+        placeId: string;
+        uploadedBy: string | null;
+        createdAt: string;
+        updatedAt: string;
+        isActive: boolean;
+    };
+};
+
+export type PatchApiMediaByIdResponse = PatchApiMediaByIdResponses[keyof PatchApiMediaByIdResponses];

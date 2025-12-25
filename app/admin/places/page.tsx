@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Button, Modal, Table, message, Tag, Card, Descriptions, Input, Badge, Checkbox, Image } from 'antd'
 import { CheckOutlined, CloseOutlined, EyeOutlined, SearchOutlined } from '@ant-design/icons'
-import { useFindManyPlace, useFindManyPlaceUpdateRequest, useUpdatePlaceUpdateRequest, useUpdatePlace, useFindManyMedia, useUpdateMedia } from '@/lib/api/generated'
+import { useFindManyPlace, useFindManyPlaceUpdateRequest, useUpdatePlaceUpdateRequest, useUpdatePlace, useFindManyMedia, useUpdateMedia, useDeleteMedia } from '@/lib/api/generated'
 import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 
@@ -59,11 +59,20 @@ export default function AdminPlacesPage() {
   // Update media mutation
   const updateMediaMutation = useUpdateMedia({
     onSuccess: () => {
-      message.success('メディアを処理しました')
       queryClient.invalidateQueries({ queryKey: ['Media', 'findMany'] })
     },
     onError: (error: any) => {
       message.error(`処理に失敗しました: ${error.message}`)
+    }
+  })
+
+  // Delete media mutation
+  const deleteMediaMutation = useDeleteMedia({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['Media', 'findMany'] })
+    },
+    onError: (error: any) => {
+      message.error(`削除に失敗しました: ${error.message}`)
     }
   })
 
@@ -234,6 +243,10 @@ export default function AdminPlacesPage() {
           isPendingApproval: false
         }
       })
+      
+      // Remove from pending media list
+      setPendingMedia(prev => prev.filter(m => m.id !== media.id))
+      message.success('メディアを承認しました')
     } catch (error) {
       console.error('Error approving media:', error)
       message.error('メディアの承認に失敗しました')
@@ -242,16 +255,17 @@ export default function AdminPlacesPage() {
 
   const handleRejectMedia = async (media: any) => {
     try {
-      await updateMediaMutation.mutateAsync({
-        where: { id: media.id },
-        data: {
-          isActive: false,
-          isPendingApproval: false
-        }
+      // Xóa media record khỏi database
+      await deleteMediaMutation.mutateAsync({
+        where: { id: media.id }
       })
+      
+      // Remove from pending media list
+      setPendingMedia(prev => prev.filter(m => m.id !== media.id))
+      message.success('メディアを削除しました')
     } catch (error) {
-      console.error('Error rejecting media:', error)
-      message.error('メディアの拒否に失敗しました')
+      console.error('Error deleting media:', error)
+      message.error('メディアの削除に失敗しました')
     }
   }
 
@@ -505,48 +519,61 @@ export default function AdminPlacesPage() {
 
                     {/* Comparison Table */}
                     {request.status === 'PENDING' && (
-                      <div className="border rounded-lg overflow-hidden">
-                        <table className="w-full">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-4 py-2 text-left w-12">選択</th>
-                              <th className="px-4 py-2 text-left">フィールド</th>
-                              <th className="px-4 py-2 text-left">現在の値</th>
-                              <th className="px-4 py-2 text-left">新しい値</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {['description', 'area', 'openingTime', 'closingTime', 'minAge', 'maxAge', 'price'].map(field => {
-                              const hasChange = request[field] !== null
-                              if (!hasChange) return null
-                              
-                              const isSelected = selectedFields[request.id]?.includes(field)
-                              const currentValue = selectedPlace?.[field]
-                              const newValue = request[field]
-                              
-                              return (
-                                <tr key={field} className={isSelected ? 'bg-green-50' : ''}>
-                                  <td className="px-4 py-2 border-t">
-                                    <Checkbox
-                                      checked={isSelected}
-                                      onChange={() => toggleFieldSelection(request.id, field)}
-                                    />
-                                  </td>
-                                  <td className="px-4 py-2 border-t font-medium">
-                                    {getFieldLabel(field)}
-                                  </td>
-                                  <td className="px-4 py-2 border-t text-gray-600">
-                                    {getFieldValue(field, currentValue)}
-                                  </td>
-                                  <td className="px-4 py-2 border-t font-medium text-green-600">
-                                    {getFieldValue(field, newValue)}
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                      <Table
+                        dataSource={['description', 'area', 'openingTime', 'closingTime', 'minAge', 'maxAge', 'price']
+                          .filter(field => request[field] !== null)
+                          .map(field => ({
+                            key: field,
+                            field,
+                            currentValue: selectedPlace?.[field],
+                            newValue: request[field],
+                            isSelected: selectedFields[request.id]?.includes(field)
+                          }))}
+                        columns={[
+                          {
+                            title: '選択',
+                            key: 'checkbox',
+                            width: 60,
+                            align: 'center' as const,
+                            render: (_: any, record: any) => (
+                              <Checkbox
+                                checked={record.isSelected}
+                                onChange={() => toggleFieldSelection(request.id, record.field)}
+                              />
+                            )
+                          },
+                          {
+                            title: 'フィールド',
+                            key: 'field',
+                            width: 120,
+                            render: (_: any, record: any) => (
+                              <span className="font-medium">{getFieldLabel(record.field)}</span>
+                            )
+                          },
+                          {
+                            title: '現在の値',
+                            key: 'currentValue',
+                            render: (_: any, record: any) => (
+                              <span className="text-gray-600">
+                                {getFieldValue(record.field, record.currentValue)}
+                              </span>
+                            )
+                          },
+                          {
+                            title: '新しい値',
+                            key: 'newValue',
+                            render: (_: any, record: any) => (
+                              <span className="font-medium text-green-600">
+                                {getFieldValue(record.field, record.newValue)}
+                              </span>
+                            )
+                          }
+                        ]}
+                        rowClassName={(record) => record.isSelected ? 'bg-green-50' : ''}
+                        pagination={false}
+                        size="small"
+                        bordered
+                      />
                     )}
 
                     {/* Already processed requests - show with Descriptions */}
@@ -672,16 +699,7 @@ export default function AdminPlacesPage() {
                         <Button
                           danger
                           icon={<CloseOutlined />}
-                          onClick={() => {
-                            Modal.confirm({
-                              title: 'このメディアを拒否しますか？',
-                              content: 'メディアは非表示になり、削除されます。',
-                              onOk: () => handleRejectMedia(media),
-                              okText: '拒否',
-                              cancelText: 'キャンセル',
-                              okButtonProps: { danger: true }
-                            })
-                          }}
+                          onClick={() => handleRejectMedia(media)}
                         >
                           拒否
                         </Button>

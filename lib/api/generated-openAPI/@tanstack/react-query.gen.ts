@@ -3,8 +3,8 @@
 import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOptions, type UseMutationOptions } from '@tanstack/react-query';
 
 import { client } from '../client.gen';
-import { deleteFile, generatePresignedUploadUrl, getApiMapsAutocomplete, getApiMapsPlaceDetails, getApiMapsPlaceTypes, getApiMapsSearchNearbyWithDetails, getApiMapsV2Autocomplete, getApiMapsV2PlaceDetails, getApiMapsV2PlaceTypes, getApiMapsV2SearchNearbyWithDetails, getApiPlaces, getApiPlacesById, getApiReviewsPlaceByPlaceId, getFileInfo, listFiles, type Options, patchApiPlacesByPlaceId, postApiAuthLogin, postApiAuthRegister, postApiPlacesImportFromMap, postApiReviews, uploadFile } from '../sdk.gen';
-import type { DeleteFileData, DeleteFileError, DeleteFileResponse, GeneratePresignedUploadUrlData, GeneratePresignedUploadUrlError, GeneratePresignedUploadUrlResponse, GetApiMapsAutocompleteData, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponse, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, GetApiMapsV2AutocompleteData, GetApiMapsV2AutocompleteError, GetApiMapsV2AutocompleteResponse, GetApiMapsV2PlaceDetailsData, GetApiMapsV2PlaceDetailsError, GetApiMapsV2PlaceDetailsResponse, GetApiMapsV2PlaceTypesData, GetApiMapsV2PlaceTypesResponse, GetApiMapsV2SearchNearbyWithDetailsData, GetApiMapsV2SearchNearbyWithDetailsError, GetApiMapsV2SearchNearbyWithDetailsResponse, GetApiPlacesByIdData, GetApiPlacesByIdError, GetApiPlacesByIdResponse, GetApiPlacesData, GetApiPlacesError, GetApiPlacesResponse, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdError, GetApiReviewsPlaceByPlaceIdResponse, GetFileInfoData, GetFileInfoError, GetFileInfoResponse, ListFilesData, ListFilesError, ListFilesResponse, PatchApiPlacesByPlaceIdData, PatchApiPlacesByPlaceIdError, PatchApiPlacesByPlaceIdResponse, PostApiAuthLoginData, PostApiAuthLoginError, PostApiAuthLoginResponse, PostApiAuthRegisterData, PostApiAuthRegisterError, PostApiAuthRegisterResponse, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapError, PostApiPlacesImportFromMapResponse, PostApiReviewsData, PostApiReviewsError, PostApiReviewsResponse, UploadFileData, UploadFileError, UploadFileResponse } from '../types.gen';
+import { deleteApiMediaById, deleteFile, generatePresignedUploadUrl, getApiMapsAutocomplete, getApiMapsPlaceDetails, getApiMapsPlaceTypes, getApiMapsSearchNearbyWithDetails, getApiMapsV2Autocomplete, getApiMapsV2PlaceDetails, getApiMapsV2PlaceTypes, getApiMapsV2SearchNearbyWithDetails, getApiMedia, getApiPlaces, getApiPlacesById, getApiReviewsPlaceByPlaceId, getFileInfo, listFiles, type Options, patchApiMediaById, patchApiPlacesByPlaceId, postApiAuthForgotPassword, postApiAuthLogin, postApiAuthRegister, postApiAuthResetPassword, postApiMedia, postApiPlacesImportFromMap, postApiReviews, refreshBucketPolicy, uploadFile } from '../sdk.gen';
+import type { DeleteApiMediaByIdData, DeleteApiMediaByIdError, DeleteApiMediaByIdResponse, DeleteFileData, DeleteFileError, DeleteFileResponse, GeneratePresignedUploadUrlData, GeneratePresignedUploadUrlError, GeneratePresignedUploadUrlResponse, GetApiMapsAutocompleteData, GetApiMapsAutocompleteError, GetApiMapsAutocompleteResponse, GetApiMapsPlaceDetailsData, GetApiMapsPlaceDetailsError, GetApiMapsPlaceDetailsResponse, GetApiMapsPlaceTypesData, GetApiMapsPlaceTypesResponse, GetApiMapsSearchNearbyWithDetailsData, GetApiMapsSearchNearbyWithDetailsError, GetApiMapsSearchNearbyWithDetailsResponse, GetApiMapsV2AutocompleteData, GetApiMapsV2AutocompleteError, GetApiMapsV2AutocompleteResponse, GetApiMapsV2PlaceDetailsData, GetApiMapsV2PlaceDetailsError, GetApiMapsV2PlaceDetailsResponse, GetApiMapsV2PlaceTypesData, GetApiMapsV2PlaceTypesResponse, GetApiMapsV2SearchNearbyWithDetailsData, GetApiMapsV2SearchNearbyWithDetailsError, GetApiMapsV2SearchNearbyWithDetailsResponse, GetApiMediaData, GetApiMediaError, GetApiMediaResponse, GetApiPlacesByIdData, GetApiPlacesByIdError, GetApiPlacesByIdResponse, GetApiPlacesData, GetApiPlacesError, GetApiPlacesResponse, GetApiReviewsPlaceByPlaceIdData, GetApiReviewsPlaceByPlaceIdError, GetApiReviewsPlaceByPlaceIdResponse, GetFileInfoData, GetFileInfoError, GetFileInfoResponse, ListFilesData, ListFilesError, ListFilesResponse, PatchApiMediaByIdData, PatchApiMediaByIdError, PatchApiMediaByIdResponse, PatchApiPlacesByPlaceIdData, PatchApiPlacesByPlaceIdError, PatchApiPlacesByPlaceIdResponse, PostApiAuthForgotPasswordData, PostApiAuthForgotPasswordError, PostApiAuthForgotPasswordResponse, PostApiAuthLoginData, PostApiAuthLoginError, PostApiAuthLoginResponse, PostApiAuthRegisterData, PostApiAuthRegisterError, PostApiAuthRegisterResponse, PostApiAuthResetPasswordData, PostApiAuthResetPasswordError, PostApiAuthResetPasswordResponse, PostApiMediaData, PostApiMediaError, PostApiMediaResponse, PostApiPlacesImportFromMapData, PostApiPlacesImportFromMapError, PostApiPlacesImportFromMapResponse, PostApiReviewsData, PostApiReviewsError, PostApiReviewsResponse, RefreshBucketPolicyData, RefreshBucketPolicyError, RefreshBucketPolicyResponse, UploadFileData, UploadFileError, UploadFileResponse } from '../types.gen';
 
 /**
  * Login
@@ -34,6 +34,44 @@ export const postApiAuthRegisterMutation = (options?: Partial<Options<PostApiAut
     const mutationOptions: UseMutationOptions<PostApiAuthRegisterResponse, PostApiAuthRegisterError, Options<PostApiAuthRegisterData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await postApiAuthRegister({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Forgot Password
+ *
+ * Send password reset email to user
+ */
+export const postApiAuthForgotPasswordMutation = (options?: Partial<Options<PostApiAuthForgotPasswordData>>): UseMutationOptions<PostApiAuthForgotPasswordResponse, PostApiAuthForgotPasswordError, Options<PostApiAuthForgotPasswordData>> => {
+    const mutationOptions: UseMutationOptions<PostApiAuthForgotPasswordResponse, PostApiAuthForgotPasswordError, Options<PostApiAuthForgotPasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiAuthForgotPassword({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Reset Password
+ *
+ * Reset password using token from email
+ */
+export const postApiAuthResetPasswordMutation = (options?: Partial<Options<PostApiAuthResetPasswordData>>): UseMutationOptions<PostApiAuthResetPasswordResponse, PostApiAuthResetPasswordError, Options<PostApiAuthResetPasswordData>> => {
+    const mutationOptions: UseMutationOptions<PostApiAuthResetPasswordResponse, PostApiAuthResetPasswordError, Options<PostApiAuthResetPasswordData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiAuthResetPassword({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -503,3 +541,128 @@ export const listFilesOptions = (options?: Options<ListFilesData>) => queryOptio
     },
     queryKey: listFilesQueryKey(options)
 });
+
+/**
+ * Refresh bucket policy for public access
+ */
+export const refreshBucketPolicyMutation = (options?: Partial<Options<RefreshBucketPolicyData>>): UseMutationOptions<RefreshBucketPolicyResponse, RefreshBucketPolicyError, Options<RefreshBucketPolicyData>> => {
+    const mutationOptions: UseMutationOptions<RefreshBucketPolicyResponse, RefreshBucketPolicyError, Options<RefreshBucketPolicyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await refreshBucketPolicy({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getApiMediaQueryKey = (options?: Options<GetApiMediaData>) => createQueryKey("getApiMedia", options);
+
+/**
+ * Get media files
+ *
+ * Get list of media files with optional filters
+ */
+export const getApiMediaOptions = (options?: Options<GetApiMediaData>) => queryOptions<GetApiMediaResponse, GetApiMediaError, GetApiMediaResponse, ReturnType<typeof getApiMediaQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getApiMedia({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getApiMediaQueryKey(options)
+});
+
+export const getApiMediaInfiniteQueryKey = (options?: Options<GetApiMediaData>): QueryKey<Options<GetApiMediaData>> => createQueryKey("getApiMedia", options, true);
+
+/**
+ * Get media files
+ *
+ * Get list of media files with optional filters
+ */
+export const getApiMediaInfiniteOptions = (options?: Options<GetApiMediaData>) => {
+    return infiniteQueryOptions<GetApiMediaResponse, GetApiMediaError, InfiniteData<GetApiMediaResponse>, QueryKey<Options<GetApiMediaData>>, string | Pick<QueryKey<Options<GetApiMediaData>>[0], 'body' | 'headers' | 'path' | 'query'>>(
+    // @ts-ignore
+    {
+        queryFn: async ({ pageParam, queryKey, signal }) => {
+            // @ts-ignore
+            const page: Pick<QueryKey<Options<GetApiMediaData>>[0], 'body' | 'headers' | 'path' | 'query'> = typeof pageParam === 'object' ? pageParam : {
+                query: {
+                    offset: pageParam
+                }
+            };
+            const params = createInfiniteParams(queryKey, page);
+            const { data } = await getApiMedia({
+                ...options,
+                ...params,
+                signal,
+                throwOnError: true
+            });
+            return data;
+        },
+        queryKey: getApiMediaInfiniteQueryKey(options)
+    });
+};
+
+/**
+ * Create new media file
+ *
+ * Add a new media file to a place (requires authentication)
+ */
+export const postApiMediaMutation = (options?: Partial<Options<PostApiMediaData>>): UseMutationOptions<PostApiMediaResponse, PostApiMediaError, Options<PostApiMediaData>> => {
+    const mutationOptions: UseMutationOptions<PostApiMediaResponse, PostApiMediaError, Options<PostApiMediaData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await postApiMedia({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Delete media file
+ *
+ * Delete a media file (requires authentication)
+ */
+export const deleteApiMediaByIdMutation = (options?: Partial<Options<DeleteApiMediaByIdData>>): UseMutationOptions<DeleteApiMediaByIdResponse, DeleteApiMediaByIdError, Options<DeleteApiMediaByIdData>> => {
+    const mutationOptions: UseMutationOptions<DeleteApiMediaByIdResponse, DeleteApiMediaByIdError, Options<DeleteApiMediaByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteApiMediaById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Update media information
+ *
+ * Update media metadata (requires authentication)
+ */
+export const patchApiMediaByIdMutation = (options?: Partial<Options<PatchApiMediaByIdData>>): UseMutationOptions<PatchApiMediaByIdResponse, PatchApiMediaByIdError, Options<PatchApiMediaByIdData>> => {
+    const mutationOptions: UseMutationOptions<PatchApiMediaByIdResponse, PatchApiMediaByIdError, Options<PatchApiMediaByIdData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await patchApiMediaById({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};

@@ -1011,11 +1011,12 @@ export default function PlaceDetailPage() {
                   if (!savedPlaceId) {
                     handleSavePlace()
                   } else {
-                    setIsReviewModalOpen(true)
+                    // Reload page to refresh data
+                    window.location.reload()
                   }
                 }}
               >
-                {savedPlaceId ? 'レビューを書く' : '保存してレビューを書く'}
+                {savedPlaceId ? 'ページを再読み込み' : '保存してページを再読み込み'}
               </Button>
             )}
           </div>

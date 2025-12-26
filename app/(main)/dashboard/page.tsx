@@ -30,7 +30,8 @@ export default function DashboardPage() {
       },
       media: {
         where: {
-          isActive: true
+          isActive: true,
+          isPendingApproval: false  // Only show approved media
         },
         orderBy: {
           sortOrder: 'asc'

@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Button, Table, message, Tag, Badge, Input } from 'antd'
 import { EyeOutlined, SearchOutlined } from '@ant-design/icons'
-import { useFindManyPlace, useFindManyPlaceUpdateRequest, useUpdatePlaceUpdateRequest, useUpdatePlace, useUpdateMedia, useDeleteMedia } from '@/lib/api/generated'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { getApiMediaOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { useFindManyPlace, useFindManyPlaceUpdateRequest, useUpdatePlaceUpdateRequest, useUpdatePlace, useFindManyMedia, useUpdateMedia, useDeleteMedia } from '@/lib/api/generated'
+import { useQueryClient } from '@tanstack/react-query'
+import { getPresignedUrl } from '@/lib/utils/presigned-url'
 import RequestDetailModal from '@/components/features/places/request-detail-modal'
 
 export default function AdminPlacesPage() {
@@ -15,6 +15,7 @@ export default function AdminPlacesPage() {
   const [selectedRequests, setSelectedRequests] = useState<any[]>([])
   const [searchText, setSearchText] = useState('')
   const [pendingMedia, setPendingMedia] = useState<any[]>([])
+  const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({})
 
   // Fetch all places
   const { data: places, isLoading: placesLoading } = useFindManyPlace({
@@ -42,16 +43,34 @@ export default function AdminPlacesPage() {
     }
   })
 
-  // Fetch all media using OpenAPI (returns presigned URLs)
-  const { data: allMediaResponse } = useQuery({
-    ...getApiMediaOptions({
-      query: {
-        limit: '1000'  // Get all media
-      }
-    })
+  // Fetch all media using ZenStack (includes pending approval)
+  const { data: allMedia } = useFindManyMedia({
+    where: {
+      isActive: true
+    },
+    include: {
+      place: true
+    },
+    orderBy: {
+      createdAt: 'desc'
+    }
   })
 
-  const allMedia = allMediaResponse?.media
+  // Transform media file paths to presigned URLs
+  useEffect(() => {
+    if (allMedia) {
+      const transformUrls = async () => {
+        const urls: Record<string, string> = {}
+        for (const media of allMedia) {
+          if (media.fileUrl) {
+            urls[media.id] = await getPresignedUrl(media.fileUrl)
+          }
+        }
+        setMediaUrls(urls)
+      }
+      transformUrls()
+    }
+  }, [allMedia])
 
   // Update media mutation
   const updateMediaMutation = useUpdateMedia({
@@ -127,9 +146,16 @@ export default function AdminPlacesPage() {
   const handleViewRequests = (place: any) => {
     const placeRequests = allRequests?.filter((req: any) => req.placeId === place.id) || []
     const placeMedia = allMedia?.filter((media: any) => media.placeId === place.id && media.isPendingApproval === true) || []
+
+    // Transform media file paths to presigned URLs
+    const mediaWithPresignedUrls = placeMedia.map((media: any) => ({
+      ...media,
+      fileUrl: mediaUrls[media.id] || media.fileUrl  // Use presigned URL if available
+    }))
+
     setSelectedPlace(place)
     setSelectedRequests(placeRequests)
-    setPendingMedia(placeMedia)
+    setPendingMedia(mediaWithPresignedUrls)
     setIsRequestModalOpen(true)
   }
 

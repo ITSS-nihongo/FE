@@ -27,12 +27,12 @@ export default function PlaceDetailPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
   const [isUpdatePlaceModalOpen, setIsUpdatePlaceModalOpen] = useState(false)
   const [savedPlaceId, setSavedPlaceId] = useState<string | null>(null)
-  const [updateUploadedFiles, setUpdateUploadedFiles] = useState<{id?: string, url: string, type: 'IMAGE' | 'VIDEO', fileName: string}[]>([])
+  const [updateUploadedFiles, setUpdateUploadedFiles] = useState<{ id?: string, url: string, type: 'IMAGE' | 'VIDEO', fileName: string, previewUrl?: string }[]>([])
   const [showAllGallery, setShowAllGallery] = useState(false)
-  
+
   // Get current user
   const { userId, isAuthenticated } = useMe()
-  
+
   // Form instances
   const [reviewForm] = Form.useForm()
   const [saveForm] = Form.useForm()
@@ -61,7 +61,7 @@ export default function PlaceDetailPage() {
   const savedPlace = savedPlacesData?.places?.find(
     (place: any) => place.externalPlaceId === placeId
   )
-  
+
   useEffect(() => {
     if (savedPlace) {
       setSavedPlaceId(savedPlace.id)
@@ -203,7 +203,7 @@ export default function PlaceDetailPage() {
     onError: (error: any) => {
       console.error('Review creation error:', error)
       const errorMsg = error?.message || error?.error?.message || ''
-      
+
       if (errorMsg.includes('already reviewed') || errorMsg.includes('Unique constraint')) {
         message.error('この地点を既にレビューしています')
       } else if (errorMsg.includes('Foreign key constraint') || errorMsg.includes('userId_fkey')) {
@@ -250,9 +250,9 @@ export default function PlaceDetailPage() {
           throw new Error('Failed to get presigned URL')
         }
         const presignedData = await presignedResponse.json()
-        
+
         console.log('Presigned data:', presignedData)
-        
+
         // Step 2: Upload file to MinIO using presigned URL
         const uploadResponse = await fetch(presignedData.uploadUrl, {
           method: 'PUT',
@@ -261,23 +261,24 @@ export default function PlaceDetailPage() {
             'Content-Type': file.type
           }
         })
-        
+
         if (!uploadResponse.ok) {
           throw new Error('Failed to upload file to MinIO')
         }
-        
+
         console.log('Upload successful, public URL:', presignedData.publicUrl)
-        
+
         // Step 3: Determine media type based on file type
         const mediaType = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
-        
+
         // Step 4: Return file data
         return {
-          fileUrl: presignedData.publicUrl,
+          fileUrl: presignedData.publicUrl,  // File path for DB
           fileName: presignedData.fileName,
           mediaType,
           fileSize: file.size,
-          mimeType: file.type
+          mimeType: file.type,
+          previewUrl: presignedData.previewUrl  // Presigned URL for preview
         }
       } catch (error) {
         console.error('Upload process error:', error)
@@ -312,9 +313,10 @@ export default function PlaceDetailPage() {
       mutate: (file: File) => {
         uploadFileMut.mutateAsync(file).then((data) => {
           setUpdateUploadedFiles(prev => [...prev, {
-            url: data.fileUrl,
+            url: data.fileUrl,  // This is the file path for DB storage
             type: data.mediaType as 'IMAGE' | 'VIDEO',
-            fileName: data.fileName
+            fileName: data.fileName,
+            previewUrl: data.previewUrl  // Add preview URL for immediate display
           }])
           message.success(`${data.mediaType === 'VIDEO' ? '動画' : '画像'}をアップロードしました`)
         }).catch((error) => {
@@ -384,7 +386,7 @@ export default function PlaceDetailPage() {
                 <Select.Option value="OUTDOOR">屋外</Select.Option>
               </Select>
             </Form.Item>
-            
+
             <Form.Item
               label="最小年齢"
               name="minAge"
@@ -398,7 +400,7 @@ export default function PlaceDetailPage() {
                 suffix="歳"
               />
             </Form.Item>
-            
+
             <Form.Item
               label="最大年齢"
               name="maxAge"
@@ -561,7 +563,7 @@ export default function PlaceDetailPage() {
   const place = placeData.result
 
   // Calculate average rating from reviews
-  const averageRating = reviewsData && reviewsData.length > 0 
+  const averageRating = reviewsData && reviewsData.length > 0
     ? reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewsData.length
     : place.rating || 0
 
@@ -637,9 +639,9 @@ export default function PlaceDetailPage() {
             <div className="flex items-center gap-2">
               <ClockCircleOutlined className="text-lg" />
               <span className="font-bold text-sm">
-                {savedPlaceData?.openingTime && savedPlaceData?.closingTime 
+                {savedPlaceData?.openingTime && savedPlaceData?.closingTime
                   ? `${savedPlaceData.openingTime}-${savedPlaceData.closingTime}`
-                  : place.opening_hours?.open_now !== undefined 
+                  : place.opening_hours?.open_now !== undefined
                     ? place.opening_hours.open_now ? '営業中' : '営業時間外'
                     : '営業時間不明'
                 }
@@ -666,7 +668,7 @@ export default function PlaceDetailPage() {
                   </div>
                 </div>
               )}
-              
+
               {place.website && (
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -674,9 +676,9 @@ export default function PlaceDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">ウェブサイト</p>
-                    <a 
-                      href={place.website} 
-                      target="_blank" 
+                    <a
+                      href={place.website}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-base font-medium text-blue-600 hover:underline"
                     >
@@ -806,7 +808,7 @@ export default function PlaceDetailPage() {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">ギャラリー</h3>
             {(mediaData && mediaData.length > 4) && (
-              <button 
+              <button
                 onClick={() => setShowAllGallery(!showAllGallery)}
                 className="text-purple-500 text-sm font-medium hover:underline"
               >
@@ -814,7 +816,7 @@ export default function PlaceDetailPage() {
               </button>
             )}
           </div>
-          
+
           {/* User uploaded media prioritized */}
           {mediaData && mediaData.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -975,18 +977,17 @@ export default function PlaceDetailPage() {
                 size="large"
                 block
                 icon={isFavorited ? <HeartFilled /> : <HeartOutlined />}
-                className={`h-12 rounded-full font-bold text-base shadow-md ${
-                  isFavorited 
-                    ? 'bg-red-500 hover:bg-red-400 border-0 text-white'
-                    : 'bg-white hover:bg-red-50 border-red-300 text-red-500'
-                }`}
+                className={`h-12 rounded-full font-bold text-base shadow-md ${isFavorited
+                  ? 'bg-red-500 hover:bg-red-400 border-0 text-white'
+                  : 'bg-white hover:bg-red-50 border-red-300 text-red-500'
+                  }`}
                 onClick={handleToggleFavorite}
                 loading={addFavoriteMutation.isPending || removeFavoriteMutation.isPending}
               >
                 {isFavorited ? 'お気に入りから削除' : 'お気に入りに追加'}
               </Button>
             )}
-            
+
             {/* Update Place Button - Only show when authenticated */}
             {isAuthenticated && savedPlaceId && (
               <Button
@@ -998,7 +999,7 @@ export default function PlaceDetailPage() {
                 地点情報を更新
               </Button>
             )}
-            
+
             {/* Write Review Button - Only show when authenticated */}
             {isAuthenticated && (
               <Button
@@ -1114,7 +1115,7 @@ export default function PlaceDetailPage() {
             <h4 className="text-base font-bold text-gray-900 mb-4">
               地点の詳細情報を更新
             </h4>
-            
+
             {/* Additional Description */}
             <Form.Item
               label="詳細説明"
@@ -1197,7 +1198,7 @@ export default function PlaceDetailPage() {
                     placeholder="最小年齢"
                   />
                 </Form.Item>
-                
+
                 <Form.Item
                   label="最大年齢"
                   name="maxAge"
@@ -1253,7 +1254,7 @@ export default function PlaceDetailPage() {
                   className="w-full rounded-lg"
                 />
               </Form.Item>
-              
+
               <Form.Item
                 label="閉店時間"
                 name="closingTime"
@@ -1286,7 +1287,7 @@ export default function PlaceDetailPage() {
                   </div>
                 )}
               </Upload>
-              
+
               {/* Display uploaded files */}
               {updateUploadedFiles.length > 0 && (
                 <div className="mt-3 grid grid-cols-3 gap-2">
@@ -1294,7 +1295,7 @@ export default function PlaceDetailPage() {
                     <div key={index} className="relative group">
                       {file.type === 'IMAGE' ? (
                         <Image
-                          src={file.url}
+                          src={file.previewUrl || file.url}
                           alt={`Update uploaded ${index + 1}`}
                           className="rounded-lg object-cover"
                           width={80}
@@ -1303,7 +1304,7 @@ export default function PlaceDetailPage() {
                       ) : (
                         <div className="relative w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
                           <video
-                            src={file.url}
+                            src={file.previewUrl || file.url}
                             className="w-full h-full object-cover"
                             muted
                             preload="metadata"
@@ -1329,7 +1330,7 @@ export default function PlaceDetailPage() {
                   ))}
                 </div>
               )}
-              
+
               <p className="text-xs text-gray-500 mt-2">
                 地点の写真・動画は最大10ファイルまで追加できます。
               </p>

@@ -8,7 +8,7 @@ import {
   PlayCircleOutlined, FileImageOutlined
 } from '@ant-design/icons'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getApiMapsV2PlaceDetailsOptions, postApiPlacesImportFromMapMutation, getApiPlacesOptions, uploadFileMutation, patchApiPlacesByPlaceIdMutation } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { getApiMapsV2PlaceDetailsOptions, postApiPlacesImportFromMapMutation, getApiPlacesOptions, uploadFileMutation, patchApiPlacesByPlaceIdMutation, getApiMediaOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useCreateReview, useFindManyReview } from '@/lib/api/generated'
 import { useUpdatePlace, useFindManyPlace } from '@/lib/api/generated'
 import { useCreateFavorite, useDeleteFavorite, useFindManyFavorite } from '@/lib/api/generated/favorite'
@@ -134,18 +134,18 @@ export default function PlaceDetailPage() {
     enabled: !!savedPlaceId,
   })
 
-  // Fetch media files for the place
-  const { data: mediaData } = useFindManyMedia({
-    where: {
-      placeId: savedPlaceId!,
-      isActive: true
-    },
-    orderBy: {
-      sortOrder: 'asc'
-    }
-  }, {
+  // Fetch media files for the place using OpenAPI (returns presigned URLs)
+  const { data: mediaResponse } = useQuery({
+    ...getApiMediaOptions({
+      query: {
+        placeId: savedPlaceId!,
+        limit: '100'
+      }
+    }),
     enabled: !!savedPlaceId,
   })
+
+  const mediaData = mediaResponse?.media
 
   // Save place mutation
   const savePlaceMutation = useMutation({

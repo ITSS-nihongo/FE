@@ -5,12 +5,14 @@ import { Input, Card, Slider, Rate, Avatar } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
 import Link from 'next/link'
 import { useFindManyPlace } from '@/lib/api/generated'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getPresignedUrl } from '@/lib/utils/presigned-url'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [searchText, setSearchText] = useState('')
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 8])
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
 
   // Fetch places data từ ZenStack
   const { data: placesData, isLoading } = useFindManyPlace({
@@ -47,6 +49,23 @@ export default function DashboardPage() {
     }
   })
 
+  // Transform file paths to presigned URLs
+  useEffect(() => {
+    if (placesData) {
+      const transformUrls = async () => {
+        const urls: Record<string, string> = {}
+        for (const place of placesData) {
+          const firstMedia = place.media?.[0]
+          if (firstMedia?.fileUrl) {
+            urls[place.id] = await getPresignedUrl(firstMedia.fileUrl)
+          }
+        }
+        setImageUrls(urls)
+      }
+      transformUrls()
+    }
+  }, [placesData])
+
   const handleSearch = () => {
     if (searchText.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchText)}&minAge=${ageRange[0]}&maxAge=${ageRange[1]}`)
@@ -79,7 +98,7 @@ export default function DashboardPage() {
               placeholder="場所の場所と名前を入力してください"
               prefix={<SearchOutlined className="text-gray-400" />}
               suffix={
-                <button 
+                <button
                   className="bg-cyan-400 hover:bg-cyan-500 text-black px-6 py-2 rounded-md font-medium transition-colors flex items-center gap-2"
                   onClick={handleSearch}
                 >
@@ -115,7 +134,7 @@ export default function DashboardPage() {
       {/* Places Grid */}
       <div>
         <h2 className="text-2xl font-bold mb-4 text-gray-800">おすすめの場所</h2>
-        
+
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
@@ -127,13 +146,12 @@ export default function DashboardPage() {
             {placesData?.map((place) => {
               const avgRating = calculateAvgRating(place)
               const reviewCount = place._count?.reviews || 0
-              
+
               // Use externalPlaceId for the link, fallback to regular id if not available
               const linkId = place.externalPlaceId || place.id
 
-              // Get first media image if available
-              const firstMedia = place.media?.[0]
-              const imageUrl = firstMedia?.fileUrl
+              // Get presigned URL from state
+              const imageUrl = imageUrls[place.id]
 
               return (
                 <Link key={place.id} href={`/places/${linkId}`}>
@@ -144,7 +162,7 @@ export default function DashboardPage() {
                         {imageUrl ? (
                           <img
                             src={imageUrl}
-                            alt={firstMedia?.altText || place.name}
+                            alt={place.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
@@ -165,7 +183,7 @@ export default function DashboardPage() {
                       <h3 className="font-semibold text-base line-clamp-2 min-h-[3rem]">
                         {place.name}
                       </h3>
-                      
+
                       <div className="flex items-center gap-1">
                         <Rate disabled value={avgRating} allowHalf className="text-sm" />
                         <span className="text-xs text-gray-500">

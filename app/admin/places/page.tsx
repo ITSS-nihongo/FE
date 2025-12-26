@@ -3,8 +3,9 @@
 import { useState, useMemo } from 'react'
 import { Button, Table, message, Tag, Badge, Input } from 'antd'
 import { EyeOutlined, SearchOutlined } from '@ant-design/icons'
-import { useFindManyPlace, useFindManyPlaceUpdateRequest, useUpdatePlaceUpdateRequest, useUpdatePlace, useFindManyMedia, useUpdateMedia, useDeleteMedia } from '@/lib/api/generated'
-import { useQueryClient } from '@tanstack/react-query'
+import { useFindManyPlace, useFindManyPlaceUpdateRequest, useUpdatePlaceUpdateRequest, useUpdatePlace, useUpdateMedia, useDeleteMedia } from '@/lib/api/generated'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getApiMediaOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import RequestDetailModal from '@/components/features/places/request-detail-modal'
 
 export default function AdminPlacesPage() {
@@ -41,18 +42,16 @@ export default function AdminPlacesPage() {
     }
   })
 
-  // Fetch all media (including pending approval)
-  const { data: allMedia } = useFindManyMedia({
-    where: {
-      isActive: true
-    },
-    include: {
-      place: true
-    },
-    orderBy: {
-      createdAt: 'desc'
-    }
+  // Fetch all media using OpenAPI (returns presigned URLs)
+  const { data: allMediaResponse } = useQuery({
+    ...getApiMediaOptions({
+      query: {
+        limit: '1000'  // Get all media
+      }
+    })
   })
+
+  const allMedia = allMediaResponse?.media
 
   // Update media mutation
   const updateMediaMutation = useUpdateMedia({
@@ -78,9 +77,9 @@ export default function AdminPlacesPage() {
   const filteredPlaces = useMemo(() => {
     if (!places) return []
     if (!searchText) return places
-    
+
     const lowerSearch = searchText.toLowerCase()
-    return places.filter(place => 
+    return places.filter(place =>
       place.name?.toLowerCase().includes(lowerSearch) ||
       place.address?.toLowerCase().includes(lowerSearch)
     )
@@ -89,21 +88,21 @@ export default function AdminPlacesPage() {
   // Count pending requests per place (including media)
   const requestCountByPlace = useMemo(() => {
     const counts: Record<string, number> = {}
-    
+
     // Count field update requests
     allRequests?.forEach((req: any) => {
       if (req.status === 'PENDING') {
         counts[req.placeId] = (counts[req.placeId] || 0) + 1
       }
     })
-    
+
     // Count pending media
     allMedia?.forEach((media: any) => {
       if (media.isPendingApproval === true) {
         counts[media.placeId] = (counts[media.placeId] || 0) + 1
       }
     })
-    
+
     return counts
   }, [allRequests, allMedia])
 
@@ -145,7 +144,7 @@ export default function AdminPlacesPage() {
       const updateData: any = {
         updatedAt: new Date()
       }
-      
+
       if (selectedFields.includes('description') && request.description !== null) {
         updateData.description = request.description
       }
@@ -181,12 +180,12 @@ export default function AdminPlacesPage() {
           reviewedAt: new Date()
         }
       })
-      
+
       // Update local state to reflect the change
-      setSelectedRequests(prev => prev.map(r => 
+      setSelectedRequests(prev => prev.map(r =>
         r.id === request.id ? { ...r, status: 'APPROVED' } : r
       ))
-      
+
       message.success(`${selectedFields.length}件のフィールドを承認しました`)
     } catch (error) {
       console.error('Error approving request:', error)
@@ -204,12 +203,12 @@ export default function AdminPlacesPage() {
           reviewedAt: new Date()
         }
       })
-      
+
       // Update local state to reflect the change
-      setSelectedRequests(prev => prev.map(r => 
+      setSelectedRequests(prev => prev.map(r =>
         r.id === request.id ? { ...r, status: 'REJECTED', rejectionReason: reason?.trim() || null } : r
       ))
-      
+
       message.success('リクエストを拒否しました')
     } catch (error) {
       console.error('Error rejecting request:', error)
@@ -225,7 +224,7 @@ export default function AdminPlacesPage() {
           isPendingApproval: false
         }
       })
-      
+
       // Remove from pending media list
       setPendingMedia(prev => prev.filter(m => m.id !== media.id))
       message.success('メディアを承認しました')
@@ -240,7 +239,7 @@ export default function AdminPlacesPage() {
       await deleteMediaMutation.mutateAsync({
         where: { id: media.id }
       })
-      
+
       // Remove from pending media list
       setPendingMedia(prev => prev.filter(m => m.id !== media.id))
       message.success('メディアを削除しました')

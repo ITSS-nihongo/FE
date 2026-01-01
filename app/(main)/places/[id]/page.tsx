@@ -610,17 +610,9 @@ export default function PlaceDetailPage() {
           {/* Rating */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-center shadow-sm h-16">
             <div className="flex items-center gap-2">
-              <div className="flex text-yellow-400">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <StarFilled
-                    key={star}
-                    style={{ fontSize: '18px' }}
-                    className={star <= Math.round(averageRating) ? 'text-yellow-400' : 'text-gray-200'}
-                  />
-                ))}
-              </div>
-              <span className="font-bold text-lg ml-2">{averageRating.toFixed(1)}</span>
-              <span className="text-gray-400 text-sm">({totalReviews})</span>
+              <Rate disabled defaultValue={averageRating || 0} className="text-sm text-yellow-400" />
+              <span className="font-bold text-lg ml-2">{(averageRating || 0).toFixed(1)}</span>
+              <span className="text-gray-400 text-sm">({totalReviews || 0})</span>
             </div>
           </div>
 
@@ -1009,14 +1001,14 @@ export default function PlaceDetailPage() {
                 className="bg-[#C058D3] hover:bg-[#b04cc3] border-0 h-12 rounded-full text-white font-bold text-base shadow-md"
                 onClick={() => {
                   if (!savedPlaceId) {
+                    message.warning('レビューするには、まず地点を保存してください')
                     handleSavePlace()
                   } else {
-                    // Reload page to refresh data
-                    window.location.reload()
+                    setIsReviewModalOpen(true)
                   }
                 }}
               >
-                {savedPlaceId ? 'ページを再読み込み' : '保存してページを再読み込み'}
+                レビューを書く
               </Button>
             )}
           </div>

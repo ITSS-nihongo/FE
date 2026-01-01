@@ -5,17 +5,29 @@ import { Card, Button, Spin, Empty, Avatar, message } from 'antd'
 import { UserOutlined, EnvironmentOutlined, HeartFilled, HeartOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useFindManyPlace, useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite } from '@/lib/api/generated'
+import { getApiPlacesOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useMe } from '@/lib/hooks/use-me'
 import { useEffect, useMemo, useState } from 'react'
+import { getPresignedUrl } from '@/lib/utils/presigned-url'
 
 export default function RecommendationsPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading: authLoading } = useMe()
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [displayLimit, setDisplayLimit] = useState(6) // Limit for displaying recommendations
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
 
-  // Fetch all active places from database
-  const { data: allPlaces, isLoading: isLoadingPlaces } = useFindManyPlace({
+  // Fetch places from API
+  const { data: placesResponse, isLoading: isLoadingAPI } = useQuery(
+    getApiPlacesOptions({
+      query: {
+        limit: '100' // Fetch more to filter by distance and keywords
+      }
+    })
+  )
+  console.log('🌐 Fetched places from API:', placesResponse?.places?.length || 0)
+  // Fetch places from Database
+  const { data: dbPlaces, isLoading: isLoadingDB } = useFindManyPlace({
     where: {
       isActive: true
     },
@@ -27,7 +39,8 @@ export default function RecommendationsPage() {
       },
       media: {
         where: {
-          isActive: true
+          isActive: true,
+          isPendingApproval: false
         },
         orderBy: {
           sortOrder: 'asc'
@@ -39,11 +52,21 @@ export default function RecommendationsPage() {
           reviews: true
         }
       }
-    },
-    orderBy: {
-      averageRating: 'desc'
     }
   })
+
+  const isLoadingPlaces = isLoadingAPI || isLoadingDB
+
+  // Keywords to filter places
+  const keywords = [
+    'khu vui chơi',
+    'sân chơi',
+    'công viên trẻ em',
+    'trung tâm vui chơi',
+    'công viên',
+    'khu du lịch',
+    'vườn bách thú'
+  ]
 
   // Fetch user's favorites
   const { data: userFavorites, isLoading: isLoadingFavorites } = useFindManyFavorite({
@@ -136,9 +159,63 @@ export default function RecommendationsPage() {
 
   // Smart recommendation logic based on user profile
   const recommendedPlaces = useMemo(() => {
-    if (!allPlaces || !user) return []
+    if (!user) return []
+
+    // Merge places from API and Database
+    const allPlaces = []
+    const seenIds = new Set<string>()
+
+    // Add places from API
+    if (placesResponse?.places) {
+      for (const place of placesResponse.places) {
+        if (!seenIds.has(place.id)) {
+          allPlaces.push({
+            ...place,
+            source: 'api',
+            averageRating: place.averageRating || 0,
+            totalReviews: place.totalReviews || 0
+          })
+          seenIds.add(place.id)
+        }
+      }
+    }
+
+    // Add places from Database
+    if (dbPlaces) {
+      for (const place of dbPlaces) {
+        if (!seenIds.has(place.id)) {
+          // Calculate average rating from reviews
+          const avgRating = place.reviews && place.reviews.length > 0
+            ? place.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / place.reviews.length
+            : place.averageRating || 0
+          
+          allPlaces.push({
+            ...place,
+            source: 'db',
+            averageRating: avgRating,
+            totalReviews: place._count?.reviews || 0,
+            imageUrl: place.media?.[0]?.fileUrl || place.imageUrl
+          })
+          seenIds.add(place.id)
+        }
+      }
+    }
 
     return allPlaces
+      .filter((place) => {
+        // Filter by distance: must be within 20km if location is available
+        if (userLocation && place.latitude && place.longitude) {
+          const distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            place.latitude,
+            place.longitude
+          )
+          if (distance > 20) return false // Max 20km
+        }
+
+        return true
+      })
       .map((place) => {
         let score = 0
         
@@ -190,15 +267,38 @@ export default function RecommendationsPage() {
         }
       })
       .filter(place => place.matchScore >= 50) // Only show places with >50% match
-      .sort((a, b) => b.matchScore - a.matchScore)
-  }, [allPlaces, user, avgKidAge, userLocation])
+      .sort((a, b) => {
+        // Sort by distance first (if available), then by match score
+        if (a.distance !== null && b.distance !== null) {
+          return a.distance - b.distance
+        }
+        return b.matchScore - a.matchScore
+      })
+  }, [placesResponse, dbPlaces, user, avgKidAge, userLocation])
+
+  // Transform file paths to presigned URLs for DB images
+  useEffect(() => {
+    if (recommendedPlaces.length > 0) {
+      const transformUrls = async () => {
+        const urls: Record<string, string> = {}
+        for (const place of recommendedPlaces) {
+          // Only transform URLs from database (not from API)
+          if (place.source === 'db' && place.imageUrl && place.imageUrl.startsWith('places/')) {
+            urls[place.id] = await getPresignedUrl(place.imageUrl)
+          }
+        }
+        setImageUrls(urls)
+      }
+      transformUrls()
+    }
+  }, [recommendedPlaces])
 
   // Display limited recommendations
   const displayedPlaces = recommendedPlaces.slice(0, displayLimit)
   const hasMore = recommendedPlaces.length > displayLimit
 
-  // Count nearby places (using all places as proxy)
-  const nearbyCount = allPlaces?.length || 0
+  // Count nearby places (using filtered places)
+  const nearbyCount = recommendedPlaces.length
   
   // Count saved favorites
   const savedCount = userFavorites?.length || 0
@@ -327,15 +427,10 @@ export default function RecommendationsPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedPlaces.map((place) => {
-              // Calculate average rating from reviews if not available in place
-              const avgRating = place.averageRating || 
-                (place.reviews && place.reviews.length > 0 
-                  ? place.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / place.reviews.length 
-                  : 0)
-              const reviewCount = place._count?.reviews || place.totalReviews || 0
-              const firstMedia = place.media?.[0]
-              const imageUrl = firstMedia?.fileUrl || place.imageUrl
-              const linkId = place.externalPlaceId || place.id
+              const avgRating = place.averageRating || 0
+              const reviewCount = place.totalReviews || 0
+              const imageUrl = place.imageUrl
+              const linkId = place.id
               const favorited = isFavorited(place.id)
 
               return (
@@ -421,10 +516,10 @@ export default function RecommendationsPage() {
                       <span className="flex items-center gap-1">
                         <span className="text-yellow-600">💰</span>
                         <span className="font-semibold">
-                          {place.price === 0 
+                          {(place as any).price === 0 
                             ? '無料' 
-                            : place.price !== null && place.price !== undefined
-                              ? `${place.price.toLocaleString()}円`
+                            : (place as any).price !== null && (place as any).price !== undefined
+                              ? `${((place as any).price as number).toLocaleString()}円`
                               : 'なし'
                           }
                         </span>

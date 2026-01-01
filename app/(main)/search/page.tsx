@@ -296,17 +296,47 @@ function SearchResultsContent() {
       })
     }
     
-    // Apply sorting
-    if (sortBy === 'rating') {
-      return places.sort((a, b) => calculateAvgRating(b) - calculateAvgRating(a))
+    // Apply distance filter (20km max) and calculate distance for each place
+    const placesWithDistance = places
+      .map(place => {
+        let distance = null
+        if (userLocation && place.latitude && place.longitude) {
+          distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            place.latitude,
+            place.longitude
+          )
+        }
+        return { ...place, distance }
+      })
+      .filter(place => {
+        // Filter: only show places within 20km if location is available
+        if (userLocation && place.distance !== null) {
+          return place.distance <= 20
+        }
+        return true // Show all places if no user location
+      })
+    
+    // Apply sorting (distance takes priority)
+    if (userLocation) {
+      // Sort by distance (nearest first)
+      return placesWithDistance.sort((a, b) => {
+        if (a.distance === null && b.distance === null) return 0
+        if (a.distance === null) return 1
+        if (b.distance === null) return -1
+        return a.distance - b.distance
+      })
+    } else if (sortBy === 'rating') {
+      return placesWithDistance.sort((a, b) => calculateAvgRating(b) - calculateAvgRating(a))
     } else if (sortBy === 'newest') {
-      return places.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      return placesWithDistance.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     } else if (sortBy === 'price') {
-      return places.sort((a, b) => (a.price || 0) - (b.price || 0))
+      return placesWithDistance.sort((a, b) => (a.price || 0) - (b.price || 0))
     }
     
-    return places
-  }, [dbPlaces, sortBy, ageFilter])
+    return placesWithDistance
+  }, [dbPlaces, sortBy, ageFilter, userLocation])
 
   // Get predictions from API (already filtered and sorted by relevance)
   const results = predictions
@@ -384,6 +414,7 @@ function SearchResultsContent() {
               const firstMedia = place.media?.[0]
               const imageUrl = firstMedia?.fileUrl
               const linkId = place.externalPlaceId || place.id
+              const distance = place.distance
 
               return (
                 <Card
@@ -451,8 +482,8 @@ function SearchResultsContent() {
                             </span>
                             <span>•</span>
                             <span>
-                              {userLocation && place.latitude && place.longitude
-                                ? formatDistance(calculateDistance(userLocation.lat, userLocation.lng, place.latitude, place.longitude))
+                              {distance !== null && distance !== undefined
+                                ? formatDistance(distance)
                                 : 'なし'}
                             </span>
                           </div>

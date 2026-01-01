@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation'
 import { Input, Card, Slider, Rate, Avatar } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
 import Link from 'next/link'
-import { useFindManyPlace } from '@/lib/api/generated'
+import { useQuery } from '@tanstack/react-query'
+import { getApiPlacesOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useState, useEffect } from 'react'
 import { getPresignedUrl } from '@/lib/utils/presigned-url'
+import { translateJapaneseToVietnamese, isJapanese } from '@/lib/utils/translate'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -14,70 +16,74 @@ export default function DashboardPage() {
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 8])
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
 
-  // Fetch places data từ ZenStack
-  const { data: placesData, isLoading } = useFindManyPlace({
-    where: searchText ? {
-      OR: [
-        { name: { contains: searchText, mode: 'insensitive' } },
-        { address: { contains: searchText, mode: 'insensitive' } }
-      ]
-    } : undefined,
-    include: {
-      reviews: {
-        select: {
-          rating: true
-        }
-      },
-      media: {
-        where: {
-          isActive: true,
-          isPendingApproval: false  // Only show approved media
-        },
-        orderBy: {
-          sortOrder: 'asc'
-        },
-        take: 1
-      },
-      _count: {
-        select: {
-          reviews: true
-        }
+  // Fetch all places from API
+  const { data: placesResponse, isLoading } = useQuery(
+    getApiPlacesOptions({
+      query: {
+        limit: '20' // Fetch 20 places only
       }
-    },
-    take: 4,
-    orderBy: {
-      averageRating: 'desc' // Sort by highest rating
+    })
+  )
+
+  // Filter places by keywords
+  const keywords = [
+    'khu vui chơi',
+    'sân chơi',
+    'công viên trẻ em',
+    'trung tâm vui chơi',
+    'công viên',
+    'khu du lịch',
+    'vườn bách thú'
+  ]
+
+  // Randomize and select 4 places
+  const [randomPlaces, setRandomPlaces] = useState<any[]>([])
+
+  useEffect(() => {
+    if (placesResponse?.places && placesResponse.places.length > 0) {
+      // Filter places by keywords
+      const filtered = placesResponse.places.filter((place) => 
+        keywords.some(keyword => 
+          place.name.toLowerCase().startsWith(keyword.toLowerCase())
+        )
+      )
+      
+      if (filtered.length > 0) {
+        // Shuffle and take 4 random places
+        const shuffled = [...filtered].sort(() => Math.random() - 0.5)
+        setRandomPlaces(shuffled.slice(0, 4))
+      }
     }
-  })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [placesResponse])
 
   // Transform file paths to presigned URLs
   useEffect(() => {
-    if (placesData) {
+    if (randomPlaces.length > 0) {
       const transformUrls = async () => {
         const urls: Record<string, string> = {}
-        for (const place of placesData) {
-          const firstMedia = place.media?.[0]
-          if (firstMedia?.fileUrl) {
-            urls[place.id] = await getPresignedUrl(firstMedia.fileUrl)
+        for (const place of randomPlaces) {
+          if (place.imageUrl) {
+            urls[place.id] = await getPresignedUrl(place.imageUrl)
           }
         }
         setImageUrls(urls)
       }
       transformUrls()
     }
-  }, [placesData])
+  }, [randomPlaces])
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (searchText.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchText)}&minAge=${ageRange[0]}&maxAge=${ageRange[1]}`)
+      let searchQuery = searchText.trim()
+      
+      // If text is in Japanese, translate to Vietnamese
+      if (isJapanese(searchQuery)) {
+        searchQuery = await translateJapaneseToVietnamese(searchQuery)
+      }
+      
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}&minAge=${ageRange[0]}&maxAge=${ageRange[1]}`)
     }
-  }
-
-  // Calculate average rating
-  const calculateAvgRating = (place: any) => {
-    if (!place.reviews || place.reviews.length === 0) return 0
-    const sum = place.reviews.reduce((acc: number, review: any) => acc + review.rating, 0)
-    return sum / place.reviews.length
   }
 
   return (
@@ -144,18 +150,12 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {placesData?.map((place) => {
-              const avgRating = calculateAvgRating(place)
-              const reviewCount = place._count?.reviews || 0
-
-              // Use externalPlaceId for the link, fallback to regular id if not available
-              const linkId = place.externalPlaceId || place.id
-
+            {randomPlaces?.map((place) => {
               // Get presigned URL from state
               const imageUrl = imageUrls[place.id]
 
               return (
-                <Link key={place.id} href={`/places/${linkId}`}>
+                <Link key={place.id} href={`/places/${place.id}`}>
                   <Card
                     hoverable
                     cover={
@@ -181,14 +181,14 @@ export default function DashboardPage() {
                     className="h-full"
                   >
                     <div className="space-y-2">
-                      <h3 className="font-semibold text-base line-clamp-2 min-h-[3rem]">
+                      <h3 className="font-semibold text-base line-clamp-2 min-h-12">
                         {place.name}
                       </h3>
 
                       <div className="flex items-center gap-1">
-                        <Rate disabled value={avgRating} allowHalf className="text-sm" />
+                        <Rate disabled value={place.averageRating} allowHalf className="text-sm" />
                         <span className="text-xs text-gray-500">
-                          ({reviewCount}レビュー)
+                          ({place.totalReviews}レビュー)
                         </span>
                       </div>
 
@@ -200,7 +200,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!isLoading && (!placesData || placesData.length === 0) && (
+        {!isLoading && (!randomPlaces || randomPlaces.length === 0) && (
           <Card>
             <p className="text-center text-gray-500 py-8">
               場所が見つかりませんでした

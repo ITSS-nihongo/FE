@@ -5,73 +5,112 @@ import { Input, Card, Slider, Rate, Avatar } from 'antd'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { getApiPlacesOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useState, useEffect } from 'react'
-import { getPresignedUrl } from '@/lib/utils/presigned-url'
 import { translateJapaneseToVietnamese, isJapanese } from '@/lib/utils/translate'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [searchText, setSearchText] = useState('')
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 8])
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
-
-  // Fetch all places from API
-  const { data: placesResponse, isLoading } = useQuery(
-    getApiPlacesOptions({
-      query: {
-        limit: '20' // Fetch 20 places only
-      }
-    })
-  )
-
-  // Filter places by keywords
-  const keywords = [
-    'khu vui chơi',
-    'sân chơi',
-    'công viên trẻ em',
-    'trung tâm vui chơi',
-    'công viên',
-    'khu du lịch',
-    'vườn bách thú'
-  ]
-
-  // Randomize and select 4 places
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [randomPlaces, setRandomPlaces] = useState<any[]>([])
 
+  // Keywords for fetching recommendations
+  const keywords = [
+    'công viên',
+    'khu vui chơi',
+    'sân chơi trẻ em',
+    'trung tâm vui chơi',
+  ]
+
+  // Get user location
   useEffect(() => {
-    if (placesResponse?.places && placesResponse.places.length > 0) {
-      // Filter places by keywords
-      const filtered = placesResponse.places.filter((place) => 
-        keywords.some(keyword => 
-          place.name.toLowerCase().startsWith(keyword.toLowerCase())
-        )
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          })
+        },
+        (error) => {
+          console.log('⚠️ Location not available:', error.message)
+          // Use default location (Hanoi)
+          setUserLocation({ lat: 21.0285, lng: 105.8542 })
+        }
+      )
+    } else {
+      // Use default location (Hanoi)
+      setUserLocation({ lat: 21.0285, lng: 105.8542 })
+    }
+  }, [])
+
+  // Fetch places from Goong API using autocomplete
+  const { data: placesData1 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[0],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '10',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
+
+  const { data: placesData2 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[1],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '10',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
+
+  const { data: placesData3 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[2],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '10',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
+
+  const { data: placesData4 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[3],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '10',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
+
+  // Combine and randomize places when data is loaded
+  useEffect(() => {
+    const allPredictions = [
+      ...(placesData1?.predictions || []),
+      ...(placesData2?.predictions || []),
+      ...(placesData3?.predictions || []),
+      ...(placesData4?.predictions || []),
+    ]
+
+    if (allPredictions.length > 0) {
+      // Remove duplicates by place_id
+      const uniquePlaces = Array.from(
+        new Map(allPredictions.map(p => [p.place_id, p])).values()
       )
       
-      if (filtered.length > 0) {
-        // Shuffle and take 4 random places
-        const shuffled = [...filtered].sort(() => Math.random() - 0.5)
-        setRandomPlaces(shuffled.slice(0, 4))
-      }
+      // Shuffle and take 4 random places
+      const shuffled = [...uniquePlaces].sort(() => Math.random() - 0.5)
+      setRandomPlaces(shuffled.slice(0, 4))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [placesResponse])
-
-  // Transform file paths to presigned URLs
-  useEffect(() => {
-    if (randomPlaces.length > 0) {
-      const transformUrls = async () => {
-        const urls: Record<string, string> = {}
-        for (const place of randomPlaces) {
-          if (place.imageUrl) {
-            urls[place.id] = await getPresignedUrl(place.imageUrl)
-          }
-        }
-        setImageUrls(urls)
-      }
-      transformUrls()
-    }
-  }, [randomPlaces])
+  }, [placesData1, placesData2, placesData3, placesData4])
 
   const handleSearch = async () => {
     if (searchText.trim()) {
@@ -142,7 +181,7 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-2xl font-bold mb-4 text-gray-800">おすすめの場所</h2>
 
-        {isLoading ? (
+        {!userLocation ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <Card key={i} loading={true} />
@@ -151,44 +190,33 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {randomPlaces?.map((place) => {
-              // Get presigned URL from state
-              const imageUrl = imageUrls[place.id]
+              // Use place_id from Goong API
+              const linkId = place.place_id
 
               return (
-                <Link key={place.id} href={`/places/${place.id}`}>
+                <Link key={place.place_id} href={`/places/${encodeURIComponent(linkId)}`}>
                   <Card
                     hoverable
                     cover={
                       <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
-                        {imageUrl ? (
-                          <img
-                            src={imageUrl}
-                            alt={place.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none'
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                            </svg>
-                          </div>
-                        )}
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                          </svg>
+                        </div>
                       </div>
                     }
                     className="h-full"
                   >
                     <div className="space-y-2">
                       <h3 className="font-semibold text-base line-clamp-2 min-h-12">
-                        {place.name}
+                        {place.structured_formatting?.main_text || place.description}
                       </h3>
 
                       <div className="flex items-center gap-1">
-                        <Rate disabled value={place.averageRating} allowHalf className="text-sm" />
+                        <Rate disabled value={0} allowHalf className="text-sm" />
                         <span className="text-xs text-gray-500">
-                          ({place.totalReviews}レビュー)
+                          (0レビュー)
                         </span>
                       </div>
 
@@ -200,7 +228,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {!isLoading && (!randomPlaces || randomPlaces.length === 0) && (
+        {userLocation && (!randomPlaces || randomPlaces.length === 0) && (
           <Card>
             <p className="text-center text-gray-500 py-8">
               場所が見つかりませんでした

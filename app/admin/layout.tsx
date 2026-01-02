@@ -16,16 +16,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // Get current user authentication status
   const { user, isAuthenticated } = useMe()
 
-  // Redirect if not admin
+  // Redirect if not authenticated or not admin
   if (isAuthenticated && user?.role !== 'ADMIN') {
     router.push('/dashboard')
+    return null
+  }
+  
+  if (!isAuthenticated && user !== undefined) {
+    router.push('/login')
     return null
   }
 
   const handleLogout = () => {
     tokenManager.removeToken()
     setIsDropdownOpen(false)
-    window.location.href = '/dashboard'
+    window.location.href = '/login'
   }
 
   return (
@@ -36,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/admin/users" className="text-xl font-bold text-gray-900">
-              Logo
+              TheWeekend Admin
             </Link>
 
             {/* Navigation Links */}

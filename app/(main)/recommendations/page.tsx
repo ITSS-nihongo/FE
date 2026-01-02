@@ -4,69 +4,78 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, Button, Spin, Empty, Avatar, message } from 'antd'
 import { UserOutlined, EnvironmentOutlined, HeartFilled, HeartOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import { useFindManyPlace, useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite } from '@/lib/api/generated'
-import { getApiPlacesOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite } from '@/lib/api/generated'
+import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useMe } from '@/lib/hooks/use-me'
 import { useEffect, useMemo, useState } from 'react'
-import { getPresignedUrl } from '@/lib/utils/presigned-url'
 
 export default function RecommendationsPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading: authLoading } = useMe()
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [displayLimit, setDisplayLimit] = useState(6) // Limit for displaying recommendations
-  const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
+  const [allPlaces, setAllPlaces] = useState<any[]>([])
 
-  // Fetch places from API
-  const { data: placesResponse, isLoading: isLoadingAPI } = useQuery(
-    getApiPlacesOptions({
+  // Keywords for fetching family-friendly places
+  const keywords = [
+    'công viên',
+    'khu vui chơi',
+    'sân chơi trẻ em',
+    'trung tâm vui chơi',
+    'khu du lịch',
+    'công viên trẻ em',
+  ]
+
+  // Fetch places from Goong API using autocomplete for each keyword
+  const { data: placesData1, isLoading: isLoading1 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
       query: {
-        limit: '100' // Fetch more to filter by distance and keywords
-      }
-    })
-  )
-  console.log('🌐 Fetched places from API:', placesResponse?.places?.length || 0)
-  // Fetch places from Database
-  const { data: dbPlaces, isLoading: isLoadingDB } = useFindManyPlace({
-    where: {
-      isActive: true
-    },
-    include: {
-      reviews: {
-        select: {
-          rating: true
-        }
-      },
-      media: {
-        where: {
-          isActive: true,
-          isPendingApproval: false
-        },
-        orderBy: {
-          sortOrder: 'asc'
-        },
-        take: 1
-      },
-      _count: {
-        select: {
-          reviews: true
-        }
-      }
-    }
+        input: keywords[0],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '20',
+        radius: '20000', // 20km radius in meters
+      } as any,
+    }),
+    enabled: !!userLocation,
   })
 
-  const isLoadingPlaces = isLoadingAPI || isLoadingDB
+  const { data: placesData2, isLoading: isLoading2 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[1],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '20',
+        radius: '20000',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
 
-  // Keywords to filter places
-  const keywords = [
-    'khu vui chơi',
-    'sân chơi',
-    'công viên trẻ em',
-    'trung tâm vui chơi',
-    'công viên',
-    'khu du lịch',
-    'vườn bách thú'
-  ]
+  const { data: placesData3, isLoading: isLoading3 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[2],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '20',
+        radius: '20000',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
+
+  const { data: placesData4, isLoading: isLoading4 } = useQuery({
+    ...getApiMapsV2AutocompleteOptions({
+      query: {
+        input: keywords[3],
+        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
+        limit: '20',
+        radius: '20000',
+      } as any,
+    }),
+    enabled: !!userLocation,
+  })
+
+  const isLoadingPlaces = isLoading1 || isLoading2 || isLoading3 || isLoading4
 
   // Fetch user's favorites
   const { data: userFavorites, isLoading: isLoadingFavorites } = useFindManyFavorite({
@@ -77,6 +86,26 @@ export default function RecommendationsPage() {
       place: true
     }
   })
+
+  // Combine places from all keyword searches and remove duplicates
+  useEffect(() => {
+    const allPredictions = [
+      ...(placesData1?.predictions || []),
+      ...(placesData2?.predictions || []),
+      ...(placesData3?.predictions || []),
+      ...(placesData4?.predictions || []),
+    ]
+
+    if (allPredictions.length > 0) {
+      // Remove duplicates by place_id
+      const uniquePlaces = Array.from(
+        new Map(allPredictions.map(p => [p.place_id, p])).values()
+      )
+      
+      console.log('🌐 Fetched unique places from Goong API:', uniquePlaces.length)
+      setAllPlaces(uniquePlaces)
+    }
+  }, [placesData1, placesData2, placesData3, placesData4])
 
   // Redirect to dashboard if not authenticated
   useEffect(() => {
@@ -159,142 +188,43 @@ export default function RecommendationsPage() {
 
   // Smart recommendation logic based on user profile
   const recommendedPlaces = useMemo(() => {
-    if (!user) return []
+    if (!user || !userLocation || allPlaces.length === 0) return []
 
-    // Merge places from API and Database
-    const allPlaces = []
-    const seenIds = new Set<string>()
-
-    // Add places from API
-    if (placesResponse?.places) {
-      for (const place of placesResponse.places) {
-        if (!seenIds.has(place.id)) {
-          allPlaces.push({
-            ...place,
-            source: 'api',
-            averageRating: place.averageRating || 0,
-            totalReviews: place.totalReviews || 0
-          })
-          seenIds.add(place.id)
-        }
-      }
-    }
-
-    // Add places from Database
-    if (dbPlaces) {
-      for (const place of dbPlaces) {
-        if (!seenIds.has(place.id)) {
-          // Calculate average rating from reviews
-          const avgRating = place.reviews && place.reviews.length > 0
-            ? place.reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / place.reviews.length
-            : place.averageRating || 0
-          
-          allPlaces.push({
-            ...place,
-            source: 'db',
-            averageRating: avgRating,
-            totalReviews: place._count?.reviews || 0,
-            imageUrl: place.media?.[0]?.fileUrl || place.imageUrl
-          })
-          seenIds.add(place.id)
-        }
-      }
-    }
+    console.log('🎯 Calculating recommendations for', allPlaces.length, 'places')
 
     return allPlaces
-      .filter((place) => {
-        // Filter by distance: must be within 20km if location is available
-        if (userLocation && place.latitude && place.longitude) {
-          const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            place.latitude,
-            place.longitude
-          )
-          if (distance > 20) return false // Max 20km
-        }
-
-        return true
-      })
-      .map((place) => {
-        let score = 0
+      .map((prediction) => {
+        let score = 50 // Base score for being in keyword search results
         
-        // 1. Age suitability (40% weight)
-        const kidsAges = user.numberOfKids > 0 
-          ? Array.from({ length: user.numberOfKids }, (_, i) => 3 + i * 2) // Estimate kids ages
-          : [avgKidAge]
-        
-        const ageMatch = kidsAges.some(kidAge => 
-          kidAge >= (place.minAge || 0) && kidAge <= (place.maxAge || 18)
-        )
-        if (ageMatch) score += 40
-        
-        // 2. Rating (30% weight)
-        const ratingScore = (place.averageRating / 5) * 30
-        score += ratingScore
-        
-        // 3. Number of reviews (15% weight) - more reviews = more trusted
-        const reviewScore = Math.min((place.totalReviews / 10) * 15, 15)
-        score += reviewScore
-        
-        // 4. Place type variety (15% weight)
-        // Prefer OUTDOOR for families with kids, INDOOR as alternative
-        if (user.numberOfKids > 0 && place.placeType === 'OUTDOOR') {
-          score += 15
-        } else if (place.placeType === 'INDOOR') {
-          score += 10
-        }
-
-        // Calculate distance if user location is available
-        let distance = null
-        let distanceText = ''
-        if (userLocation && place.latitude && place.longitude) {
-          distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            place.latitude,
-            place.longitude
-          )
-          distanceText = formatDistance(distance)
-        }
+        // Note: Goong API autocomplete doesn't provide exact coordinates
+        // We only know places are within 20km radius based on API filter
         
         return {
-          ...place,
+          id: prediction.place_id,
+          name: prediction.structured_formatting?.main_text || prediction.description,
+          address: prediction.structured_formatting?.secondary_text || prediction.description,
+          imageUrl: null,
+          averageRating: 0,
+          totalReviews: 0,
+          minAge: null,
+          maxAge: null,
+          placeType: null,
+          price: null,
+          latitude: null,
+          longitude: null,
+          externalPlaceId: prediction.place_id,
           matchScore: Math.round(score),
-          ageMatch,
-          distance,
-          distanceText,
+          distance: null,
+          distanceText: '20km以内', // Show radius info instead of exact distance
         }
       })
-      .filter(place => place.matchScore >= 50) // Only show places with >50% match
-      .sort((a, b) => {
-        // Sort by distance first (if available), then by match score
-        if (a.distance !== null && b.distance !== null) {
-          return a.distance - b.distance
-        }
-        return b.matchScore - a.matchScore
-      })
-  }, [placesResponse, dbPlaces, user, avgKidAge, userLocation])
-
-  // Transform file paths to presigned URLs for DB images
-  useEffect(() => {
-    if (recommendedPlaces.length > 0) {
-      const transformUrls = async () => {
-        const urls: Record<string, string> = {}
-        for (const place of recommendedPlaces) {
-          // Only transform URLs from database (not from API)
-          if (place.source === 'db' && place.imageUrl && place.imageUrl.startsWith('places/')) {
-            urls[place.id] = await getPresignedUrl(place.imageUrl)
-          }
-        }
-        setImageUrls(urls)
-      }
-      transformUrls()
-    }
-  }, [recommendedPlaces])
+      .filter(place => place.matchScore >= 50)
+      .sort((a, b) => b.matchScore - a.matchScore)
+  }, [allPlaces, user, userLocation])
 
   // Display limited recommendations
   const displayedPlaces = recommendedPlaces.slice(0, displayLimit)
+  console.log('📍 Displaying', displayedPlaces, 'of', recommendedPlaces, 'recommended places')
   const hasMore = recommendedPlaces.length > displayLimit
 
   // Count nearby places (using filtered places)
@@ -303,14 +233,23 @@ export default function RecommendationsPage() {
   // Count saved favorites
   const savedCount = userFavorites?.length || 0
 
-  // Check if place is favorited
+  // Check if place is favorited (by externalPlaceId)
   const isFavorited = (placeId: string) => {
-    return userFavorites?.some(fav => fav.placeId === placeId) || false
+    // For Goong places, check by externalPlaceId
+    return userFavorites?.some(fav => fav.place?.externalPlaceId === placeId) || false
   }
 
-  // Toggle favorite
+  // Toggle favorite - only works if place is saved in database
   const handleToggleFavorite = (placeId: string) => {
     if (!user) return
+
+    // Find the database place ID by externalPlaceId
+    const dbPlace = userFavorites?.find(fav => fav.place?.externalPlaceId === placeId)?.place
+    
+    if (!dbPlace) {
+      message.warning('この地点を保存してからお気に入りに追加してください')
+      return
+    }
 
     const favorited = isFavorited(placeId)
     
@@ -319,7 +258,7 @@ export default function RecommendationsPage() {
       deleteFavorite({
         where: {
           userId: user.id,
-          placeId: placeId
+          placeId: dbPlace.id
         }
       })
     } else {
@@ -327,7 +266,7 @@ export default function RecommendationsPage() {
       createFavorite({
         data: {
           userId: user.id,
-          placeId: placeId
+          placeId: dbPlace.id
         }
       })
     }
@@ -430,8 +369,9 @@ export default function RecommendationsPage() {
               const avgRating = place.averageRating || 0
               const reviewCount = place.totalReviews || 0
               const imageUrl = place.imageUrl
-              const linkId = place.id
-              const favorited = isFavorited(place.id)
+              // Use place_id from Goong API (externalPlaceId)
+              const linkId = encodeURIComponent(place.externalPlaceId)
+              const favorited = isFavorited(place.externalPlaceId)
 
               return (
                 <Card
@@ -463,7 +403,7 @@ export default function RecommendationsPage() {
                           className="text-3xl cursor-pointer hover:scale-110 transition-transform drop-shadow-lg"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleToggleFavorite(place.id)
+                            handleToggleFavorite(place.externalPlaceId)
                           }}
                         />
                       ) : (
@@ -471,7 +411,7 @@ export default function RecommendationsPage() {
                           className="text-3xl cursor-pointer hover:scale-110 transition-transform drop-shadow-lg"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleToggleFavorite(place.id)
+                            handleToggleFavorite(place.externalPlaceId)
                           }}
                         />
                       )}
@@ -527,12 +467,10 @@ export default function RecommendationsPage() {
                     </div>
 
                     {/* Distance */}
-                    {place.distanceText && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <EnvironmentOutlined className="text-blue-500" />
-                        <span className="font-medium">{place.distanceText}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <EnvironmentOutlined className="text-blue-500" />
+                      <span className="font-medium">{place.distanceText}</span>
+                    </div>
 
                     <Button
                       type="primary"

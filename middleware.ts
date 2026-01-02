@@ -36,10 +36,25 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Root path: redirect dựa vào token
+  // Root path: redirect dựa vào token và role
   if (pathname === '/') {
     if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      // Decode token to check user role
+      try {
+        const tokenValue = token.value
+        const payload = JSON.parse(atob(tokenValue.split('.')[1]))
+        const userRole = payload.role
+        
+        // Admin goes to admin page, others to dashboard
+        if (userRole === 'ADMIN') {
+          return NextResponse.redirect(new URL('/admin/users', request.url))
+        } else {
+          return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
+      } catch (error) {
+        console.error('Error decoding token in middleware:', error)
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
     } else {
       return NextResponse.redirect(new URL('/login', request.url))
     }

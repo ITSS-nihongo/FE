@@ -54,8 +54,15 @@ export function LoginForm() {
         tokenManager.clearRemember()
       }
       
-      // Redirect to original page or dashboard
-      const redirectTo = searchParams.get('redirect') || '/dashboard'
+      // Decode token to get user role
+      const decoded = JSON.parse(atob(data.token.split('.')[1]))
+      const userRole = decoded.role
+      
+      // Redirect based on role - admin goes to admin page, others to dashboard
+      let redirectTo = searchParams.get('redirect')
+      if (!redirectTo) {
+        redirectTo = userRole === 'ADMIN' ? '/admin/users' : '/dashboard'
+      }
       router.push(redirectTo)
     },
   })

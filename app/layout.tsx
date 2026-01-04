@@ -17,8 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ITSS Place Finder",
-  description: "Find the best places for kids and families",
+  title: "The Weekend - Children's Playground Website",
+  description: "子供の遊び場を見つけるための週末ガイド",
+  icons: {
+    icon: '/images/logo-weekend.png',
+  },
 };
 
 export default function RootLayout({

@@ -22,7 +22,26 @@ export default function FavoritesPage() {
       userId: userId!
     },
     include: {
-      place: true
+      place: {
+        include: {
+          media: {
+            where: {
+              isActive: true,
+              isPendingApproval: false,
+              mediaType: 'IMAGE'
+            },
+            take: 1,
+            orderBy: {
+              sortOrder: 'asc'
+            }
+          },
+          reviews: {
+            select: {
+              rating: true
+            }
+          }
+        }
+      }
     }
   }, {
     enabled: !!userId && isAuthenticated,
@@ -75,6 +94,15 @@ export default function FavoritesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {favorites.map((favorite: any) => {
               const place = favorite.place
+              // Calculate average rating from reviews
+              const reviews = place.reviews || []
+              const avgRating = reviews.length > 0
+                ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length
+                : 0
+              const totalReviews = reviews.length
+              // Get first image from media
+              const imageUrl = place.media && place.media.length > 0 ? place.media[0].fileUrl : null
+              
               return (
                 <Card
                   key={favorite.id}
@@ -116,15 +144,9 @@ export default function FavoritesPage() {
 
                     {/* Rating */}
                     <div className="flex items-center gap-2">
-                      <div className="flex text-yellow-400">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <StarFilled
-                            key={star}
-                            className={`text-sm ${star <= (place.rating || 5) ? 'text-yellow-400' : 'text-gray-200'}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm font-medium">{place.rating || '5.0'}</span>
+                      <Rate disabled value={Number(avgRating)} allowHalf className="text-sm" />
+                      <span className="text-sm font-medium">{avgRating > 0 ? avgRating.toFixed(1) : 'なし'}</span>
+                      <span className="text-xs text-gray-400">({totalReviews})</span>
                     </div>
 
                     {/* Age Range */}
@@ -138,7 +160,14 @@ export default function FavoritesPage() {
                     {/* Price/Type */}
                     <div className="flex items-center gap-1 text-sm text-gray-600">
                       <span className="font-medium">料金:</span>
-                      <span>{place.placeType === 'OUTDOOR' ? '無料' : '150円'}</span>
+                      <span>
+                        {place.price === 0 
+                          ? '無料' 
+                          : place.price !== null && place.price !== undefined
+                            ? `${place.price.toLocaleString()}円`
+                            : 'なし'
+                        }
+                      </span>
                     </div>
 
                     {/* Address */}
@@ -194,20 +223,33 @@ export default function FavoritesPage() {
           <div className="space-y-6">
             {/* Image */}
             <div className="w-full max-h-96 bg-gray-100 rounded-xl overflow-hidden flex items-center justify-center">
-              {selectedPlace.photos && selectedPlace.photos.length > 0 ? (
+              {selectedPlace.media && selectedPlace.media.length > 0 ? (
                 <img
-                  src={selectedPlace.photos[0]}
-                  alt={selectedPlace.name}
-                  className="w-full h-auto max-h-96 object-contain"
+                  src={selectedPlace.media[0].fileUrl}
+                  alt={selectedPlace.media[0].altText || selectedPlace.name}
+                  className="w-full h-auto max-h-96 object-cover"
                   onError={(e) => {
-                    e.currentTarget.style.display = 'none'
+                    const target = e.currentTarget
+                    target.style.display = 'none'
+                    const parent = target.parentElement
+                    if (parent) {
+                      parent.innerHTML = `
+                        <div class="w-full h-64 flex flex-col items-center justify-center text-gray-400">
+                          <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                          </svg>
+                          <p class="text-sm font-medium mt-2">画像を読み込めませんでした</p>
+                        </div>
+                      `
+                    }
                   }}
                 />
               ) : (
-                <div className="w-full h-64 flex items-center justify-center text-gray-300">
+                <div className="w-full h-64 flex flex-col items-center justify-center text-gray-400">
                   <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
                   </svg>
+                  <p className="text-sm font-medium mt-2">写真準備中</p>
                 </div>
               )}
             </div>
@@ -218,15 +260,23 @@ export default function FavoritesPage() {
               
               {/* Rating */}
               <div className="flex items-center gap-2">
-                <div className="flex text-yellow-400">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <StarFilled
-                      key={star}
-                      className={star <= (selectedPlace.rating || 5) ? 'text-yellow-400' : 'text-gray-200'}
-                    />
-                  ))}
-                </div>
-                <span className="font-medium">{selectedPlace.rating || '5.0'}</span>
+                {(() => {
+                  const reviews = selectedPlace.reviews || []
+                  const avgRating = reviews.length > 0
+                    ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length
+                    : 0
+                  return (
+                    <>
+                      <Rate disabled value={Number(avgRating)} allowHalf className="text-base" />
+                      <span className="font-medium">
+                        {avgRating > 0 ? avgRating.toFixed(1) : 'なし'}
+                      </span>
+                      <span className="text-sm text-gray-400">
+                        ({selectedPlace.reviews?.length || 0}件のレビュー)
+                      </span>
+                    </>
+                  )
+                })()}
               </div>
 
               {/* Details - 2 columns */}
@@ -244,7 +294,14 @@ export default function FavoritesPage() {
                   {/* Price */}
                   <div>
                     <span className="font-medium text-gray-800">料金: </span>
-                    <span className="text-gray-600">{selectedPlace.placeType === 'OUTDOOR' ? '無料' : '150円'}</span>
+                    <span className="text-gray-600">
+                      {selectedPlace.price === 0 
+                        ? '無料' 
+                        : selectedPlace.price !== null && selectedPlace.price !== undefined
+                          ? `${selectedPlace.price.toLocaleString()}円`
+                          : 'なし'
+                      }
+                    </span>
                   </div>
                 </div>
 

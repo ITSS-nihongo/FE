@@ -117,11 +117,24 @@ export default function RecommendationsPage() {
     where: externalPlaceIds.length > 0 ? {
       externalPlaceId: {
         in: externalPlaceIds
-      }
+      },
+      isActive: true
     } : undefined,
     include: {
       media: {
-        take: 1
+        where: {
+          isActive: true,
+          isPendingApproval: false
+        },
+        take: 1,
+        orderBy: {
+          sortOrder: 'asc'
+        }
+      },
+      reviews: {
+        select: {
+          rating: true
+        }
       }
     }
   }, {
@@ -230,9 +243,12 @@ export default function RecommendationsPage() {
           // Use data from database
           console.log('✅ Using DB data for:', dbPlace.name)
           
-          // Use average rating from database (if available)
-          const avgRating = dbPlace.averageRating || 0
-          const totalReviews = dbPlace.totalReviews || 0
+          // Calculate average rating from reviews
+          const reviews = (dbPlace as any).reviews || []
+          const avgRating = reviews.length > 0
+            ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length
+            : 0
+          const totalReviews = reviews.length
           
           // Boost score if place is in database
           score += 20
@@ -280,8 +296,8 @@ export default function RecommendationsPage() {
             id: dbPlace.id,
             name: dbPlace.name,
             address: dbPlace.address || prediction.structured_formatting?.secondary_text || prediction.description,
-            imageUrl: (dbPlace as any).media && (dbPlace as any).media.length > 0 ? (dbPlace as any).media[0].url : null,
-            averageRating: avgRating,
+            imageUrl: (dbPlace as any).media && (dbPlace as any).media.length > 0 ? (dbPlace as any).media[0].fileUrl : null,
+            averageRating: Number(avgRating.toFixed(1)),
             totalReviews: totalReviews,
             minAge: dbPlace.minAge,
             maxAge: dbPlace.maxAge,

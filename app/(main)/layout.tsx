@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { HomeOutlined, HeartOutlined, UserOutlined, DownOutlined } from '@ant-design/icons'
 import { useMe } from '@/lib/hooks/use-me'
@@ -29,8 +30,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         <div className="w-full px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/dashboard" className="text-lg font-semibold hover:text-pink-500 transition-colors">
-              Logo
+            <Link href="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
+              <div className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                The Weekend
+              </div>
             </Link>
 
             {/* Navigation Links */}

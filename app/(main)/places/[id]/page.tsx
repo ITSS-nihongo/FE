@@ -610,7 +610,7 @@ export default function PlaceDetailPage() {
           {/* Rating */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-center shadow-sm h-16">
             <div className="flex items-center gap-2">
-              <Rate disabled defaultValue={averageRating || 0} className="text-sm text-yellow-400" />
+              <Rate disabled value={Number(averageRating) || 0} className="text-sm text-yellow-400" />
               <span className="font-bold text-lg ml-2">{(averageRating || 0).toFixed(1)}</span>
               <span className="text-gray-400 text-sm">({totalReviews || 0})</span>
             </div>

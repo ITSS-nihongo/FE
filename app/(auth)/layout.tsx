@@ -10,9 +10,11 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="text-lg font-semibold">
-              Logo
-            </div>
+            <Link href="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
+              <div className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+                The Weekend
+              </div>
+            </Link>
 
             {/* Navigation Links */}
             <nav className="hidden md:flex items-center space-x-8">
@@ -22,8 +24,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             </nav>
 
             {/* Login Button */}
-            <Link 
-              href="/login" 
+            <Link
+              href="/login"
               className="flex items-center gap-2 px-4 py-2 text-pink-500 border border-pink-500 rounded-full hover:bg-pink-50 transition-colors"
             >
               <span>ログイン</span>

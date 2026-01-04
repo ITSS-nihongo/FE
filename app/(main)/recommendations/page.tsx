@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, Button, Spin, Empty, Avatar, message } from 'antd'
 import { UserOutlined, EnvironmentOutlined, HeartFilled, HeartOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import { useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite } from '@/lib/api/generated'
+import { useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite, useFindManyPlace } from '@/lib/api/generated'
 import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useMe } from '@/lib/hooks/use-me'
 import { useEffect, useMemo, useState } from 'react'
@@ -107,6 +107,27 @@ export default function RecommendationsPage() {
     }
   }, [placesData1, placesData2, placesData3, placesData4])
 
+  // Get list of external place IDs to query database
+  const externalPlaceIds = useMemo(() => {
+    return allPlaces.map(p => p.place_id)
+  }, [allPlaces])
+
+  // Query database for places that already exist (by externalPlaceId)
+  const { data: dbPlaces, isLoading: isLoadingDbPlaces } = useFindManyPlace({
+    where: externalPlaceIds.length > 0 ? {
+      externalPlaceId: {
+        in: externalPlaceIds
+      }
+    } : undefined,
+    include: {
+      media: {
+        take: 1
+      }
+    }
+  }, {
+    enabled: externalPlaceIds.length > 0
+  })
+
   // Redirect to dashboard if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -191,36 +212,115 @@ export default function RecommendationsPage() {
     if (!user || !userLocation || allPlaces.length === 0) return []
 
     console.log('🎯 Calculating recommendations for', allPlaces.length, 'places')
+    console.log('💾 Found', dbPlaces?.length || 0, 'places in database')
+
+    // Create a map of external place IDs to database places for quick lookup
+    const dbPlaceMap = new Map(
+      (dbPlaces || []).map(dbPlace => [dbPlace.externalPlaceId, dbPlace])
+    )
 
     return allPlaces
       .map((prediction) => {
         let score = 50 // Base score for being in keyword search results
         
-        // Note: Goong API autocomplete doesn't provide exact coordinates
-        // We only know places are within 20km radius based on API filter
+        // Check if this place exists in the database
+        const dbPlace = dbPlaceMap.get(prediction.place_id)
         
-        return {
-          id: prediction.place_id,
-          name: prediction.structured_formatting?.main_text || prediction.description,
-          address: prediction.structured_formatting?.secondary_text || prediction.description,
-          imageUrl: null,
-          averageRating: 0,
-          totalReviews: 0,
-          minAge: null,
-          maxAge: null,
-          placeType: null,
-          price: null,
-          latitude: null,
-          longitude: null,
-          externalPlaceId: prediction.place_id,
-          matchScore: Math.round(score),
-          distance: null,
-          distanceText: '20km以内', // Show radius info instead of exact distance
+        if (dbPlace) {
+          // Use data from database
+          console.log('✅ Using DB data for:', dbPlace.name)
+          
+          // Use average rating from database (if available)
+          const avgRating = dbPlace.averageRating || 0
+          const totalReviews = dbPlace.totalReviews || 0
+          
+          // Boost score if place is in database
+          score += 20
+          
+          // Boost score based on ratings
+          if (avgRating >= 4) score += 15
+          else if (avgRating >= 3) score += 10
+          
+          // Boost score based on number of reviews
+          if (totalReviews >= 10) score += 10
+          else if (totalReviews >= 5) score += 5
+          
+          // Age compatibility scoring
+          if (dbPlace.minAge !== null && dbPlace.maxAge !== null) {
+            if (avgKidAge >= dbPlace.minAge && avgKidAge <= dbPlace.maxAge) {
+              score += 20 // Perfect age match
+            } else if (avgKidAge < dbPlace.minAge) {
+              const ageDiff = dbPlace.minAge - avgKidAge
+              score -= ageDiff * 2 // Penalty for too young
+            } else {
+              const ageDiff = avgKidAge - dbPlace.maxAge
+              score -= ageDiff * 2 // Penalty for too old
+            }
+          }
+          
+          // Calculate distance if coordinates available
+          let distance = null
+          let distanceText = '20km以内'
+          if (dbPlace.latitude !== null && dbPlace.longitude !== null) {
+            distance = calculateDistance(
+              userLocation.lat,
+              userLocation.lng,
+              dbPlace.latitude,
+              dbPlace.longitude
+            )
+            distanceText = formatDistance(distance)
+            
+            // Distance-based scoring
+            if (distance < 5) score += 15
+            else if (distance < 10) score += 10
+            else if (distance < 15) score += 5
+          }
+          
+          return {
+            id: dbPlace.id,
+            name: dbPlace.name,
+            address: dbPlace.address || prediction.structured_formatting?.secondary_text || prediction.description,
+            imageUrl: (dbPlace as any).media && (dbPlace as any).media.length > 0 ? (dbPlace as any).media[0].url : null,
+            averageRating: avgRating,
+            totalReviews: totalReviews,
+            minAge: dbPlace.minAge,
+            maxAge: dbPlace.maxAge,
+            placeType: dbPlace.placeType,
+            price: dbPlace.price,
+            latitude: dbPlace.latitude,
+            longitude: dbPlace.longitude,
+            externalPlaceId: dbPlace.externalPlaceId,
+            matchScore: Math.round(score),
+            distance,
+            distanceText,
+          }
+        } else {
+          // Use data from Goong API only
+          console.log('📍 Using API data for:', prediction.structured_formatting?.main_text)
+          
+          return {
+            id: prediction.place_id,
+            name: prediction.structured_formatting?.main_text || prediction.description,
+            address: prediction.structured_formatting?.secondary_text || prediction.description,
+            imageUrl: null,
+            averageRating: 0,
+            totalReviews: 0,
+            minAge: null,
+            maxAge: null,
+            placeType: null,
+            price: null,
+            latitude: null,
+            longitude: null,
+            externalPlaceId: prediction.place_id,
+            matchScore: Math.round(score),
+            distance: null,
+            distanceText: '20km以内',
+          }
         }
       })
       .filter(place => place.matchScore >= 50)
       .sort((a, b) => b.matchScore - a.matchScore)
-  }, [allPlaces, user, userLocation])
+  }, [allPlaces, user, userLocation, dbPlaces, avgKidAge])
 
   // Display limited recommendations
   const displayedPlaces = recommendedPlaces.slice(0, displayLimit)
@@ -239,19 +339,19 @@ export default function RecommendationsPage() {
     return userFavorites?.some(fav => fav.place?.externalPlaceId === placeId) || false
   }
 
-  // Toggle favorite - only works if place is saved in database
-  const handleToggleFavorite = (placeId: string) => {
+  // Toggle favorite - works for both DB places and API-only places
+  const handleToggleFavorite = (place: any) => {
     if (!user) return
 
-    // Find the database place ID by externalPlaceId
-    const dbPlace = userFavorites?.find(fav => fav.place?.externalPlaceId === placeId)?.place
+    // First, try to find the database place by externalPlaceId
+    const dbPlace = dbPlaces?.find(p => p.externalPlaceId === place.externalPlaceId)
     
     if (!dbPlace) {
       message.warning('この地点を保存してからお気に入りに追加してください')
       return
     }
 
-    const favorited = isFavorited(placeId)
+    const favorited = isFavorited(place.externalPlaceId)
     
     if (favorited) {
       // Remove from favorites
@@ -273,7 +373,7 @@ export default function RecommendationsPage() {
   }
 
   // Show loading while checking auth
-  if (authLoading || isLoadingPlaces || isLoadingFavorites) {
+  if (authLoading || isLoadingPlaces || isLoadingFavorites || isLoadingDbPlaces) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Spin size="large" />
@@ -403,7 +503,7 @@ export default function RecommendationsPage() {
                           className="text-3xl cursor-pointer hover:scale-110 transition-transform drop-shadow-lg"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleToggleFavorite(place.externalPlaceId)
+                            handleToggleFavorite(place)
                           }}
                         />
                       ) : (
@@ -411,17 +511,11 @@ export default function RecommendationsPage() {
                           className="text-3xl cursor-pointer hover:scale-110 transition-transform drop-shadow-lg"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleToggleFavorite(place.externalPlaceId)
+                            handleToggleFavorite(place)
                           }}
                         />
                       )}
                     </div>
-                    {/* Match score badge */}
-                    {place.matchScore >= 70 && (
-                      <div className="absolute top-3 left-3 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                        {place.matchScore}% マッチ
-                      </div>
-                    )}
                   </div>
 
                   <div className="p-4 space-y-3">

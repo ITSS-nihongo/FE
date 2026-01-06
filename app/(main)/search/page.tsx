@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useFindManyPlace } from '@/lib/api/generated'
 import Link from 'next/link'
+import { translateVietnameseToJapanese, batchTranslateVietnameseToJapanese } from '@/lib/utils/translate'
 
 const { Option } = Select
 
@@ -28,19 +29,23 @@ function SearchResultsContent() {
   const [sessionToken] = useState(() => generateSessionToken()) // Generate once per component mount
   const [searchRadius, setSearchRadius] = useState<string>('50') // Default 50km radius
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
-  
+
   // Sorting and filtering states
   const [sortBy, setSortBy] = useState<string>('relevant') // relevant, newest, rating, price
   const [placeTypeFilter, setPlaceTypeFilter] = useState<string>('all') // all, INDOOR, OUTDOOR
   const [ageFilter, setAgeFilter] = useState<{ min: number; max: number } | null>(null)
-  
+
   // Debounced search states
   const [debouncedSearchText, setDebouncedSearchText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  
+
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const searchInputRef = useRef<any>(null)
+
+  // Translation states for Vietnamese to Japanese
+  const [translations, setTranslations] = useState<Map<string, string>>(new Map())
+  const [isTranslating, setIsTranslating] = useState(false)
 
   // Location state (optional for Goong Autocomplete)
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -53,9 +58,9 @@ function SearchResultsContent() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2)
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c // Distance in km
   }
@@ -126,9 +131,9 @@ function SearchResultsContent() {
       }
     },
     orderBy: sortBy === 'newest' ? { createdAt: 'desc' } :
-             sortBy === 'rating' ? { averageRating: 'desc' } :
-             sortBy === 'price' ? { price: 'asc' } :
-             { createdAt: 'desc' } // default for 'relevant' and others
+      sortBy === 'rating' ? { averageRating: 'desc' } :
+        sortBy === 'price' ? { price: 'asc' } :
+          { createdAt: 'desc' } // default for 'relevant' and others
   })
 
   // Get user location (optional - for location biased search)
@@ -166,7 +171,7 @@ function SearchResultsContent() {
   // Debounce function for search input
   const debounceSearch = useCallback((value: string) => {
     setIsTyping(true)
-    
+
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
@@ -219,7 +224,7 @@ function SearchResultsContent() {
     const qParam = searchParams.get('q')
     const minAgeParam = searchParams.get('minAge')
     const maxAgeParam = searchParams.get('maxAge')
-    
+
     if (qParam) {
       console.log('📖 Reading search query from URL:', qParam)
       setSearchText(qParam)
@@ -227,7 +232,7 @@ function SearchResultsContent() {
       // Auto-trigger search
       handleSearchAPI(qParam)
     }
-    
+
     if (minAgeParam && maxAgeParam) {
       const minAge = parseInt(minAgeParam)
       const maxAge = parseInt(maxAgeParam)
@@ -246,6 +251,92 @@ function SearchResultsContent() {
       }
     }
   }, [])
+
+  // Translate place names and addresses from Vietnamese to Japanese
+  useEffect(() => {
+    const translatePlaces = async () => {
+      if (!dbPlaces || dbPlaces.length === 0) return
+
+      // Collect all texts that need translation
+      const textsToTranslate: string[] = []
+
+      dbPlaces.forEach((place: any) => {
+        if (place.name && !translations.has(place.name)) {
+          textsToTranslate.push(place.name)
+        }
+        if (place.address && !translations.has(place.address)) {
+          textsToTranslate.push(place.address)
+        }
+      })
+
+      if (textsToTranslate.length === 0) return
+
+      setIsTranslating(true)
+      try {
+        const newTranslations = await batchTranslateVietnameseToJapanese(textsToTranslate)
+
+        // Merge with existing translations
+        setTranslations(prev => {
+          const merged = new Map(prev)
+          newTranslations.forEach((value, key) => {
+            merged.set(key, value)
+          })
+          return merged
+        })
+      } catch (error) {
+        console.error('Failed to translate places:', error)
+      } finally {
+        setIsTranslating(false)
+      }
+    }
+
+    translatePlaces()
+  }, [dbPlaces])
+
+  // Translate API predictions from Vietnamese to Japanese
+  useEffect(() => {
+    const translatePredictions = async () => {
+      const apiPredictions = searchData?.predictions || []
+      if (!apiPredictions || apiPredictions.length === 0) return
+
+      // Collect all texts that need translation
+      const textsToTranslate: string[] = []
+
+      apiPredictions.forEach((prediction: any) => {
+        const mainText = prediction.structured_formatting?.main_text || prediction.description
+        const secondaryText = prediction.structured_formatting?.secondary_text || prediction.description
+
+        if (mainText && !translations.has(mainText)) {
+          textsToTranslate.push(mainText)
+        }
+        if (secondaryText && !translations.has(secondaryText)) {
+          textsToTranslate.push(secondaryText)
+        }
+      })
+
+      if (textsToTranslate.length === 0) return
+
+      setIsTranslating(true)
+      try {
+        const newTranslations = await batchTranslateVietnameseToJapanese(textsToTranslate)
+
+        // Merge with existing translations
+        setTranslations(prev => {
+          const merged = new Map(prev)
+          newTranslations.forEach((value, key) => {
+            merged.set(key, value)
+          })
+          return merged
+        })
+      } catch (error) {
+        console.error('Failed to translate predictions:', error)
+      } finally {
+        setIsTranslating(false)
+      }
+    }
+
+    translatePredictions()
+  }, [searchData?.predictions])
 
   const handleSearch = (keyword?: string) => {
     const searchKeyword = keyword || searchText
@@ -281,9 +372,9 @@ function SearchResultsContent() {
   // Filter and sort database places based on filters and sortBy
   const sortedDBPlaces = useMemo(() => {
     if (!dbPlaces) return []
-    
+
     let places = [...dbPlaces]
-    
+
     // Apply age filter (client-side)
     if (ageFilter) {
       places = places.filter(place => {
@@ -295,7 +386,7 @@ function SearchResultsContent() {
         )
       })
     }
-    
+
     // Apply distance filter (20km max) and calculate distance for each place
     const placesWithDistance = places
       .map(place => {
@@ -317,7 +408,7 @@ function SearchResultsContent() {
         }
         return true // Show all places if no user location
       })
-    
+
     // Apply sorting (distance takes priority)
     if (userLocation) {
       // Sort by distance (nearest first)
@@ -334,7 +425,7 @@ function SearchResultsContent() {
     } else if (sortBy === 'price') {
       return placesWithDistance.sort((a, b) => (a.price || 0) - (b.price || 0))
     }
-    
+
     return placesWithDistance
   }, [dbPlaces, sortBy, ageFilter, userLocation])
 
@@ -405,6 +496,14 @@ function SearchResultsContent() {
           </div>
         )}
 
+        {/* Translation Loading Indicator */}
+        {isTranslating && !isLoadingDB && !isSearching && (
+          <div className="flex items-center justify-center gap-2 py-2 text-sm text-gray-500">
+            <Spin size="small" />
+            <span>日本語に翻訳中...</span>
+          </div>
+        )}
+
         {/* Database Results */}
         {!isLoadingDB && !isSearching && sortedDBPlaces.length > 0 && (
           <div className="space-y-6">
@@ -450,14 +549,14 @@ function SearchResultsContent() {
                       <div>
                         <Link href={`/places/${linkId}`}>
                           <h3 className="text-2xl font-bold text-gray-900 mb-4 cursor-pointer hover:text-pink-600 transition-colors">
-                            {place.name}
+                            {translations.get(place.name) || place.name}
                           </h3>
                         </Link>
 
                         <div className="space-y-3">
                           <div className="flex items-start gap-2 text-base text-gray-700">
                             <EnvironmentOutlined className="text-lg mt-1 text-gray-500" />
-                            <span>{place.address || 'なし'}</span>
+                            <span>{place.address ? (translations.get(place.address) || place.address) : 'なし'}</span>
                           </div>
 
                           <div className="flex items-center gap-3 text-base text-gray-900 flex-wrap">
@@ -468,14 +567,14 @@ function SearchResultsContent() {
                             </div>
                             <span>•</span>
                             <span>
-                              {place.minAge !== null && place.maxAge !== null 
-                                ? `${place.minAge}-${place.maxAge}歳` 
+                              {place.minAge !== null && place.maxAge !== null
+                                ? `${place.minAge}-${place.maxAge}歳`
                                 : 'なし'}
                             </span>
                             <span>•</span>
                             <span>
-                              {place.price === 0 
-                                ? '無料' 
+                              {place.price === 0
+                                ? '無料'
                                 : place.price !== null && place.price !== undefined
                                   ? `${place.price.toLocaleString()}円`
                                   : 'なし'}
@@ -537,13 +636,21 @@ function SearchResultsContent() {
                           className="text-2xl font-bold text-gray-900 mb-4 cursor-pointer hover:text-pink-600 transition-colors"
                           onClick={() => router.push(`/places/${encodeURIComponent(prediction.place_id)}`)}
                         >
-                          {prediction.structured_formatting?.main_text || prediction.description}
+                          {(() => {
+                            const mainText = prediction.structured_formatting?.main_text || prediction.description
+                            return translations.get(mainText) || mainText
+                          })()}
                         </h3>
 
                         <div className="space-y-3">
                           <div className="flex items-start gap-2 text-base text-gray-700">
                             <EnvironmentOutlined className="text-lg mt-1 text-gray-500" />
-                            <span>{prediction.structured_formatting?.secondary_text || prediction.description || 'なし'}</span>
+                            <span>
+                              {(() => {
+                                const secondaryText = prediction.structured_formatting?.secondary_text || prediction.description
+                                return translations.get(secondaryText) || secondaryText || 'なし'
+                              })()}
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-3 text-base text-gray-900 flex-wrap">

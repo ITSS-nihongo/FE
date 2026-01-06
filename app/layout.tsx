@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "The Weekend - Children's Playground Website",
+  title: "TheWeekend - Children's Playground Website",
   description: "子供の遊び場を見つけるための週末ガイド",
   icons: {
     icon: '/images/logo-weekend.png',

@@ -500,6 +500,7 @@ export default function PlaceDetailPage() {
         if (values.minAge !== undefined && values.minAge !== '') requestData.minAge = parseInt(values.minAge)
         if (values.maxAge !== undefined && values.maxAge !== '') requestData.maxAge = parseInt(values.maxAge)
         if (values.price !== undefined && values.price !== '') requestData.price = parseFloat(values.price)
+        if (values.placeType) requestData.placeType = values.placeType
 
         await createUpdateRequestMutation.mutateAsync({
           data: requestData
@@ -1099,7 +1100,8 @@ export default function PlaceDetailPage() {
             closingTime: null,
             minAge: savedPlaceData?.minAge || 0,
             maxAge: savedPlaceData?.maxAge || 18,
-            price: savedPlaceData?.price || ''
+            price: savedPlaceData?.price || '',
+            placeType: savedPlaceData?.placeType || 'OUTDOOR'
           }}
           className="space-y-6 py-4"
         >
@@ -1108,6 +1110,24 @@ export default function PlaceDetailPage() {
             <h4 className="text-base font-bold text-gray-900 mb-4">
               地点の詳細情報を更新
             </h4>
+
+            {/* Place Type */}
+            <Form.Item
+              label="施設タイプ"
+              name="placeType"
+            >
+              <Select
+                placeholder="施設タイプを選択"
+                className="rounded-lg"
+                size="large"
+              >
+                <Select.Option value="INDOOR">屋内</Select.Option>
+                <Select.Option value="OUTDOOR">屋外</Select.Option>
+              </Select>
+            </Form.Item>
+            <p className="text-xs text-gray-500 -mt-4 mb-4">
+              屋内施設か屋外施設かを選択してください（検索フィルターで使用されます）
+            </p>
 
             {/* Additional Description */}
             <Form.Item

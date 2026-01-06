@@ -1,18 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, Rate, Button, Modal, Empty, Spin, message } from 'antd'
 import { HeartFilled, HeartOutlined, EnvironmentOutlined, ClockCircleOutlined, StarFilled } from '@ant-design/icons'
 import { useFindManyFavorite, useDeleteFavorite } from '@/lib/api/generated/favorite'
 import { useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useMe } from '@/lib/hooks/use-me'
+import { batchTranslateVietnameseToJapanese } from '@/lib/utils/translate'
 
 export default function FavoritesPage() {
+  const router = useRouter()
   const [selectedPlace, setSelectedPlace] = useState<any>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const queryClient = useQueryClient()
-  
+
+  // Translation states for Vietnamese to Japanese
+  const [translations, setTranslations] = useState<Map<string, string>>(new Map())
+  const [isTranslating, setIsTranslating] = useState(false)
+
   // Get current user
   const { userId, isAuthenticated } = useMe()
 
@@ -64,10 +71,53 @@ export default function FavoritesPage() {
     })
   }
 
+  // Navigate to place detail page (same logic as other pages)
   const handleViewDetail = (place: any) => {
-    setSelectedPlace(place)
-    setIsDetailModalOpen(true)
+    const linkId = place.externalPlaceId || place.id
+    router.push(`/places/${linkId}`)
   }
+
+  // Translate place names and addresses from Vietnamese to Japanese
+  useEffect(() => {
+    const translatePlaces = async () => {
+      if (!favorites || favorites.length === 0) return
+
+      // Collect all texts that need translation
+      const textsToTranslate: string[] = []
+
+      favorites.forEach((favorite: any) => {
+        const place = favorite.place
+        if (place?.name && !translations.has(place.name)) {
+          textsToTranslate.push(place.name)
+        }
+        if (place?.address && !translations.has(place.address)) {
+          textsToTranslate.push(place.address)
+        }
+      })
+
+      if (textsToTranslate.length === 0) return
+
+      setIsTranslating(true)
+      try {
+        const newTranslations = await batchTranslateVietnameseToJapanese(textsToTranslate)
+
+        // Merge with existing translations
+        setTranslations(prev => {
+          const merged = new Map(prev)
+          newTranslations.forEach((value, key) => {
+            merged.set(key, value)
+          })
+          return merged
+        })
+      } catch (error) {
+        console.error('Failed to translate places:', error)
+      } finally {
+        setIsTranslating(false)
+      }
+    }
+
+    translatePlaces()
+  }, [favorites])
 
   if (favoritesLoading) {
     return (
@@ -80,13 +130,20 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-gray-50 w-full pb-20">
       <div className="w-full px-4 py-6 space-y-8">
-        
+
         {/* Header Section */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h1 className="text-2xl font-bold text-black mb-2">お気に入りの場所</h1>
           <p className="text-gray-600">
             気になった遊び場・お出かけスポットをいつでも振り返れる、あなた専用のリストです。
           </p>
+          {/* Translation Loading Indicator */}
+          {isTranslating && (
+            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+              <Spin size="small" />
+              <span>日本語に翻訳中...</span>
+            </div>
+          )}
         </div>
 
         {/* Favorites Grid */}
@@ -102,7 +159,7 @@ export default function FavoritesPage() {
               const totalReviews = reviews.length
               // Get first image from media
               const imageUrl = place.media && place.media.length > 0 ? place.media[0].fileUrl : null
-              
+
               return (
                 <Card
                   key={favorite.id}
@@ -125,7 +182,7 @@ export default function FavoritesPage() {
                           </svg>
                         </div>
                       )} */}
-                      
+
                       {/* Heart Icon - Remove from favorites */}
                       <button
                         onClick={() => handleRemoveFavorite(favorite.id)}
@@ -139,7 +196,7 @@ export default function FavoritesPage() {
                   <div className="p-4 space-y-3">
                     {/* Place Name */}
                     <h3 className="font-bold text-lg text-black line-clamp-2">
-                      {place.name}
+                      {translations.get(place.name) || place.name}
                     </h3>
 
                     {/* Rating */}
@@ -161,8 +218,8 @@ export default function FavoritesPage() {
                     <div className="flex items-center gap-1 text-sm text-gray-600">
                       <span className="font-medium">料金:</span>
                       <span>
-                        {place.price === 0 
-                          ? '無料' 
+                        {place.price === 0
+                          ? '無料'
                           : place.price !== null && place.price !== undefined
                             ? `${place.price.toLocaleString()}円`
                             : 'なし'
@@ -173,17 +230,22 @@ export default function FavoritesPage() {
                     {/* Address */}
                     <div className="flex items-start gap-1 text-sm text-gray-600">
                       <EnvironmentOutlined className="mt-0.5 shrink-0" />
-                      <span className="line-clamp-2">{place.address || place.vicinity || 'ダム周辺道路'}</span>
+                      <span className="line-clamp-2">
+                        {place.address
+                          ? (translations.get(place.address) || place.address)
+                          : (place.vicinity || 'ダム周辺道路')
+                        }
+                      </span>
                     </div>
 
-                    {/* Detail Button */}
+                    {/* Detail Button - Navigate to place details page */}
                     <Button
                       type="primary"
                       block
-                      className="mt-4 bg-purple-500 hover:bg-purple-400 border-0 rounded-lg h-10"
+                      className="mt-4 bg-white hover:bg-pink-50 border-2 border-pink-500 text-pink-500 hover:text-pink-600 hover:border-pink-600 rounded-lg h-10 font-medium"
                       onClick={() => handleViewDetail(place)}
                     >
-                      詳細
+                      詳細を見る
                     </Button>
                   </div>
                 </Card>
@@ -193,7 +255,7 @@ export default function FavoritesPage() {
         ) : (
           /* Empty State */
           <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <Empty 
+            <Empty
               description="まだお気に入りの場所がありません"
               className="text-gray-500"
             />
@@ -257,7 +319,7 @@ export default function FavoritesPage() {
             {/* Place Info */}
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-black">{selectedPlace.name}</h2>
-              
+
               {/* Rating */}
               <div className="flex items-center gap-2">
                 {(() => {
@@ -290,13 +352,13 @@ export default function FavoritesPage() {
                       <span className="text-gray-600">{selectedPlace.minAge}歳 - {selectedPlace.maxAge}歳</span>
                     </div>
                   )}
-                  
+
                   {/* Price */}
                   <div>
                     <span className="font-medium text-gray-800">料金: </span>
                     <span className="text-gray-600">
-                      {selectedPlace.price === 0 
-                        ? '無料' 
+                      {selectedPlace.price === 0
+                        ? '無料'
                         : selectedPlace.price !== null && selectedPlace.price !== undefined
                           ? `${selectedPlace.price.toLocaleString()}円`
                           : 'なし'
@@ -311,7 +373,7 @@ export default function FavoritesPage() {
                   <div>
                     <span className="font-medium text-gray-800">営業時間: </span>
                     <span className="text-gray-600">
-                      {selectedPlace.openingTime && selectedPlace.closingTime 
+                      {selectedPlace.openingTime && selectedPlace.closingTime
                         ? `${selectedPlace.openingTime} - ${selectedPlace.closingTime}`
                         : '8:00-18:00'
                       }

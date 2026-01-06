@@ -70,7 +70,7 @@ export type PostApiAuthRegisterData = {
          */
         email: string;
         /**
-         * Password (minimum 6 characters)
+         * Password (minimum 1 characters)
          */
         password: string;
         /**

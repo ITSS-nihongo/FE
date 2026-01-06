@@ -192,6 +192,9 @@ export default function AdminPlacesPage() {
       if (selectedFields.includes('price') && request.price !== null) {
         updateData.price = request.price
       }
+      if (selectedFields.includes('placeType') && request.placeType !== null) {
+        updateData.placeType = request.placeType
+      }
 
       await updatePlaceMutation.mutateAsync({
         where: { id: request.placeId },

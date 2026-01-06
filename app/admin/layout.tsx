@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href="/admin/users" className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-              The Weekend Admin
+              TheWeekend Admin
             </Link>
 
             {/* Navigation Links */}

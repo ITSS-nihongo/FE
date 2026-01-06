@@ -113,7 +113,7 @@ model Place {
   favorites       Favorite[]
   media           Media[]     // One-to-many relation with media files
   updateRequests  PlaceUpdateRequest[] // Update requests for this place
-  
+
   // Access Control Rules
   // Tất cả người dùng đều có thể đọc địa điểm
   @@allow('read', isActive == true)

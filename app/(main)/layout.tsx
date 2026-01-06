@@ -32,7 +32,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center hover:opacity-80 transition-opacity">
               <div className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                The Weekend
+                TheWeekend
               </div>
             </Link>
 

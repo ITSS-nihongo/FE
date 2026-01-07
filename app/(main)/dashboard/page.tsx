@@ -1,126 +1,104 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Input, Card, Slider, Rate, Avatar } from 'antd'
-import { SearchOutlined, UserOutlined } from '@ant-design/icons'
+import { Input, Card, Slider, Rate } from 'antd'
+import { SearchOutlined } from '@ant-design/icons'
 import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
-import { useState, useEffect } from 'react'
-import { translateJapaneseToVietnamese, isJapanese } from '@/lib/utils/translate'
+import { useState, useEffect, useMemo } from 'react'
+import { translateJapaneseToVietnamese, translateVietnameseToJapanese, isJapanese } from '@/lib/utils/translate'
+import { useFindManyPlace } from '@/lib/api/generated'
+import { useQueries } from '@tanstack/react-query'
+import { getApiMediaOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 
 export default function DashboardPage() {
   const router = useRouter()
   const [searchText, setSearchText] = useState('')
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 8])
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [randomPlaces, setRandomPlaces] = useState<any[]>([])
+  const [translatedPlaces, setTranslatedPlaces] = useState<Map<string, { name: string; address: string }>>(new Map())
 
-  // Keywords for fetching recommendations
-  const keywords = [
-    'công viên',
-    'khu vui chơi',
-    'sân chơi trẻ em',
-    'trung tâm vui chơi',
-  ]
+  // Fetch places from database
+  const { data: placesData, isLoading } = useFindManyPlace({
+    where: {
+      isActive: true
+    },
+    take: 20 // Fetch more places to have a better random selection
+  })
 
-  // Get user location
+  // Translate and randomize places when data is loaded
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
+    const translateAndSetPlaces = async () => {
+      if (placesData && placesData.length > 0) {
+        // Prioritize places with images
+        const placesWithImages = placesData.filter((p: any) => p.imageUrl)
+        const placesWithoutImages = placesData.filter((p: any) => !p.imageUrl)
+
+        // Shuffle both arrays
+        const shuffledWithImages = [...placesWithImages].sort(() => Math.random() - 0.5)
+        const shuffledWithoutImages = [...placesWithoutImages].sort(() => Math.random() - 0.5)
+
+        // Take up to 4 places, prioritizing ones with images
+        const selected = [
+          ...shuffledWithImages.slice(0, 4),
+          ...shuffledWithoutImages.slice(0, Math.max(0, 4 - shuffledWithImages.length))
+        ].slice(0, 4)
+
+        setRandomPlaces(selected)
+
+        // Translate place names and addresses
+        const translationMap = new Map<string, { name: string; address: string }>()
+
+        for (const place of selected) {
+          const translatedName = await translateVietnameseToJapanese(place.name)
+          const translatedAddress = await translateVietnameseToJapanese(place.address)
+          translationMap.set(place.id, {
+            name: translatedName,
+            address: translatedAddress,
           })
-        },
-        (error) => {
-          console.log('⚠️ Location not available:', error.message)
-          // Use default location (Hanoi)
-          setUserLocation({ lat: 21.0285, lng: 105.8542 })
         }
-      )
-    } else {
-      // Use default location (Hanoi)
-      setUserLocation({ lat: 21.0285, lng: 105.8542 })
+
+        setTranslatedPlaces(translationMap)
+      }
     }
-  }, [])
 
-  // Fetch places from Goong API using autocomplete
-  const { data: placesData1 } = useQuery({
-    ...getApiMapsV2AutocompleteOptions({
-      query: {
-        input: keywords[0],
-        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
-        limit: '10',
-      } as any,
-    }),
-    enabled: !!userLocation,
+    translateAndSetPlaces()
+  }, [placesData])
+
+  // Fetch media for each selected place (like place detail page)
+  const mediaQueries = useQueries({
+    queries: randomPlaces.map((place) => ({
+      ...getApiMediaOptions({
+        query: {
+          placeId: place.id,
+          limit: '1' // Only get first image
+        }
+      }),
+      enabled: !!place.id,
+      staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    }))
   })
 
-  const { data: placesData2 } = useQuery({
-    ...getApiMapsV2AutocompleteOptions({
-      query: {
-        input: keywords[1],
-        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
-        limit: '10',
-      } as any,
-    }),
-    enabled: !!userLocation,
-  })
-
-  const { data: placesData3 } = useQuery({
-    ...getApiMapsV2AutocompleteOptions({
-      query: {
-        input: keywords[2],
-        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
-        limit: '10',
-      } as any,
-    }),
-    enabled: !!userLocation,
-  })
-
-  const { data: placesData4 } = useQuery({
-    ...getApiMapsV2AutocompleteOptions({
-      query: {
-        input: keywords[3],
-        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : undefined,
-        limit: '10',
-      } as any,
-    }),
-    enabled: !!userLocation,
-  })
-
-  // Combine and randomize places when data is loaded
-  useEffect(() => {
-    const allPredictions = [
-      ...(placesData1?.predictions || []),
-      ...(placesData2?.predictions || []),
-      ...(placesData3?.predictions || []),
-      ...(placesData4?.predictions || []),
-    ]
-
-    if (allPredictions.length > 0) {
-      // Remove duplicates by place_id
-      const uniquePlaces = Array.from(
-        new Map(allPredictions.map(p => [p.place_id, p])).values()
-      )
-      
-      // Shuffle and take 4 random places
-      const shuffled = [...uniquePlaces].sort(() => Math.random() - 0.5)
-      setRandomPlaces(shuffled.slice(0, 4))
-    }
-  }, [placesData1, placesData2, placesData3, placesData4])
+  // Compute media map reactively from queries (no useEffect needed)
+  const placeMediaMap = useMemo(() => {
+    const mediaMap = new Map<string, any>()
+    randomPlaces.forEach((place, index) => {
+      const queryResult = mediaQueries[index]
+      if (queryResult?.data?.media && queryResult.data.media.length > 0) {
+        mediaMap.set(place.id, queryResult.data.media[0])
+      }
+    })
+    return mediaMap
+  }, [randomPlaces, mediaQueries])
 
   const handleSearch = async () => {
     if (searchText.trim()) {
       let searchQuery = searchText.trim()
-      
+
       // If text is in Japanese, translate to Vietnamese
       if (isJapanese(searchQuery)) {
         searchQuery = await translateJapaneseToVietnamese(searchQuery)
       }
-      
+
       router.push(`/search?q=${encodeURIComponent(searchQuery)}&minAge=${ageRange[0]}&maxAge=${ageRange[1]}`)
     }
   }
@@ -181,7 +159,7 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-2xl font-bold mb-4 text-gray-800">おすすめの場所</h2>
 
-        {!userLocation ? (
+        {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <Card key={i} loading={true} />
@@ -190,45 +168,91 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {randomPlaces?.map((place) => {
-              // Use place_id from Goong API
-              const linkId = place.place_id
+              const translated = translatedPlaces.get(place.id)
+              const displayName = translated?.name || place.name
+              const displayAddress = translated?.address || place.address
+              // Use externalPlaceId if available, otherwise use id (matching search page logic)
+              const linkId = place.externalPlaceId || place.id
+              // Get media for this place (like detail page)
+              const mediaData = placeMediaMap.get(place.id)
 
               return (
-                <Link key={place.place_id} href={`/places/${encodeURIComponent(linkId)}`}>
-                  <Card
-                    hoverable
-                    cover={
-                      <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
-                        <div className="w-full h-full flex items-center justify-center text-gray-300">
-                          <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                          </svg>
+                <Link key={place.id} href={`/places/${encodeURIComponent(linkId)}`} passHref legacyBehavior>
+                  <a style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <Card
+                      hoverable
+                      onClick={() => router.push(`/places/${encodeURIComponent(linkId)}`)}
+                      style={{ cursor: 'pointer' }}
+                      cover={
+                        // Prioritize user uploaded media first (like detail page), then imageUrl from Goong
+                        mediaData?.fileUrl ? (
+                          <div className="h-40 bg-gray-100 overflow-hidden">
+                            <img
+                              src={mediaData.fileUrl}
+                              alt={mediaData.altText || displayName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        ) : place.imageUrl ? (
+                          <div className="h-40 bg-gray-100 overflow-hidden">
+                            <img
+                              src={place.imageUrl}
+                              alt={displayName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                              </svg>
+                            </div>
+                          </div>
+                        )
+                      }
+                      className="h-full"
+                    >
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-base line-clamp-2 min-h-12">
+                          {displayName}
+                        </h3>
+
+                        <p className="text-xs text-gray-500 line-clamp-1">
+                          {displayAddress}
+                        </p>
+
+                        <div className="flex items-center gap-1">
+                          <Rate disabled value={place.averageRating || 0} allowHalf className="text-sm" />
+                          <span className="text-xs text-gray-500">
+                            ({place.totalReviews || 0}レビュー)
+                          </span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                            {place.placeType === 'INDOOR' ? '屋内' : '屋外'}
+                          </span>
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                            {place.minAge}-{place.maxAge}歳
+                          </span>
                         </div>
                       </div>
-                    }
-                    className="h-full"
-                  >
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-base line-clamp-2 min-h-12">
-                        {place.structured_formatting?.main_text || place.description}
-                      </h3>
-
-                      <div className="flex items-center gap-1">
-                        <Rate disabled value={0} allowHalf className="text-sm" />
-                        <span className="text-xs text-gray-500">
-                          (0レビュー)
-                        </span>
-                      </div>
-
-                    </div>
-                  </Card>
+                    </Card>
+                  </a>
                 </Link>
               )
             })}
           </div>
         )}
 
-        {userLocation && (!randomPlaces || randomPlaces.length === 0) && (
+        {!isLoading && (!randomPlaces || randomPlaces.length === 0) && (
           <Card>
             <p className="text-center text-gray-500 py-8">
               場所が見つかりませんでした

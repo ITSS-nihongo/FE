@@ -8,6 +8,7 @@ import { useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite, useFindM
 import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useMe } from '@/lib/hooks/use-me'
 import { useEffect, useMemo, useState } from 'react'
+import { translateVietnameseToJapanese, batchTranslateVietnameseToJapanese } from '@/lib/utils/translate'
 
 export default function RecommendationsPage() {
   const router = useRouter()
@@ -15,6 +16,7 @@ export default function RecommendationsPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [displayLimit, setDisplayLimit] = useState(6) // Limit for displaying recommendations
   const [allPlaces, setAllPlaces] = useState<any[]>([])
+  const [translations, setTranslations] = useState<Map<string, string>>(new Map()) // Store translations
 
   // Keywords for fetching family-friendly places
   const keywords = [
@@ -101,7 +103,7 @@ export default function RecommendationsPage() {
       const uniquePlaces = Array.from(
         new Map(allPredictions.map(p => [p.place_id, p])).values()
       )
-      
+
       console.log('🌐 Fetched unique places from Goong API:', uniquePlaces.length)
       setAllPlaces(uniquePlaces)
     }
@@ -202,9 +204,9 @@ export default function RecommendationsPage() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2)
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2)
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
     return R * c // Distance in km
   }
@@ -235,32 +237,32 @@ export default function RecommendationsPage() {
     return allPlaces
       .map((prediction) => {
         let score = 50 // Base score for being in keyword search results
-        
+
         // Check if this place exists in the database
         const dbPlace = dbPlaceMap.get(prediction.place_id)
-        
+
         if (dbPlace) {
           // Use data from database
           console.log('✅ Using DB data for:', dbPlace.name)
-          
+
           // Calculate average rating from reviews
           const reviews = (dbPlace as any).reviews || []
           const avgRating = reviews.length > 0
             ? reviews.reduce((sum: number, review: any) => sum + review.rating, 0) / reviews.length
             : 0
           const totalReviews = reviews.length
-          
+
           // Boost score if place is in database
           score += 20
-          
+
           // Boost score based on ratings
           if (avgRating >= 4) score += 15
           else if (avgRating >= 3) score += 10
-          
+
           // Boost score based on number of reviews
           if (totalReviews >= 10) score += 10
           else if (totalReviews >= 5) score += 5
-          
+
           // Age compatibility scoring
           if (dbPlace.minAge !== null && dbPlace.maxAge !== null) {
             if (avgKidAge >= dbPlace.minAge && avgKidAge <= dbPlace.maxAge) {
@@ -273,7 +275,7 @@ export default function RecommendationsPage() {
               score -= ageDiff * 2 // Penalty for too old
             }
           }
-          
+
           // Calculate distance if coordinates available
           let distance = null
           let distanceText = '20km以内'
@@ -285,13 +287,13 @@ export default function RecommendationsPage() {
               dbPlace.longitude
             )
             distanceText = formatDistance(distance)
-            
+
             // Distance-based scoring
             if (distance < 5) score += 15
             else if (distance < 10) score += 10
             else if (distance < 15) score += 5
           }
-          
+
           return {
             id: dbPlace.id,
             name: dbPlace.name,
@@ -313,7 +315,7 @@ export default function RecommendationsPage() {
         } else {
           // Use data from Goong API only
           console.log('📍 Using API data for:', prediction.structured_formatting?.main_text)
-          
+
           return {
             id: prediction.place_id,
             name: prediction.structured_formatting?.main_text || prediction.description,
@@ -338,6 +340,28 @@ export default function RecommendationsPage() {
       .sort((a, b) => b.matchScore - a.matchScore)
   }, [allPlaces, user, userLocation, dbPlaces, avgKidAge])
 
+  // Translate place names and addresses to Japanese
+  useEffect(() => {
+    const translatePlaces = async () => {
+      if (recommendedPlaces.length > 0) {
+        // Collect all texts to translate (names + addresses)
+        const textsToTranslate: string[] = []
+        recommendedPlaces.forEach(place => {
+          textsToTranslate.push(place.name)
+          if (place.address) {
+            textsToTranslate.push(place.address)
+          }
+        })
+
+        // Batch translate
+        const translationMap = await batchTranslateVietnameseToJapanese(textsToTranslate)
+        setTranslations(translationMap)
+      }
+    }
+
+    translatePlaces()
+  }, [recommendedPlaces])
+
   // Display limited recommendations
   const displayedPlaces = recommendedPlaces.slice(0, displayLimit)
   console.log('📍 Displaying', displayedPlaces, 'of', recommendedPlaces, 'recommended places')
@@ -345,7 +369,7 @@ export default function RecommendationsPage() {
 
   // Count nearby places (using filtered places)
   const nearbyCount = recommendedPlaces.length
-  
+
   // Count saved favorites
   const savedCount = userFavorites?.length || 0
 
@@ -361,14 +385,14 @@ export default function RecommendationsPage() {
 
     // First, try to find the database place by externalPlaceId
     const dbPlace = dbPlaces?.find(p => p.externalPlaceId === place.externalPlaceId)
-    
+
     if (!dbPlace) {
       message.warning('この地点を保存してからお気に入りに追加してください')
       return
     }
 
     const favorited = isFavorited(place.externalPlaceId)
-    
+
     if (favorited) {
       // Remove from favorites
       deleteFavorite({
@@ -455,7 +479,7 @@ export default function RecommendationsPage() {
         </Card>
 
         {/* Saved Spots Card */}
-        <Card 
+        <Card
           className="shadow-md border-2 border-gray-200 hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => router.push('/favorites')}
         >
@@ -474,7 +498,7 @@ export default function RecommendationsPage() {
       {/* Recommendations Section */}
       <div>
         <h2 className="text-2xl font-bold mb-6">あなたへのおすすめ</h2>
-        
+
         {recommendedPlaces.length === 0 ? (
           <Card>
             <Empty description="おすすめの場所が見つかりませんでした" />
@@ -515,7 +539,7 @@ export default function RecommendationsPage() {
                     {/* Heart icon for favorite */}
                     <div className="absolute top-3 right-3">
                       {favorited ? (
-                        <HeartFilled 
+                        <HeartFilled
                           className="text-3xl cursor-pointer hover:scale-110 transition-transform drop-shadow-lg"
                           onClick={(e) => {
                             e.stopPropagation()
@@ -523,7 +547,7 @@ export default function RecommendationsPage() {
                           }}
                         />
                       ) : (
-                        <HeartOutlined 
+                        <HeartOutlined
                           className="text-3xl cursor-pointer hover:scale-110 transition-transform drop-shadow-lg"
                           onClick={(e) => {
                             e.stopPropagation()
@@ -536,11 +560,11 @@ export default function RecommendationsPage() {
 
                   <div className="p-4 space-y-3">
                     <h3 className="text-lg font-bold line-clamp-2 min-h-14">
-                      {place.name}
+                      {translations.get(place.name) || place.name}
                     </h3>
-                    
+
                     <p className="text-sm text-gray-600 line-clamp-2 min-h-10">
-                      {place.address || '住所情報なし'}
+                      {place.address ? (translations.get(place.address) || place.address) : '住所情報なし'}
                     </p>
 
                     <div className="flex items-center justify-between text-sm flex-wrap gap-2">
@@ -552,8 +576,8 @@ export default function RecommendationsPage() {
                       <span className="flex items-center gap-1">
                         <span>👶</span>
                         <span className="font-semibold">
-                          {place.minAge !== null && place.maxAge !== null 
-                            ? `${place.minAge}-${place.maxAge}歳` 
+                          {place.minAge !== null && place.maxAge !== null
+                            ? `${place.minAge}-${place.maxAge}歳`
                             : 'なし'}
                         </span>
                       </span>
@@ -566,8 +590,8 @@ export default function RecommendationsPage() {
                       <span className="flex items-center gap-1">
                         <span className="text-yellow-600">💰</span>
                         <span className="font-semibold">
-                          {(place as any).price === 0 
-                            ? '無料' 
+                          {(place as any).price === 0
+                            ? '無料'
                             : (place as any).price !== null && (place as any).price !== undefined
                               ? `${((place as any).price as number).toLocaleString()}円`
                               : 'なし'
@@ -613,7 +637,7 @@ export default function RecommendationsPage() {
         )}
       </div>
 
-      
+
     </div>
   )
 }

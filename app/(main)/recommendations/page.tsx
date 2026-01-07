@@ -1,11 +1,11 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueries } from '@tanstack/react-query'
 import { Card, Button, Spin, Empty, Avatar, message } from 'antd'
 import { UserOutlined, EnvironmentOutlined, HeartFilled, HeartOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
 import { useFindManyFavorite, useCreateFavorite, useDeleteManyFavorite, useFindManyPlace } from '@/lib/api/generated'
-import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { getApiMapsV2AutocompleteOptions, getApiMediaOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useMe } from '@/lib/hooks/use-me'
 import { useEffect, useMemo, useState } from 'react'
 import { translateVietnameseToJapanese, batchTranslateVietnameseToJapanese } from '@/lib/utils/translate'
@@ -123,16 +123,6 @@ export default function RecommendationsPage() {
       isActive: true
     } : undefined,
     include: {
-      media: {
-        where: {
-          isActive: true,
-          isPendingApproval: false
-        },
-        take: 1,
-        orderBy: {
-          sortOrder: 'asc'
-        }
-      },
       reviews: {
         select: {
           rating: true
@@ -298,7 +288,6 @@ export default function RecommendationsPage() {
             id: dbPlace.id,
             name: dbPlace.name,
             address: dbPlace.address || prediction.structured_formatting?.secondary_text || prediction.description,
-            imageUrl: (dbPlace as any).media && (dbPlace as any).media.length > 0 ? (dbPlace as any).media[0].fileUrl : null,
             averageRating: Number(avgRating.toFixed(1)),
             totalReviews: totalReviews,
             minAge: dbPlace.minAge,
@@ -320,7 +309,6 @@ export default function RecommendationsPage() {
             id: prediction.place_id,
             name: prediction.structured_formatting?.main_text || prediction.description,
             address: prediction.structured_formatting?.secondary_text || prediction.description,
-            imageUrl: null,
             averageRating: 0,
             totalReviews: 0,
             minAge: null,
@@ -361,6 +349,32 @@ export default function RecommendationsPage() {
 
     translatePlaces()
   }, [recommendedPlaces])
+
+  // Fetch media for each recommended place (like place detail page)
+  const mediaQueries = useQueries({
+    queries: recommendedPlaces.map((place) => ({
+      ...getApiMediaOptions({
+        query: {
+          placeId: place.id,
+          limit: '1' // Only get first image
+        }
+      }),
+      enabled: !!place.id && typeof place.id === 'string' && place.id.length > 0,
+      staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    }))
+  })
+
+  // Compute media map reactively from queries (no useEffect needed)
+  const placeMediaMap = useMemo(() => {
+    const mediaMap = new Map<string, any>()
+    recommendedPlaces.forEach((place, index) => {
+      const queryResult = mediaQueries[index]
+      if (queryResult?.data?.media && queryResult.data.media.length > 0) {
+        mediaMap.set(place.id, queryResult.data.media[0])
+      }
+    })
+    return mediaMap
+  }, [recommendedPlaces, mediaQueries])
 
   // Display limited recommendations
   const displayedPlaces = recommendedPlaces.slice(0, displayLimit)
@@ -508,7 +522,6 @@ export default function RecommendationsPage() {
             {displayedPlaces.map((place) => {
               const avgRating = place.averageRating || 0
               const reviewCount = place.totalReviews || 0
-              const imageUrl = place.imageUrl
               // Use place_id from Goong API (externalPlaceId)
               const linkId = encodeURIComponent(place.externalPlaceId)
               const favorited = isFavorited(place.externalPlaceId)
@@ -520,10 +533,11 @@ export default function RecommendationsPage() {
                   bodyStyle={{ padding: 0 }}
                 >
                   <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {imageUrl ? (
+                    {/* Prioritize user uploaded media first (like detail page) */}
+                    {placeMediaMap.get(place.id)?.fileUrl ? (
                       <img
-                        src={imageUrl}
-                        alt={place.name}
+                        src={placeMediaMap.get(place.id).fileUrl}
+                        alt={placeMediaMap.get(place.id).altText || place.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none'

@@ -4,8 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { Card, Button, Input, Select, Spin, message, Modal, AutoComplete, List, Rate } from 'antd'
 import { SearchOutlined, EnvironmentOutlined, ClockCircleOutlined, FilterOutlined } from '@ant-design/icons'
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { getApiMapsV2AutocompleteOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
+import { useQuery, useQueries } from '@tanstack/react-query'
+import { getApiMapsV2AutocompleteOptions, getApiMediaOptions } from '@/lib/api/generated-openAPI/@tanstack/react-query.gen'
 import { useFindManyPlace } from '@/lib/api/generated'
 import Link from 'next/link'
 import { translateVietnameseToJapanese, batchTranslateVietnameseToJapanese } from '@/lib/utils/translate'
@@ -429,6 +429,32 @@ function SearchResultsContent() {
     return placesWithDistance
   }, [dbPlaces, sortBy, ageFilter, userLocation])
 
+  // Fetch media for each DB place (like dashboard page) to get presigned URLs
+  const mediaQueries = useQueries({
+    queries: sortedDBPlaces.map((place: any) => ({
+      ...getApiMediaOptions({
+        query: {
+          placeId: place.id,
+          limit: '1' // Only get first image
+        }
+      }),
+      enabled: !!place.id,
+      staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    }))
+  })
+
+  // Compute media map reactively from queries (like dashboard page)
+  const placeMediaMap = useMemo(() => {
+    const mediaMap = new Map<string, any>()
+    sortedDBPlaces.forEach((place: any, index: number) => {
+      const queryResult = mediaQueries[index]
+      if (queryResult?.data?.media && queryResult.data.media.length > 0) {
+        mediaMap.set(place.id, queryResult.data.media[0])
+      }
+    })
+    return mediaMap
+  }, [sortedDBPlaces, mediaQueries])
+
   // Get predictions from API (already filtered and sorted by relevance)
   const results = predictions
 
@@ -510,10 +536,10 @@ function SearchResultsContent() {
             {sortedDBPlaces.map((place: any) => {
               const avgRating = calculateAvgRating(place)
               const reviewCount = place._count?.reviews || 0
-              const firstMedia = place.media?.[0]
-              const imageUrl = firstMedia?.fileUrl
               const linkId = place.externalPlaceId || place.id
               const distance = place.distance
+              // Get media for this place from API (like dashboard page)
+              const mediaData = placeMediaMap.get(place.id)
 
               return (
                 <Card
@@ -522,13 +548,22 @@ function SearchResultsContent() {
                   bodyStyle={{ padding: 0 }}
                 >
                   <div className="flex w-full">
-                    {/* Image */}
+                    {/* Image - Prioritize user uploaded media first (like dashboard), then imageUrl from Goong */}
                     <Link href={`/places/${linkId}`} className="shrink-0">
                       <div className="w-80 h-64 bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer">
-                        {imageUrl ? (
+                        {mediaData?.fileUrl ? (
                           <img
-                            src={imageUrl}
-                            alt={firstMedia?.altText || place.name}
+                            src={mediaData.fileUrl}
+                            alt={mediaData.altText || place.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ) : place.imageUrl ? (
+                          <img
+                            src={place.imageUrl}
+                            alt={place.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none'
